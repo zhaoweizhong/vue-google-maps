@@ -7621,8 +7621,8 @@
 
 	var __vue_script__, __vue_template__
 	__webpack_require__(6)
-	__vue_script__ = __webpack_require__(9)
-	__vue_template__ = __webpack_require__(83)
+	__vue_script__ = __webpack_require__(10)
+	__vue_template__ = __webpack_require__(84)
 	module.exports = __vue_script__ || {}
 	if (module.exports.__esModule) module.exports = module.exports.default
 	if (__vue_template__) { (typeof module.exports === "function" ? module.exports.options : module.exports).template = __vue_template__ }
@@ -7630,7 +7630,7 @@
 	  var hotAPI = require("vue-hot-reload-api")
 	  hotAPI.install(require("vue"), true)
 	  if (!hotAPI.compatible) return
-	  var id = "/mnt/c/Users/Daniel/Desktop/vue-google-maps/examples/src/app.vue"
+	  var id = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\src\\app.vue"
 	  if (!module.hot.data) {
 	    hotAPI.createRecord(id, module.exports)
 	  } else {
@@ -7645,17 +7645,17 @@
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=_v-d7d750e4&file=app.vue!./../../node_modules/vue-loader/lib/selector.js?type=style&index=0!./app.vue\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+	var content = __webpack_require__(7);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(8)(content, {});
+	var update = __webpack_require__(9)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=_v-d7d750e4&file=app.vue!./../../node_modules/vue-loader/lib/selector.js?type=style&index=0!./app.vue", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=_v-d7d750e4&file=app.vue!./../../node_modules/vue-loader/lib/selector.js?type=style&index=0!./app.vue");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=_v-97185a80&file=app.vue!./../../node_modules/vue-loader/lib/selector.js?type=style&index=0!./app.vue", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=_v-97185a80&file=app.vue!./../../node_modules/vue-loader/lib/selector.js?type=style&index=0!./app.vue");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -7665,8 +7665,77 @@
 	}
 
 /***/ },
-/* 7 */,
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(8)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, "\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n}\n\n.map-panel {\n  -webkit-box-flex: 4;\n      -ms-flex: 4 1 80%;\n          flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 0 500px;\n          flex: 1 0 500px;\n}\n\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n", "", {"version":3,"sources":["/./src/app.vue.style"],"names":[],"mappings":";AAkNA;EACA,YAAA;EACA,aAAA;EACA,gBAAA;EACA,OAAA;EACA,QAAA;EACA,qBAAA;EAAA,qBAAA;EAAA,cAAA;EACA,+BAAA;EAAA,8BAAA;MAAA,wBAAA;UAAA,oBAAA;CACA;;AAEA;EACA,oBAAA;MAAA,kBAAA;UAAA,cAAA;CACA;AACA;EACA,mBAAA;EACA,oBAAA;MAAA,oBAAA;UAAA,gBAAA;CACA;;AAEA;EACA,WAAA;EACA,cAAA;EACA,eAAA;CACA","file":"app.vue","sourcesContent":["/* vim: set softtabstop=2 shiftwidth=2 expandtab : */\n<template>\n<div class=\"app-panel\">\n<div class=\"settings-panel\">\n  <h1>Map information</h1>\n  Map center latitude: <input type=\"number\" v-model=\"center.lat\" number>\n  <br>\n  Map center longitude: <input type=\"number\" v-model=\"center.lng\" number>\n  <br>\n  Map bounds: {{mapBounds | json}}\n  <br>\n  Map zoom: <input type=\"number\" v-model=\"zoom\" number>\n  <br>\n  Dragged {{drag}} times\n  <br>\n  Left clicked {{mapClickedCount}} times\n  <br>\n  Map type: <select id=\"\" name=\"\" v-model=\"mapType\">\n    <option value=\"roadmap\">roadmap</option>\n    <option value=\"hybrid\">hybrid</option>\n    <option value=\"satellite\">satellite</option>\n    <option value=\"terrain\">terrain</option>\n  </select>\n  <br>\n  Map style: <select id=\"\" name=\"\" v-model=\"mapStyle\">\n    <option value=\"red\">red</option>\n    <option value=\"green\">green</option>\n    <option value=\"normal\">normal</option>\n  </select>\n  <br>\n  Enable scrollwheel zooming on the map: <input type=\"checkbox\" v-model=\"scrollwheel\">\n  <br>\n  <button @click=\"addMarker\"> Add a new Marker</button> (or right click on the map :) )\n  <h1>Clusters</h1>\n  enabled: <input type=\"checkbox\" v-model=\"clustering\" number>\n  </br>\n  Grid size: <input type=\"number\" v-model=\"gridSize\" number>\n  <br>\n  <h1>Polyline</h1>\n  Editable: <input type=\"checkbox\" number v-model=\"pleditable\">\n  <button @click=\"resetPlPath\">Reset path</button>\n  <br>\n  Visible: <input type=\"checkbox\" number v-model=\"plvisible\">\n  <br>\n  <h1>Polygon</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"pgvisible\"> <br>\n  <button @click=\"pgPath = opgPath\">Reset Polygon to pentagon</button><br>\n  <button @click=\"pgPath = originalPlPath\">Reset Polygon to a simple polygon</button><br>\n  Path: {{pgPath | json}}\n  <br>\n  <h1>Circle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayCircle\"><br>\n  {{circleBounds | json}}\n  <br>\n  <h1>Rectangle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayRectangle\"><br>\n  {{rectangleBounds | json}}\n  <br>\n  <h1>PlaceInput</h1>\n  <place-input\n    label=\"Add a marker at this place\"\n    :select-first-on-enter=\"true\"\n    @g-place_changed=\"updatePlace($event)\"\n  ></place-input>\n  <br>\n  <h1> Standalone infoWindow </h1>\n  modal 1 : <input type=\"checkbox\" number v-model=\"ifw\"><br>\n  modal 2: <input type=\"checkbox\" number v-model=\"ifw2\"> <input type=\"text\" v-model=\"ifw2text\">\n  <h1>Markers</h1>\n  Display only markers with even ID (to test filters) <input type=\"checkbox\" number v-model=\"markersEven\"><br>\n  <table>\n    <tr>\n      <th>lat</th>\n      <th>lng</th>\n      <th>opacity</th>\n      <th>enabled</th>\n      <th>draggable</th>\n      <th>clicked</th>\n      <th>right clicked</th>\n      <th>Drag-ended</th>\n      <th>Open info window</th>\n      <th>infoWIndow text</th>\n      <th>Delete me</th>\n    </tr>\n    <tr v-for=\"m in markers\">\n      <td>\n        <input type=\"number\" v-model=\"m.position.lat\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.position.lng\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.opacity\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.enabled\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.draggable\" number>\n      </td>\n      <td>{{m.clicked}}</td>\n      <td>{{m.rightClicked}}</td>\n      <td>{{m.dragended}}</td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.ifw\" number>\n      </td>\n      <td>\n        <input type=\"text\" v-model=\"m.ifw2text\">\n      </td>\n      <td><button @click=\"markers.splice(markers.indexOf(m), 1)\">Delete me </button></td>\n    </tr>\n  </table>\n</div>\n<div class=\"map-panel\">\n  <gmap-map\n    :center=\"center\"\n    :zoom=\"zoom\"\n    :map-type-id=\"mapType\"\n    :options=\"{styles: mapStyles, scrollwheel: scrollwheel}\"\n    @g-rightclick=\"mapRclicked\"\n    @g-drag=\"drag++\"\n    @g-click=\"mapClickedCount++\"\n\n    @g-zoom_changed=\"update('zoom', $event)\"\n    @g-center_changed=\"update('center', $event)\"\n    @g-maptypeid_changed=\"update('mapType', $event)\"\n    @g-bounds_changed=\"update('bounds', $event)\"\n    >\n    <gmap-cluster\n    :grid-size=\"gridSize\"\n    v-if=\"clustering\"\n    >\n      <gmap-marker\n        v-if=\"m.enabled\"\n        :position=\"m.position\"\n        :opacity=\"m.opacity\"\n        :draggable=\"m.draggable\"\n        @g-click=\"m.clicked++\"\n        @g-rightclick=\"m.rightClicked++\"\n        @g-dragend=\"m.dragended++\"\n\n        @g-position_changed=\"updateChild(m, 'position', $event)\"\n\n        v-for=\"m in activeMarkers\"\n      >\n      <gmap-info-window\n      :opened.sync=\"m.ifw\"\n      :content=\"m.ifw2text\"\n      ></gmap-info-window>\n      </gmap-marker>\n    </gmap-cluster>\n    <div v-if=\"!clustering\">\n      <gmap-marker\n      v-if=\"m.enabled\"\n      :position=\"m.position\"\n      :opacity=\"m.opacity\"\n      :draggable=\"m.draggable\"\n      @g-click=\"m.clicked++\"\n      @g-rightclick=\"m.rightClicked++\"\n      @g-dragend=\"m.dragended++\"\n      @g-position_changed=\"updateChild(m, 'position', $event)\"\n      v-for=\"m in activeMarkers\"\n      >\n        <gmap-info-window\n        :opened.sync=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </div>\n\n    <gmap-info-window\n    :position=\"center\"\n    :opened.sync=\"ifw\"\n    >\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    <br/>\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    <b>{{mapClickedCount}}</b>\n    </gmap-info-window>\n\n    <gmap-info-window\n    :position=\"center\"\n    :opened.sync=\"ifw2\"\n    :content=\"ifw2text\"\n    ></gmap-info-window>\n\n    <gmap-polyline v-if=\"plvisible\" :path=\"plPath\" :editable=\"pleditable\" :draggable=\"true\" :options=\"{geodesic:true, strokeColor:'#FF0000'}\"\n      @g-path_changed=\"updatePolylinePath($event)\">\n    </gmap-polyline>\n    <gmap-polygon v-if=\"pgvisible\" :paths=\"pgPath\" :editable=\"true\"\n      :options=\"{geodesic:true, strokeColor:'#FF0000', fillColor:'#000000'}\"\n      @g-paths_changed=\"updatePolygonPaths($event)\">\n    </gmap-polygon>\n    <gmap-circle v-if=\"displayCircle\" :bounds=\"circleBounds\"\n      :center=\"center\" :radius=\"100000\"\n      :options=\"{editable: true}\"\n\n      @g-radius_changed=\"updateCircle('radius', $event)\"\n      @g-bounds_changed=\"updateCircle('bounds', $event)\"\n\n      ></gmap-circle>\n    <gmap-rectangle v-if=\"displayRectangle\" :bounds=\"rectangleBounds\"\n    :options=\"{editable: true}\"\n    @g-bounds_changed=\"updateRectangle('bounds', $event)\"></gmap-rectangle>\n  </gmap-map>\n</div>\n</div>\n</template>\n\n<style>\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\n\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n</style>\n\n<script>\n\nimport {load, Marker, Map, Cluster, InfoWindow, Polyline, Rectangle, Circle, Polygon, PlaceInput} from '../../index.js'\n\nload('AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw', '3.24', ['places']);\n\nexport default {\n  data: function data() {\n    return {\n      center: { lat: 48.8538302, lng: 2.2982161 },\n      mapBounds: {},\n      clustering: true,\n      zoom: 7,\n      gridSize: 50,\n      mapType: 'terrain',\n      markers: [],\n      markersEven: false,\n      drag: 0,\n      mapClickedCount: 0,\n      ifw: true,\n      ifw2: false,\n      ifw2text: 'You can also use the content prop to set your modal',\n      mapStyle: 'green',\n      circleBounds: {},\n      displayCircle: false,\n      displayRectangle: false,\n      rectangleBounds: {\n        north: 33.685,\n        south: 50.671,\n        east: -70.234,\n        west: -116.251\n      },\n      originalPlPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      plPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      pleditable: true,\n      plvisible: false,\n      pgvisible: false,\n      pgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n      opgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n        scrollwheel: true\n    };\n  },\n\n  computed: {\n    activeMarkers() {\n      if (this.markersEven) {\n        return this.markers.filter(\n          (v, k) => k % 2 == 0\n        )\n      } else {\n        return this.markers\n      }\n    },\n    mapStyles () {\n      switch(this.mapStyle) {\n        case 'normal':\n          return [];\n          break;\n        case 'red':\n          return [\n              {\n                stylers: [\n                  {hue: '#890000'},\n                  {visibility: 'simplified'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                elementType: 'labels',\n                stylers: [{visibility: 'off'}]\n              },\n              {\n                featureType: 'water',\n                stylers: [{color: '#890000'}]\n              }\n            ]\n          break;\n        default:\n          return [\n              {\n                stylers: [\n                  {hue: '#899999'},\n                  {visibility: 'on'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                featureType: 'road',\n                stylers: [\n                  {visibility: 'off'}\n                ]\n              },\n              {\n                featureType: 'transit.line',\n                stylers: [\n                  {color: '#FF0000'}\n                ]\n              },\n              {\n                featureType: 'poi',\n                elementType: 'labels.icon',\n                stylers: [\n                  {visibility: 'on'},\n                  {weight: 10}\n                ]\n              },\n              {\n                featureType: 'water',\n                stylers: [\n                  { color: '#8900FF' },\n                  { weight:  9999900000},\n                ]\n              }\n            ];\n      }\n    }\n  },\n\n  methods: {\n    mapClicked (mouseArgs) {\n      console.log('map clicked', mouseArgs);\n    },\n    mapRclicked (mouseArgs) {\n      const createdMarker = this.addMarker();\n      createdMarker.position.lat = mouseArgs.latLng.lat();\n      createdMarker.position.lng = mouseArgs.latLng.lng();\n    },\n    addMarker: function addMarker() {\n      this.markers.push({\n        position: { lat: 48.8538302, lng: 2.2982161 },\n        opacity: 1,\n        draggable: true,\n        enabled: true,\n        clicked: 0,\n        rightClicked: 0,\n        dragended: 0,\n        ifw: true,\n        ifw2text: \"This text is bad please change me :( \"\n      });\n      return this.markers[this.markers.length - 1];\n    },\n    resetPlPath () {\n      this.plPath = this.originalPlPath;\n    },\n\n    update(field, event) {\n      if (field === 'center') {\n        console.log('CENTER REPORTED', event);\n        this.center = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n      } else if (field === 'bounds') {\n        this.mapBounds = event;\n      } else {\n        this.$set(this, field, event)\n      }\n    },\n\n    updateChild(object, field, event) {\n      if (field === 'position') {\n        object.position = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n      }\n    },\n\n    updatePolygonPaths(paths) {\n      // TODO\n    },\n\n    updatePolylinePath(paths) {\n      // TODO:\n    },\n\n    updateCircle(prop, value) {\n      if (prop === 'radius') {\n        this.radius = value;\n      } else if (prop === 'bounds') {\n        this.circleBounds = value;\n      }\n    },\n\n    updateRectangle(prop, value) {\n      if (prop === 'bounds') {\n        this.rectangleBounds = value;\n      }\n    },\n\n    updatePlace(place) {\n      if (place && place.geometry && place.geometry.location) {\n        var marker = this.addMarker();\n        marker.position.lat = place.geometry.location.lat();\n        marker.position.lng = place.geometry.location.lng();\n      }\n    }\n\n  },\n  components: {\n    GmapMap: Map,\n    GmapMarker: Marker,\n    GmapCluster: Cluster,\n    GmapInfoWindow: InfoWindow,\n    GmapPolygon: Polygon,\n    GmapPolyline: Polyline,\n    GmapRectangle: Rectangle,\n    GmapCircle: Circle,\n    PlaceInput\n  }\n};\n</script>\n"],"sourceRoot":"webpack://"}]);
+	
+	// exports
+
+
+/***/ },
 /* 8 */
+/***/ function(module, exports) {
+
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	// css base code, injected by the css-loader
+	module.exports = function() {
+		var list = [];
+	
+		// return the list of modules as css string
+		list.toString = function toString() {
+			var result = [];
+			for(var i = 0; i < this.length; i++) {
+				var item = this[i];
+				if(item[2]) {
+					result.push("@media " + item[2] + "{" + item[1] + "}");
+				} else {
+					result.push(item[1]);
+				}
+			}
+			return result.join("");
+		};
+	
+		// import a list of modules into the list
+		list.i = function(modules, mediaQuery) {
+			if(typeof modules === "string")
+				modules = [[null, modules, ""]];
+			var alreadyImportedModules = {};
+			for(var i = 0; i < this.length; i++) {
+				var id = this[i][0];
+				if(typeof id === "number")
+					alreadyImportedModules[id] = true;
+			}
+			for(i = 0; i < modules.length; i++) {
+				var item = modules[i];
+				// skip already imported module
+				// this implementation is not 100% perfect for weird media query combinations
+				//  when a module is imported multiple times with different media queries.
+				//  I hope this will never occur (Hey this way we have smaller bundles)
+				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+					if(mediaQuery && !item[2]) {
+						item[2] = mediaQuery;
+					} else if(mediaQuery) {
+						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+					}
+					list.push(item);
+				}
+			}
+		};
+		return list;
+	};
+
+
+/***/ },
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -7918,7 +7987,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7927,7 +7996,7 @@
 	  value: true
 	});
 	
-	var _index = __webpack_require__(10);
+	var _index = __webpack_require__(11);
 	
 	(0, _index.load)('AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw', '3.24', ['places']); // /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
 	// <template>
@@ -8341,16 +8410,16 @@
 	/* generated by vue-loader */
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {"use strict";
 	
-	var _getOwnPropertyDescriptor = __webpack_require__(12);
+	var _getOwnPropertyDescriptor = __webpack_require__(13);
 	
 	var _getOwnPropertyDescriptor2 = _interopRequireDefault(_getOwnPropertyDescriptor);
 	
-	var _create = __webpack_require__(26);
+	var _create = __webpack_require__(27);
 	
 	var _create2 = _interopRequireDefault(_create);
 	
@@ -8358,31 +8427,31 @@
 	
 	var _stringify2 = _interopRequireDefault(_stringify);
 	
-	var _setPrototypeOf = __webpack_require__(28);
+	var _setPrototypeOf = __webpack_require__(29);
 	
 	var _setPrototypeOf2 = _interopRequireDefault(_setPrototypeOf);
 	
-	var _is = __webpack_require__(34);
+	var _is = __webpack_require__(35);
 	
 	var _is2 = _interopRequireDefault(_is);
 	
-	var _from = __webpack_require__(38);
+	var _from = __webpack_require__(39);
 	
 	var _from2 = _interopRequireDefault(_from);
 	
-	var _getOwnPropertyNames = __webpack_require__(64);
+	var _getOwnPropertyNames = __webpack_require__(65);
 	
 	var _getOwnPropertyNames2 = _interopRequireDefault(_getOwnPropertyNames);
 	
-	var _keys = __webpack_require__(68);
+	var _keys = __webpack_require__(69);
 	
 	var _keys2 = _interopRequireDefault(_keys);
 	
-	var _getPrototypeOf = __webpack_require__(71);
+	var _getPrototypeOf = __webpack_require__(72);
 	
 	var _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf);
 	
-	var _typeof2 = __webpack_require__(74);
+	var _typeof2 = __webpack_require__(75);
 	
 	var _typeof3 = _interopRequireDefault(_typeof2);
 	
@@ -8399,7 +8468,7 @@
 			t.exports = r(55);
 		}, function (t, e) {
 			"use strict";
-			t.exports = __webpack_require__(82);
+			t.exports = __webpack_require__(83);
 		}, function (t, e, r) {
 			var n = r(38)("wks"),
 			    o = r(40),
@@ -8732,7 +8801,7 @@
 					var o;if ("function" != typeof e) throw new TypeError('"block" argument must be a function');"string" == typeof r && (n = r, r = null), o = v(e), n = (r && r.name ? " (" + r.name + ")." : ".") + (n ? " " + n : "."), t && !o && p(o, r, "Missing expected exception" + n);var i = "string" == typeof n,
 					    s = !t && b.isError(o),
 					    a = !t && o && !r;if ((s && i && m(o, r) || a) && p(o, r, "Got unwanted exception" + n), t && o && r && !m(o, r) || !t && o) throw o;
-				}var b = r(105),
+				}var b = r(107),
 				    x = Object.prototype.hasOwnProperty,
 				    w = Array.prototype.slice,
 				    M = function () {
@@ -8828,7 +8897,7 @@
 				c(r, e, v);var w,
 				    M,
 				    O = function O(t) {
-					if (!d && t in $) return $[t];switch (t) {case y:
+					if (!d && t in C) return C[t];switch (t) {case y:
 							return function () {
 								return new r(this, t);
 							};case g:
@@ -8841,14 +8910,14 @@
 				    j = e + " Iterator",
 				    k = _ == g,
 				    S = !1,
-				    $ = t.prototype,
-				    C = $[f] || $[h] || _ && $[_],
-				    P = C || O(_);if (C) {
-					var E = p(P.call(new t()));l(E, j, !0), !n && a($, h) && s(E, f, m), k && C.name !== g && (S = !0, P = function P() {
-						return C.call(this);
+				    C = t.prototype,
+				    $ = C[f] || C[h] || _ && C[_],
+				    P = $ || O(_);if ($) {
+					var E = p(P.call(new t()));l(E, j, !0), !n && a(C, h) && s(E, f, m), k && $.name !== g && (S = !0, P = function P() {
+						return $.call(this);
 					});
-				}if (n && !x || !d && !S && $[f] || s($, f, P), u[e] = P, u[j] = m, _) if (w = { values: k ? P : O(g), keys: b ? P : O(y), entries: k ? O("entries") : P }, x) for (M in w) {
-					M in $ || i($, M, w[M]);
+				}if (n && !x || !d && !S && C[f] || s(C, f, P), u[e] = P, u[j] = m, _) if (w = { values: k ? P : O(g), keys: b ? P : O(y), entries: k ? O("entries") : P }, x) for (M in w) {
+					M in C || i(C, M, w[M]);
 				} else o(o.P + o.F * (d || S), e, w);return w;
 			};
 		}, function (t, e, r) {
@@ -8874,9 +8943,9 @@
 				if (void 0 != t) return t[o] || t["@@iterator"] || i[n(t)];
 			};
 		}, function (t, e) {}, function (t, e, r) {
-			var n, o;n = r(47), o = r(106), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
+			var n, o;n = r(47), o = r(108), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}, function (t, e, r) {
-			var n, o;r(102), n = r(49), o = r(108), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
+			var n, o;r(104), n = r(49), o = r(110), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}, function (t, e, r) {
 			var n, o;n = r(50), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}, function (t, e, r) {
@@ -8918,7 +8987,7 @@
 			    l = r(7),
 			    p = n(l),
 			    f = r(9),
-			    d = n(f);r(99);var h = { maxZoom: { type: Number, twoWay: !1 }, calculor: { type: Function, twoWay: !1 }, gridSize: { type: Number, twoWay: !1 }, styles: { type: Array, twoWay: !1 } };e.default = a.default.extend({ mixins: [p.default, d.default], props: h, deferredReady: function deferredReady() {
+			    d = n(f);r(101);var h = { maxZoom: { type: Number, twoWay: !1 }, calculor: { type: Function, twoWay: !1 }, gridSize: { type: Number, twoWay: !1 }, styles: { type: Array, twoWay: !1 } };e.default = a.default.extend({ mixins: [p.default, d.default], props: h, deferredReady: function deferredReady() {
 					var t = this,
 					    e = i.default.clone(this.getPropsValues());this.$clusterObject = new MarkerClusterer(this.$map, [], e), (0, c.default)(this, this.$clusterObject, h, { afterModelChanged: function afterModelChanged(e, r) {
 							var n = t.$clusterObject.getMarkers();t.$clusterObject.clearMarkers(), t.$clusterObject.addMarkers(n);
@@ -9222,17 +9291,17 @@
 			    u = n(a),
 			    c = r(43),
 			    l = n(c),
-			    p = r(111),
+			    p = r(113),
 			    f = n(p),
-			    d = r(114),
+			    d = r(116),
 			    h = n(d),
-			    y = r(113),
+			    y = r(115),
 			    g = n(y),
-			    m = r(110),
+			    m = r(112),
 			    v = n(m),
-			    _ = r(115),
+			    _ = r(117),
 			    b = n(_),
-			    x = r(112),
+			    x = r(114),
 			    w = n(x),
 			    M = r(7),
 			    O = n(M);e.Map = s.default, e.Marker = u.default, e.Cluster = l.default, e.InfoWindow = f.default, e.Polyline = h.default, e.Polygon = g.default, e.Circle = v.default, e.Rectangle = b.default, e.PlaceInput = w.default, e.MapElementMixin = O.default;
@@ -9609,10 +9678,10 @@
 			    S = function S(t, e) {
 				return !(!i || t !== _M || e !== n) || g(t, e);
 			},
-			    $ = function $(t) {
+			    C = function C(t) {
 				var e = p(t)[m];return void 0 != e ? e : t;
 			},
-			    C = function C(t) {
+			    $ = function $(t) {
 				var e;return !(!l(t) || "function" != typeof (e = t.then)) && e;
 			},
 			    P = function P(t) {
@@ -9636,7 +9705,7 @@
 							    s = o ? e.ok : e.fail,
 							    a = e.resolve,
 							    u = e.reject;try {
-								s ? (o || (t.h = !0), r = s === !0 ? n : s(n), r === e.promise ? u(TypeError("Promise-chain cycle")) : (i = C(r)) ? i.call(r, a, u) : a(r)) : u(n);
+								s ? (o || (t.h = !0), r = s === !0 ? n : s(n), r === e.promise ? u(TypeError("Promise-chain cycle")) : (i = $(r)) ? i.call(r, a, u) : a(r)) : u(n);
 							} catch (t) {
 								u(t);
 							}
@@ -9665,7 +9734,7 @@
 				var e,
 				    r = this;if (!r.d) {
 					r.d = !0, r = r.r || r;try {
-						if (r.p === t) throw TypeError("Promise can't be resolved itself");(e = C(t)) ? _(function () {
+						if (r.p === t) throw TypeError("Promise can't be resolved itself");(e = $(t)) ? _(function () {
 							var n = { r: r, d: !1 };try {
 								e.call(t, a(T, n, 1), a(R, n, 1));
 							} catch (t) {
@@ -9697,7 +9766,7 @@
 				} }), c(c.S + c.F * !(k && r(78)(function (t) {
 				_M.all(t).catch(function () {});
 			})), b, { all: function all(t) {
-					var e = $(this),
+					var e = C(this),
 					    r = new P(e),
 					    n = r.resolve,
 					    i = r.reject,
@@ -9711,7 +9780,7 @@
 						}) : n(a);
 					});return a && i(a.error), r.promise;
 				}, race: function race(t) {
-					var e = $(this),
+					var e = C(this),
 					    r = new P(e),
 					    n = r.reject,
 					    o = E(function () {
@@ -9747,8 +9816,8 @@
 			    j = o.Symbol,
 			    k = o.JSON,
 			    S = k && k.stringify,
-			    $ = !1,
-			    C = d("_hidden"),
+			    C = !1,
+			    $ = d("_hidden"),
 			    P = n.isEnum,
 			    E = l("symbol-registry"),
 			    A = l("symbols"),
@@ -9762,36 +9831,36 @@
 				var n = x(R, e);n && delete R[e], w(t, e, r), n && t !== R && w(R, e, n);
 			} : w,
 			    z = function z(t) {
-				var e = A[t] = M(j.prototype);return e._k = t, s && $ && T(R, t, { configurable: !0, set: function set(e) {
-						i(this, C) && i(this[C], t) && (this[C][t] = !1), T(this, t, b(1, e));
+				var e = A[t] = M(j.prototype);return e._k = t, s && C && T(R, t, { configurable: !0, set: function set(e) {
+						i(this, $) && i(this[$], t) && (this[$][t] = !1), T(this, t, b(1, e));
 					} }), e;
 			},
 			    B = function B(t) {
 				return "symbol" == (typeof t === "undefined" ? "undefined" : (0, _typeof3.default)(t));
 			},
-			    D = function D(t, e, r) {
-				return r && i(A, e) ? (r.enumerable ? (i(t, C) && t[C][e] && (t[C][e] = !1), r = M(r, { enumerable: b(0, !1) })) : (i(t, C) || w(t, C, b(1, {})), t[C][e] = !0), T(t, e, r)) : w(t, e, r);
-			},
-			    W = function W(t, e) {
-				v(t);for (var r, n = g(e = _(e)), o = 0, i = n.length; i > o;) {
-					D(t, r = n[o++], e[r]);
-				}return t;
+			    W = function W(t, e, r) {
+				return r && i(A, e) ? (r.enumerable ? (i(t, $) && t[$][e] && (t[$][e] = !1), r = M(r, { enumerable: b(0, !1) })) : (i(t, $) || w(t, $, b(1, {})), t[$][e] = !0), T(t, e, r)) : w(t, e, r);
 			},
 			    I = function I(t, e) {
-				return void 0 === e ? M(t) : W(M(t), e);
+				v(t);for (var r, n = g(e = _(e)), o = 0, i = n.length; i > o;) {
+					W(t, r = n[o++], e[r]);
+				}return t;
+			},
+			    D = function D(t, e) {
+				return void 0 === e ? M(t) : I(M(t), e);
 			},
 			    N = function N(t) {
-				var e = P.call(this, t);return !(e || !i(this, t) || !i(A, t) || i(this, C) && this[C][t]) || e;
+				var e = P.call(this, t);return !(e || !i(this, t) || !i(A, t) || i(this, $) && this[$][t]) || e;
 			},
 			    F = function F(t, e) {
-				var r = x(t = _(t), e);return !r || !i(A, e) || i(t, C) && t[C][e] || (r.enumerable = !0), r;
-			},
-			    U = function U(t) {
-				for (var e, r = O(_(t)), n = [], o = 0; r.length > o;) {
-					i(A, e = r[o++]) || e == C || n.push(e);
-				}return n;
+				var r = x(t = _(t), e);return !r || !i(A, e) || i(t, $) && t[$][e] || (r.enumerable = !0), r;
 			},
 			    q = function q(t) {
+				for (var e, r = O(_(t)), n = [], o = 0; r.length > o;) {
+					i(A, e = r[o++]) || e == $ || n.push(e);
+				}return n;
+			},
+			    U = function U(t) {
 				for (var e, r = O(_(t)), n = [], o = 0; r.length > o;) {
 					i(A, e = r[o++]) && n.push(A[e]);
 				}return n;
@@ -9813,17 +9882,33 @@
 				return this._k;
 			}), B = function B(t) {
 				return t instanceof j;
-			}, n.create = I, n.isEnum = N, n.getDesc = F, n.setDesc = D, n.setDescs = W, n.getNames = y.get = U, n.getSymbols = q, s && !r(29) && u(R, "propertyIsEnumerable", N, !0));var Z = { for: function _for(t) {
+			}, n.create = D, n.isEnum = N, n.getDesc = F, n.setDesc = W, n.setDescs = I, n.getNames = y.get = q, n.getSymbols = U, s && !r(29) && u(R, "propertyIsEnumerable", N, !0));var Z = { for: function _for(t) {
 					return i(E, t += "") ? E[t] : E[t] = j(t);
 				}, keyFor: function keyFor(t) {
 					return h(E, t);
 				}, useSetter: function useSetter() {
-					$ = !0;
+					C = !0;
 				}, useSimple: function useSimple() {
-					$ = !1;
+					C = !1;
 				} };n.each.call("hasInstance,isConcatSpreadable,iterator,match,replace,search,species,split,toPrimitive,toStringTag,unscopables".split(","), function (t) {
 				var e = d(t);Z[t] = L ? e : z(e);
-			}), $ = !0, a(a.G + a.W, { Symbol: j }), a(a.S, "Symbol", Z), a(a.S + a.F * !L, "Object", { create: I, defineProperty: D, defineProperties: W, getOwnPropertyDescriptor: F, getOwnPropertyNames: U, getOwnPropertySymbols: q }), k && a(a.S + a.F * (!L || G), "JSON", { stringify: V }), p(j, "Symbol"), p(Math, "Math", !0), p(o.JSON, "JSON", !0);
+			}), C = !0, a(a.G + a.W, { Symbol: j }), a(a.S, "Symbol", Z), a(a.S + a.F * !L, "Object", { create: D, defineProperty: W, defineProperties: I, getOwnPropertyDescriptor: F, getOwnPropertyNames: q, getOwnPropertySymbols: U }), k && a(a.S + a.F * (!L || G), "JSON", { stringify: V }), p(j, "Symbol"), p(Math, "Math", !0), p(o.JSON, "JSON", !0);
+		}, function (t, e, r) {
+			e = t.exports = r(100)(), e.push([t.id, ".vue-map-container,.vue-map-container .vue-map{width:100%;height:100%}", "", { version: 3, sources: ["/./src/components/map.vue.style"], names: [], mappings: "AAA0C,+CAA4B,WAAW,WAAW,CAAC", file: "map.vue", sourcesContent: [".vue-map-container{width:100%;height:100%}.vue-map-container .vue-map{width:100%;height:100%}"], sourceRoot: "webpack://" }]);
+		}, function (t, e) {
+			t.exports = function () {
+				var t = [];return t.toString = function () {
+					for (var t = [], e = 0; e < this.length; e++) {
+						var r = this[e];r[2] ? t.push("@media " + r[2] + "{" + r[1] + "}") : t.push(r[1]);
+					}return t.join("");
+				}, t.i = function (e, r) {
+					"string" == typeof e && (e = [[null, e, ""]]);for (var n = {}, o = 0; o < this.length; o++) {
+						var i = this[o][0];"number" == typeof i && (n[i] = !0);
+					}for (o = 0; o < e.length; o++) {
+						var s = e[o];"number" == typeof s[0] && n[s[0]] || (r && !s[2] ? s[2] = r : r && (s[2] = "(" + s[2] + ") and (" + r + ")"), t.push(s));
+					}
+				}, t;
+			};
 		}, function (t, e) {
 			function r(t, e, n) {
 				this.extend(r, google.maps.OverlayView), this.map_ = t, this.markers_ = [], this.clusters_ = [], this.sizes = [53, 56, 66, 78, 90], this.styles_ = [], this.ready_ = !1;var o = n || {};this.gridSize_ = o.gridSize || 60, this.minClusterSize_ = o.minimumClusterSize || 2, this.maxZoom_ = o.maxZoom || null, this.styles_ = o.styles || [], this.imagePath_ = o.imagePath || this.MARKER_CLUSTER_IMAGE_PATH_, this.imageExtension_ = o.imageExtension || this.MARKER_CLUSTER_IMAGE_EXTENSION_, this.zoomOnClick_ = !0, void 0 != o.zoomOnClick && (this.zoomOnClick_ = o.zoomOnClick), this.averageCenter_ = !1, void 0 != o.averageCenter && (this.averageCenter_ = o.averageCenter), this.setupStyles_(), this.setMap(t), this.prevZoom_ = this.map_.getZoom();var i = this;google.maps.event.addListener(this.map_, "zoom_changed", function () {
@@ -10201,9 +10286,7 @@
 				};
 			}();
 		}, function (t, e, r) {
-			var n = r(!function () {
-				var t = new Error('Cannot find module "!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=_v-52a955cc&file=map.vue!./../../node_modules/less-loader/index.js!./../../node_modules/vue-loader/lib/selector.js?type=style&index=0!./map.vue"');throw t.code = "MODULE_NOT_FOUND", t;
-			}());"string" == typeof n && (n = [[t.id, n, ""]]);r(101)(n, {});n.locals && (t.exports = n.locals);
+			var n = r(99);"string" == typeof n && (n = [[t.id, n, ""]]);r(103)(n, {});n.locals && (t.exports = n.locals);
 		}, function (t, e) {
 			"function" == typeof _create2.default ? t.exports = function (t, e) {
 				t.super_ = e, t.prototype = (0, _create2.default)(e.prototype, { constructor: { value: t, enumerable: !1, writable: !0, configurable: !0 } });
@@ -10283,24 +10366,24 @@
 				}function x(t) {
 					return void 0 === t;
 				}function w(t) {
-					return M(t) && "[object RegExp]" === $(t);
+					return M(t) && "[object RegExp]" === C(t);
 				}function M(t) {
 					return "object" == (typeof t === "undefined" ? "undefined" : (0, _typeof3.default)(t)) && null !== t;
 				}function O(t) {
-					return M(t) && "[object Date]" === $(t);
+					return M(t) && "[object Date]" === C(t);
 				}function j(t) {
-					return M(t) && ("[object Error]" === $(t) || t instanceof Error);
+					return M(t) && ("[object Error]" === C(t) || t instanceof Error);
 				}function k(t) {
 					return "function" == typeof t;
 				}function S(t) {
 					return null === t || "boolean" == typeof t || "number" == typeof t || "string" == typeof t || "symbol" == (typeof t === "undefined" ? "undefined" : (0, _typeof3.default)(t)) || "undefined" == typeof t;
-				}function $(t) {
-					return Object.prototype.toString.call(t);
 				}function C(t) {
+					return Object.prototype.toString.call(t);
+				}function $(t) {
 					return t < 10 ? "0" + t.toString(10) : t.toString(10);
 				}function P() {
 					var t = new Date(),
-					    e = [C(t.getHours()), C(t.getMinutes()), C(t.getSeconds())].join(":");return [t.getDate(), T[t.getMonth()], e].join(" ");
+					    e = [$(t.getHours()), $(t.getMinutes()), $(t.getSeconds())].join(":");return [t.getDate(), T[t.getMonth()], e].join(" ");
 				}function E(t, e) {
 					return Object.prototype.hasOwnProperty.call(t, e);
 				}var A = /%[sdj%]/g;e.format = function (t) {
@@ -10336,16 +10419,16 @@
 							var n = e.format.apply(e, arguments);console.error("%s %d: %s", t, r, n);
 						};
 					} else R[t] = function () {};return R[t];
-				}, e.inspect = o, o.colors = { bold: [1, 22], italic: [3, 23], underline: [4, 24], inverse: [7, 27], white: [37, 39], grey: [90, 39], black: [30, 39], blue: [34, 39], cyan: [36, 39], green: [32, 39], magenta: [35, 39], red: [31, 39], yellow: [33, 39] }, o.styles = { special: "cyan", number: "yellow", boolean: "yellow", undefined: "grey", null: "bold", string: "green", date: "magenta", regexp: "red" }, e.isArray = h, e.isBoolean = y, e.isNull = g, e.isNullOrUndefined = m, e.isNumber = v, e.isString = _, e.isSymbol = b, e.isUndefined = x, e.isRegExp = w, e.isObject = M, e.isDate = O, e.isError = j, e.isFunction = k, e.isPrimitive = S, e.isBuffer = r(104);var T = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];e.log = function () {
+				}, e.inspect = o, o.colors = { bold: [1, 22], italic: [3, 23], underline: [4, 24], inverse: [7, 27], white: [37, 39], grey: [90, 39], black: [30, 39], blue: [34, 39], cyan: [36, 39], green: [32, 39], magenta: [35, 39], red: [31, 39], yellow: [33, 39] }, o.styles = { special: "cyan", number: "yellow", boolean: "yellow", undefined: "grey", null: "bold", string: "green", date: "magenta", regexp: "red" }, e.isArray = h, e.isBoolean = y, e.isNull = g, e.isNullOrUndefined = m, e.isNumber = v, e.isString = _, e.isSymbol = b, e.isUndefined = x, e.isRegExp = w, e.isObject = M, e.isDate = O, e.isError = j, e.isFunction = k, e.isPrimitive = S, e.isBuffer = r(106);var T = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];e.log = function () {
 					console.log("%s - %s", P(), e.format.apply(e, arguments));
-				}, e.inherits = r(103), e._extend = function (t, e) {
+				}, e.inherits = r(105), e._extend = function (t, e) {
 					if (!e || !M(e)) return t;for (var r = (0, _keys2.default)(e), n = r.length; n--;) {
 						t[r[n]] = e[r[n]];
 					}return t;
 				};
 			}).call(e, function () {
 				return this;
-			}(), r(100));
+			}(), r(102));
 		}, function (t, e) {
 			t.exports = " <div> <slot></slot> </div> ";
 		}, function (t, e) {
@@ -10357,9 +10440,9 @@
 		}, function (t, e, r) {
 			var n, o;n = r(46), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}, function (t, e, r) {
-			var n, o;n = r(48), o = r(107), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
+			var n, o;n = r(48), o = r(109), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}, function (t, e, r) {
-			var n, o;n = r(51), o = r(109), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
+			var n, o;n = r(51), o = r(111), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}, function (t, e, r) {
 			var n, o;n = r(52), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}, function (t, e, r) {
@@ -10368,10 +10451,10 @@
 			var n, o;n = r(54), t.exports = n || {}, t.exports.__esModule && (t.exports = t.exports.default), o && (("function" == typeof t.exports ? t.exports.options : t.exports).template = o);
 		}]);
 	});
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(11)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12)(module)))
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -10387,23 +10470,23 @@
 
 
 /***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(13), __esModule: true };
-
-/***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $ = __webpack_require__(14);
-	__webpack_require__(15);
+	module.exports = { "default": __webpack_require__(14), __esModule: true };
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var $ = __webpack_require__(15);
+	__webpack_require__(16);
 	module.exports = function getOwnPropertyDescriptor(it, key){
 	  return $.getDesc(it, key);
 	};
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	var $Object = Object;
@@ -10421,41 +10504,41 @@
 	};
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
-	var toIObject = __webpack_require__(16);
+	var toIObject = __webpack_require__(17);
 	
-	__webpack_require__(20)('getOwnPropertyDescriptor', function($getOwnPropertyDescriptor){
+	__webpack_require__(21)('getOwnPropertyDescriptor', function($getOwnPropertyDescriptor){
 	  return function getOwnPropertyDescriptor(it, key){
 	    return $getOwnPropertyDescriptor(toIObject(it), key);
 	  };
 	});
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// to indexed object, toObject with fallback for non-array-like ES3 strings
-	var IObject = __webpack_require__(17)
-	  , defined = __webpack_require__(19);
+	var IObject = __webpack_require__(18)
+	  , defined = __webpack_require__(20);
 	module.exports = function(it){
 	  return IObject(defined(it));
 	};
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// fallback for non-array-like ES3 and non-enumerable old V8 strings
-	var cof = __webpack_require__(18);
+	var cof = __webpack_require__(19);
 	module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
 	  return cof(it) == 'String' ? it.split('') : Object(it);
 	};
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -10465,7 +10548,7 @@
 	};
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports) {
 
 	// 7.2.1 RequireObjectCoercible(argument)
@@ -10475,13 +10558,13 @@
 	};
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// most Object methods by ES6 should accept primitives
-	var $export = __webpack_require__(21)
+	var $export = __webpack_require__(22)
 	  , core    = __webpack_require__(3)
-	  , fails   = __webpack_require__(25);
+	  , fails   = __webpack_require__(26);
 	module.exports = function(KEY, exec){
 	  var fn  = (core.Object || {})[KEY] || Object[KEY]
 	    , exp = {};
@@ -10490,12 +10573,12 @@
 	};
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var global    = __webpack_require__(22)
+	var global    = __webpack_require__(23)
 	  , core      = __webpack_require__(3)
-	  , ctx       = __webpack_require__(23)
+	  , ctx       = __webpack_require__(24)
 	  , PROTOTYPE = 'prototype';
 	
 	var $export = function(type, name, source){
@@ -10541,7 +10624,7 @@
 	module.exports = $export;
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports) {
 
 	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
@@ -10550,11 +10633,11 @@
 	if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// optional / simple context binding
-	var aFunction = __webpack_require__(24);
+	var aFunction = __webpack_require__(25);
 	module.exports = function(fn, that, length){
 	  aFunction(fn);
 	  if(that === undefined)return fn;
@@ -10575,7 +10658,7 @@
 	};
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports) {
 
 	module.exports = function(it){
@@ -10584,7 +10667,7 @@
 	};
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports) {
 
 	module.exports = function(exec){
@@ -10596,50 +10679,50 @@
 	};
 
 /***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(27), __esModule: true };
-
-/***/ },
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $ = __webpack_require__(14);
-	module.exports = function create(P, D){
-	  return $.create(P, D);
-	};
+	module.exports = { "default": __webpack_require__(28), __esModule: true };
 
 /***/ },
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(29), __esModule: true };
+	var $ = __webpack_require__(15);
+	module.exports = function create(P, D){
+	  return $.create(P, D);
+	};
 
 /***/ },
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(30);
-	module.exports = __webpack_require__(3).Object.setPrototypeOf;
+	module.exports = { "default": __webpack_require__(30), __esModule: true };
 
 /***/ },
 /* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// 19.1.3.19 Object.setPrototypeOf(O, proto)
-	var $export = __webpack_require__(21);
-	$export($export.S, 'Object', {setPrototypeOf: __webpack_require__(31).set});
+	__webpack_require__(31);
+	module.exports = __webpack_require__(3).Object.setPrototypeOf;
 
 /***/ },
 /* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// 19.1.3.19 Object.setPrototypeOf(O, proto)
+	var $export = __webpack_require__(22);
+	$export($export.S, 'Object', {setPrototypeOf: __webpack_require__(32).set});
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// Works with __proto__ only. Old v8 can't work with null proto objects.
 	/* eslint-disable no-proto */
-	var getDesc  = __webpack_require__(14).getDesc
-	  , isObject = __webpack_require__(32)
-	  , anObject = __webpack_require__(33);
+	var getDesc  = __webpack_require__(15).getDesc
+	  , isObject = __webpack_require__(33)
+	  , anObject = __webpack_require__(34);
 	var check = function(O, proto){
 	  anObject(O);
 	  if(!isObject(proto) && proto !== null)throw TypeError(proto + ": can't set as prototype!");
@@ -10648,7 +10731,7 @@
 	  set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
 	    function(test, buggy, set){
 	      try {
-	        set = __webpack_require__(23)(Function.call, getDesc(Object.prototype, '__proto__').set, 2);
+	        set = __webpack_require__(24)(Function.call, getDesc(Object.prototype, '__proto__').set, 2);
 	        set(test, []);
 	        buggy = !(test instanceof Array);
 	      } catch(e){ buggy = true; }
@@ -10663,7 +10746,7 @@
 	};
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports) {
 
 	module.exports = function(it){
@@ -10671,38 +10754,38 @@
 	};
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(32);
+	var isObject = __webpack_require__(33);
 	module.exports = function(it){
 	  if(!isObject(it))throw TypeError(it + ' is not an object!');
 	  return it;
 	};
 
 /***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(35), __esModule: true };
-
-/***/ },
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(36);
-	module.exports = __webpack_require__(3).Object.is;
+	module.exports = { "default": __webpack_require__(36), __esModule: true };
 
 /***/ },
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// 19.1.3.10 Object.is(value1, value2)
-	var $export = __webpack_require__(21);
-	$export($export.S, 'Object', {is: __webpack_require__(37)});
+	__webpack_require__(37);
+	module.exports = __webpack_require__(3).Object.is;
 
 /***/ },
 /* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// 19.1.3.10 Object.is(value1, value2)
+	var $export = __webpack_require__(22);
+	$export($export.S, 'Object', {is: __webpack_require__(38)});
+
+/***/ },
+/* 38 */
 /***/ function(module, exports) {
 
 	// 7.2.9 SameValue(x, y)
@@ -10711,28 +10794,28 @@
 	};
 
 /***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(39), __esModule: true };
-
-/***/ },
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(40);
-	__webpack_require__(56);
-	module.exports = __webpack_require__(3).Array.from;
+	module.exports = { "default": __webpack_require__(40), __esModule: true };
 
 /***/ },
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
+	__webpack_require__(41);
+	__webpack_require__(57);
+	module.exports = __webpack_require__(3).Array.from;
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
-	var $at  = __webpack_require__(41)(true);
+	var $at  = __webpack_require__(42)(true);
 	
 	// 21.1.3.27 String.prototype[@@iterator]()
-	__webpack_require__(43)(String, 'String', function(iterated){
+	__webpack_require__(44)(String, 'String', function(iterated){
 	  this._t = String(iterated); // target
 	  this._i = 0;                // next index
 	// 21.1.5.2.1 %StringIteratorPrototype%.next()
@@ -10747,11 +10830,11 @@
 	});
 
 /***/ },
-/* 41 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toInteger = __webpack_require__(42)
-	  , defined   = __webpack_require__(19);
+	var toInteger = __webpack_require__(43)
+	  , defined   = __webpack_require__(20);
 	// true  -> String#at
 	// false -> String#codePointAt
 	module.exports = function(TO_STRING){
@@ -10769,7 +10852,7 @@
 	};
 
 /***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports) {
 
 	// 7.1.4 ToInteger
@@ -10780,20 +10863,20 @@
 	};
 
 /***/ },
-/* 43 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var LIBRARY        = __webpack_require__(44)
-	  , $export        = __webpack_require__(21)
-	  , redefine       = __webpack_require__(45)
-	  , hide           = __webpack_require__(46)
-	  , has            = __webpack_require__(49)
-	  , Iterators      = __webpack_require__(50)
-	  , $iterCreate    = __webpack_require__(51)
-	  , setToStringTag = __webpack_require__(52)
-	  , getProto       = __webpack_require__(14).getProto
-	  , ITERATOR       = __webpack_require__(53)('iterator')
+	var LIBRARY        = __webpack_require__(45)
+	  , $export        = __webpack_require__(22)
+	  , redefine       = __webpack_require__(46)
+	  , hide           = __webpack_require__(47)
+	  , has            = __webpack_require__(50)
+	  , Iterators      = __webpack_require__(51)
+	  , $iterCreate    = __webpack_require__(52)
+	  , setToStringTag = __webpack_require__(53)
+	  , getProto       = __webpack_require__(15).getProto
+	  , ITERATOR       = __webpack_require__(54)('iterator')
 	  , BUGGY          = !([].keys && 'next' in [].keys()) // Safari has buggy iterators w/o `next`
 	  , FF_ITERATOR    = '@@iterator'
 	  , KEYS           = 'keys'
@@ -10851,24 +10934,24 @@
 	};
 
 /***/ },
-/* 44 */
+/* 45 */
 /***/ function(module, exports) {
 
 	module.exports = true;
 
 /***/ },
-/* 45 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(46);
-
-/***/ },
 /* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $          = __webpack_require__(14)
-	  , createDesc = __webpack_require__(47);
-	module.exports = __webpack_require__(48) ? function(object, key, value){
+	module.exports = __webpack_require__(47);
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var $          = __webpack_require__(15)
+	  , createDesc = __webpack_require__(48);
+	module.exports = __webpack_require__(49) ? function(object, key, value){
 	  return $.setDesc(object, key, createDesc(1, value));
 	} : function(object, key, value){
 	  object[key] = value;
@@ -10876,7 +10959,7 @@
 	};
 
 /***/ },
-/* 47 */
+/* 48 */
 /***/ function(module, exports) {
 
 	module.exports = function(bitmap, value){
@@ -10889,16 +10972,16 @@
 	};
 
 /***/ },
-/* 48 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Thank's IE8 for his funny defineProperty
-	module.exports = !__webpack_require__(25)(function(){
+	module.exports = !__webpack_require__(26)(function(){
 	  return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
 	});
 
 /***/ },
-/* 49 */
+/* 50 */
 /***/ function(module, exports) {
 
 	var hasOwnProperty = {}.hasOwnProperty;
@@ -10907,23 +10990,23 @@
 	};
 
 /***/ },
-/* 50 */
+/* 51 */
 /***/ function(module, exports) {
 
 	module.exports = {};
 
 /***/ },
-/* 51 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var $              = __webpack_require__(14)
-	  , descriptor     = __webpack_require__(47)
-	  , setToStringTag = __webpack_require__(52)
+	var $              = __webpack_require__(15)
+	  , descriptor     = __webpack_require__(48)
+	  , setToStringTag = __webpack_require__(53)
 	  , IteratorPrototype = {};
 	
 	// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-	__webpack_require__(46)(IteratorPrototype, __webpack_require__(53)('iterator'), function(){ return this; });
+	__webpack_require__(47)(IteratorPrototype, __webpack_require__(54)('iterator'), function(){ return this; });
 	
 	module.exports = function(Constructor, NAME, next){
 	  Constructor.prototype = $.create(IteratorPrototype, {next: descriptor(1, next)});
@@ -10931,34 +11014,34 @@
 	};
 
 /***/ },
-/* 52 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var def = __webpack_require__(14).setDesc
-	  , has = __webpack_require__(49)
-	  , TAG = __webpack_require__(53)('toStringTag');
+	var def = __webpack_require__(15).setDesc
+	  , has = __webpack_require__(50)
+	  , TAG = __webpack_require__(54)('toStringTag');
 	
 	module.exports = function(it, tag, stat){
 	  if(it && !has(it = stat ? it : it.prototype, TAG))def(it, TAG, {configurable: true, value: tag});
 	};
 
 /***/ },
-/* 53 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var store  = __webpack_require__(54)('wks')
-	  , uid    = __webpack_require__(55)
-	  , Symbol = __webpack_require__(22).Symbol;
+	var store  = __webpack_require__(55)('wks')
+	  , uid    = __webpack_require__(56)
+	  , Symbol = __webpack_require__(23).Symbol;
 	module.exports = function(name){
 	  return store[name] || (store[name] =
 	    Symbol && Symbol[name] || (Symbol || uid)('Symbol.' + name));
 	};
 
 /***/ },
-/* 54 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var global = __webpack_require__(22)
+	var global = __webpack_require__(23)
 	  , SHARED = '__core-js_shared__'
 	  , store  = global[SHARED] || (global[SHARED] = {});
 	module.exports = function(key){
@@ -10966,7 +11049,7 @@
 	};
 
 /***/ },
-/* 55 */
+/* 56 */
 /***/ function(module, exports) {
 
 	var id = 0
@@ -10976,18 +11059,18 @@
 	};
 
 /***/ },
-/* 56 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var ctx         = __webpack_require__(23)
-	  , $export     = __webpack_require__(21)
-	  , toObject    = __webpack_require__(57)
-	  , call        = __webpack_require__(58)
-	  , isArrayIter = __webpack_require__(59)
-	  , toLength    = __webpack_require__(60)
-	  , getIterFn   = __webpack_require__(61);
-	$export($export.S + $export.F * !__webpack_require__(63)(function(iter){ Array.from(iter); }), 'Array', {
+	var ctx         = __webpack_require__(24)
+	  , $export     = __webpack_require__(22)
+	  , toObject    = __webpack_require__(58)
+	  , call        = __webpack_require__(59)
+	  , isArrayIter = __webpack_require__(60)
+	  , toLength    = __webpack_require__(61)
+	  , getIterFn   = __webpack_require__(62);
+	$export($export.S + $export.F * !__webpack_require__(64)(function(iter){ Array.from(iter); }), 'Array', {
 	  // 22.1.2.1 Array.from(arrayLike, mapfn = undefined, thisArg = undefined)
 	  from: function from(arrayLike/*, mapfn = undefined, thisArg = undefined*/){
 	    var O       = toObject(arrayLike)
@@ -11018,21 +11101,21 @@
 
 
 /***/ },
-/* 57 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 7.1.13 ToObject(argument)
-	var defined = __webpack_require__(19);
+	var defined = __webpack_require__(20);
 	module.exports = function(it){
 	  return Object(defined(it));
 	};
 
 /***/ },
-/* 58 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// call something on iterator step with safe closing on error
-	var anObject = __webpack_require__(33);
+	var anObject = __webpack_require__(34);
 	module.exports = function(iterator, fn, value, entries){
 	  try {
 	    return entries ? fn(anObject(value)[0], value[1]) : fn(value);
@@ -11045,12 +11128,12 @@
 	};
 
 /***/ },
-/* 59 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// check on default Array iterator
-	var Iterators  = __webpack_require__(50)
-	  , ITERATOR   = __webpack_require__(53)('iterator')
+	var Iterators  = __webpack_require__(51)
+	  , ITERATOR   = __webpack_require__(54)('iterator')
 	  , ArrayProto = Array.prototype;
 	
 	module.exports = function(it){
@@ -11058,23 +11141,23 @@
 	};
 
 /***/ },
-/* 60 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 7.1.15 ToLength
-	var toInteger = __webpack_require__(42)
+	var toInteger = __webpack_require__(43)
 	  , min       = Math.min;
 	module.exports = function(it){
 	  return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 	};
 
 /***/ },
-/* 61 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var classof   = __webpack_require__(62)
-	  , ITERATOR  = __webpack_require__(53)('iterator')
-	  , Iterators = __webpack_require__(50);
+	var classof   = __webpack_require__(63)
+	  , ITERATOR  = __webpack_require__(54)('iterator')
+	  , Iterators = __webpack_require__(51);
 	module.exports = __webpack_require__(3).getIteratorMethod = function(it){
 	  if(it != undefined)return it[ITERATOR]
 	    || it['@@iterator']
@@ -11082,12 +11165,12 @@
 	};
 
 /***/ },
-/* 62 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// getting tag from 19.1.3.6 Object.prototype.toString()
-	var cof = __webpack_require__(18)
-	  , TAG = __webpack_require__(53)('toStringTag')
+	var cof = __webpack_require__(19)
+	  , TAG = __webpack_require__(54)('toStringTag')
 	  // ES3 wrong here
 	  , ARG = cof(function(){ return arguments; }()) == 'Arguments';
 	
@@ -11103,10 +11186,10 @@
 	};
 
 /***/ },
-/* 63 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ITERATOR     = __webpack_require__(53)('iterator')
+	var ITERATOR     = __webpack_require__(54)('iterator')
 	  , SAFE_CLOSING = false;
 	
 	try {
@@ -11129,37 +11212,37 @@
 	};
 
 /***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(65), __esModule: true };
-
-/***/ },
 /* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $ = __webpack_require__(14);
-	__webpack_require__(66);
-	module.exports = function getOwnPropertyNames(it){
-	  return $.getNames(it);
-	};
+	module.exports = { "default": __webpack_require__(66), __esModule: true };
 
 /***/ },
 /* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// 19.1.2.7 Object.getOwnPropertyNames(O)
-	__webpack_require__(20)('getOwnPropertyNames', function(){
-	  return __webpack_require__(67).get;
-	});
+	var $ = __webpack_require__(15);
+	__webpack_require__(67);
+	module.exports = function getOwnPropertyNames(it){
+	  return $.getNames(it);
+	};
 
 /***/ },
 /* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// 19.1.2.7 Object.getOwnPropertyNames(O)
+	__webpack_require__(21)('getOwnPropertyNames', function(){
+	  return __webpack_require__(68).get;
+	});
+
+/***/ },
+/* 68 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-	var toIObject = __webpack_require__(16)
-	  , getNames  = __webpack_require__(14).getNames
+	var toIObject = __webpack_require__(17)
+	  , getNames  = __webpack_require__(15).getNames
 	  , toString  = {}.toString;
 	
 	var windowNames = typeof window == 'object' && Object.getOwnPropertyNames
@@ -11179,64 +11262,64 @@
 	};
 
 /***/ },
-/* 68 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(69), __esModule: true };
-
-/***/ },
 /* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(70);
-	module.exports = __webpack_require__(3).Object.keys;
+	module.exports = { "default": __webpack_require__(70), __esModule: true };
 
 /***/ },
 /* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
+	__webpack_require__(71);
+	module.exports = __webpack_require__(3).Object.keys;
+
+/***/ },
+/* 71 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// 19.1.2.14 Object.keys(O)
-	var toObject = __webpack_require__(57);
+	var toObject = __webpack_require__(58);
 	
-	__webpack_require__(20)('keys', function($keys){
+	__webpack_require__(21)('keys', function($keys){
 	  return function keys(it){
 	    return $keys(toObject(it));
 	  };
 	});
 
 /***/ },
-/* 71 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(72), __esModule: true };
-
-/***/ },
 /* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(73);
-	module.exports = __webpack_require__(3).Object.getPrototypeOf;
+	module.exports = { "default": __webpack_require__(73), __esModule: true };
 
 /***/ },
 /* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
+	__webpack_require__(74);
+	module.exports = __webpack_require__(3).Object.getPrototypeOf;
+
+/***/ },
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// 19.1.2.9 Object.getPrototypeOf(O)
-	var toObject = __webpack_require__(57);
+	var toObject = __webpack_require__(58);
 	
-	__webpack_require__(20)('getPrototypeOf', function($getPrototypeOf){
+	__webpack_require__(21)('getPrototypeOf', function($getPrototypeOf){
 	  return function getPrototypeOf(it){
 	    return $getPrototypeOf(toObject(it));
 	  };
 	});
 
 /***/ },
-/* 74 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
-	var _Symbol = __webpack_require__(75)["default"];
+	var _Symbol = __webpack_require__(76)["default"];
 	
 	exports["default"] = function (obj) {
 	  return obj && obj.constructor === _Symbol ? "symbol" : typeof obj;
@@ -11245,43 +11328,43 @@
 	exports.__esModule = true;
 
 /***/ },
-/* 75 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(76), __esModule: true };
-
-/***/ },
 /* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(77);
-	__webpack_require__(81);
-	module.exports = __webpack_require__(3).Symbol;
+	module.exports = { "default": __webpack_require__(77), __esModule: true };
 
 /***/ },
 /* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
+	__webpack_require__(78);
+	__webpack_require__(82);
+	module.exports = __webpack_require__(3).Symbol;
+
+/***/ },
+/* 78 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 	// ECMAScript 6 symbols shim
-	var $              = __webpack_require__(14)
-	  , global         = __webpack_require__(22)
-	  , has            = __webpack_require__(49)
-	  , DESCRIPTORS    = __webpack_require__(48)
-	  , $export        = __webpack_require__(21)
-	  , redefine       = __webpack_require__(45)
-	  , $fails         = __webpack_require__(25)
-	  , shared         = __webpack_require__(54)
-	  , setToStringTag = __webpack_require__(52)
-	  , uid            = __webpack_require__(55)
-	  , wks            = __webpack_require__(53)
-	  , keyOf          = __webpack_require__(78)
-	  , $names         = __webpack_require__(67)
-	  , enumKeys       = __webpack_require__(79)
-	  , isArray        = __webpack_require__(80)
-	  , anObject       = __webpack_require__(33)
-	  , toIObject      = __webpack_require__(16)
-	  , createDesc     = __webpack_require__(47)
+	var $              = __webpack_require__(15)
+	  , global         = __webpack_require__(23)
+	  , has            = __webpack_require__(50)
+	  , DESCRIPTORS    = __webpack_require__(49)
+	  , $export        = __webpack_require__(22)
+	  , redefine       = __webpack_require__(46)
+	  , $fails         = __webpack_require__(26)
+	  , shared         = __webpack_require__(55)
+	  , setToStringTag = __webpack_require__(53)
+	  , uid            = __webpack_require__(56)
+	  , wks            = __webpack_require__(54)
+	  , keyOf          = __webpack_require__(79)
+	  , $names         = __webpack_require__(68)
+	  , enumKeys       = __webpack_require__(80)
+	  , isArray        = __webpack_require__(81)
+	  , anObject       = __webpack_require__(34)
+	  , toIObject      = __webpack_require__(17)
+	  , createDesc     = __webpack_require__(48)
 	  , getDesc        = $.getDesc
 	  , setDesc        = $.setDesc
 	  , _create        = $.create
@@ -11421,7 +11504,7 @@
 	  $.getNames   = $names.get = $getOwnPropertyNames;
 	  $.getSymbols = $getOwnPropertySymbols;
 	
-	  if(DESCRIPTORS && !__webpack_require__(44)){
+	  if(DESCRIPTORS && !__webpack_require__(45)){
 	    redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
 	  }
 	}
@@ -11491,11 +11574,11 @@
 	setToStringTag(global.JSON, 'JSON', true);
 
 /***/ },
-/* 78 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $         = __webpack_require__(14)
-	  , toIObject = __webpack_require__(16);
+	var $         = __webpack_require__(15)
+	  , toIObject = __webpack_require__(17);
 	module.exports = function(object, el){
 	  var O      = toIObject(object)
 	    , keys   = $.getKeys(O)
@@ -11506,11 +11589,11 @@
 	};
 
 /***/ },
-/* 79 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// all enumerable object keys, includes symbols
-	var $ = __webpack_require__(14);
+	var $ = __webpack_require__(15);
 	module.exports = function(it){
 	  var keys       = $.getKeys(it)
 	    , getSymbols = $.getSymbols;
@@ -11525,23 +11608,23 @@
 	};
 
 /***/ },
-/* 80 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 7.2.2 IsArray(argument)
-	var cof = __webpack_require__(18);
+	var cof = __webpack_require__(19);
 	module.exports = Array.isArray || function(arg){
 	  return cof(arg) == 'Array';
 	};
 
 /***/ },
-/* 81 */
+/* 82 */
 /***/ function(module, exports) {
 
 
 
 /***/ },
-/* 82 */
+/* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {/**
@@ -28527,10 +28610,10 @@
 	  }
 	}.call(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(11)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(12)(module)))
 
 /***/ },
-/* 83 */
+/* 84 */
 /***/ function(module, exports) {
 
 	module.exports = "\n<div class=\"app-panel\">\n<div class=\"settings-panel\">\n  <h1>Map information</h1>\n  Map center latitude: <input type=\"number\" v-model=\"center.lat\" number>\n  <br>\n  Map center longitude: <input type=\"number\" v-model=\"center.lng\" number>\n  <br>\n  Map bounds: {{mapBounds | json}}\n  <br>\n  Map zoom: <input type=\"number\" v-model=\"zoom\" number>\n  <br>\n  Dragged {{drag}} times\n  <br>\n  Left clicked {{mapClickedCount}} times\n  <br>\n  Map type: <select id=\"\" name=\"\" v-model=\"mapType\">\n    <option value=\"roadmap\">roadmap</option>\n    <option value=\"hybrid\">hybrid</option>\n    <option value=\"satellite\">satellite</option>\n    <option value=\"terrain\">terrain</option>\n  </select>\n  <br>\n  Map style: <select id=\"\" name=\"\" v-model=\"mapStyle\">\n    <option value=\"red\">red</option>\n    <option value=\"green\">green</option>\n    <option value=\"normal\">normal</option>\n  </select>\n  <br>\n  Enable scrollwheel zooming on the map: <input type=\"checkbox\" v-model=\"scrollwheel\">\n  <br>\n  <button @click=\"addMarker\"> Add a new Marker</button> (or right click on the map :) )\n  <h1>Clusters</h1>\n  enabled: <input type=\"checkbox\" v-model=\"clustering\" number>\n  </br>\n  Grid size: <input type=\"number\" v-model=\"gridSize\" number>\n  <br>\n  <h1>Polyline</h1>\n  Editable: <input type=\"checkbox\" number v-model=\"pleditable\">\n  <button @click=\"resetPlPath\">Reset path</button>\n  <br>\n  Visible: <input type=\"checkbox\" number v-model=\"plvisible\">\n  <br>\n  <h1>Polygon</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"pgvisible\"> <br>\n  <button @click=\"pgPath = opgPath\">Reset Polygon to pentagon</button><br>\n  <button @click=\"pgPath = originalPlPath\">Reset Polygon to a simple polygon</button><br>\n  Path: {{pgPath | json}}\n  <br>\n  <h1>Circle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayCircle\"><br>\n  {{circleBounds | json}}\n  <br>\n  <h1>Rectangle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayRectangle\"><br>\n  {{rectangleBounds | json}}\n  <br>\n  <h1>PlaceInput</h1>\n  <place-input\n    label=\"Add a marker at this place\"\n    :select-first-on-enter=\"true\"\n    @g-place_changed=\"updatePlace($event)\"\n  ></place-input>\n  <br>\n  <h1> Standalone infoWindow </h1>\n  modal 1 : <input type=\"checkbox\" number v-model=\"ifw\"><br>\n  modal 2: <input type=\"checkbox\" number v-model=\"ifw2\"> <input type=\"text\" v-model=\"ifw2text\">\n  <h1>Markers</h1>\n  Display only markers with even ID (to test filters) <input type=\"checkbox\" number v-model=\"markersEven\"><br>\n  <table>\n    <tr>\n      <th>lat</th>\n      <th>lng</th>\n      <th>opacity</th>\n      <th>enabled</th>\n      <th>draggable</th>\n      <th>clicked</th>\n      <th>right clicked</th>\n      <th>Drag-ended</th>\n      <th>Open info window</th>\n      <th>infoWIndow text</th>\n      <th>Delete me</th>\n    </tr>\n    <tr v-for=\"m in markers\">\n      <td>\n        <input type=\"number\" v-model=\"m.position.lat\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.position.lng\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.opacity\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.enabled\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.draggable\" number>\n      </td>\n      <td>{{m.clicked}}</td>\n      <td>{{m.rightClicked}}</td>\n      <td>{{m.dragended}}</td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.ifw\" number>\n      </td>\n      <td>\n        <input type=\"text\" v-model=\"m.ifw2text\">\n      </td>\n      <td><button @click=\"markers.splice(markers.indexOf(m), 1)\">Delete me </button></td>\n    </tr>\n  </table>\n</div>\n<div class=\"map-panel\">\n  <gmap-map\n    :center=\"center\"\n    :zoom=\"zoom\"\n    :map-type-id=\"mapType\"\n    :options=\"{styles: mapStyles, scrollwheel: scrollwheel}\"\n    @g-rightclick=\"mapRclicked\"\n    @g-drag=\"drag++\"\n    @g-click=\"mapClickedCount++\"\n\n    @g-zoom_changed=\"update('zoom', $event)\"\n    @g-center_changed=\"update('center', $event)\"\n    @g-maptypeid_changed=\"update('mapType', $event)\"\n    @g-bounds_changed=\"update('bounds', $event)\"\n    >\n    <gmap-cluster\n    :grid-size=\"gridSize\"\n    v-if=\"clustering\"\n    >\n      <gmap-marker\n        v-if=\"m.enabled\"\n        :position=\"m.position\"\n        :opacity=\"m.opacity\"\n        :draggable=\"m.draggable\"\n        @g-click=\"m.clicked++\"\n        @g-rightclick=\"m.rightClicked++\"\n        @g-dragend=\"m.dragended++\"\n\n        @g-position_changed=\"updateChild(m, 'position', $event)\"\n\n        v-for=\"m in activeMarkers\"\n      >\n      <gmap-info-window\n      :opened.sync=\"m.ifw\"\n      :content=\"m.ifw2text\"\n      ></gmap-info-window>\n      </gmap-marker>\n    </gmap-cluster>\n    <div v-if=\"!clustering\">\n      <gmap-marker\n      v-if=\"m.enabled\"\n      :position=\"m.position\"\n      :opacity=\"m.opacity\"\n      :draggable=\"m.draggable\"\n      @g-click=\"m.clicked++\"\n      @g-rightclick=\"m.rightClicked++\"\n      @g-dragend=\"m.dragended++\"\n      @g-position_changed=\"updateChild(m, 'position', $event)\"\n      v-for=\"m in activeMarkers\"\n      >\n        <gmap-info-window\n        :opened.sync=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </div>\n\n    <gmap-info-window\n    :position=\"center\"\n    :opened.sync=\"ifw\"\n    >\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    <br/>\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    <b>{{mapClickedCount}}</b>\n    </gmap-info-window>\n\n    <gmap-info-window\n    :position=\"center\"\n    :opened.sync=\"ifw2\"\n    :content=\"ifw2text\"\n    ></gmap-info-window>\n\n    <gmap-polyline v-if=\"plvisible\" :path=\"plPath\" :editable=\"pleditable\" :draggable=\"true\" :options=\"{geodesic:true, strokeColor:'#FF0000'}\"\n      @g-path_changed=\"updatePolylinePath($event)\">\n    </gmap-polyline>\n    <gmap-polygon v-if=\"pgvisible\" :paths=\"pgPath\" :editable=\"true\"\n      :options=\"{geodesic:true, strokeColor:'#FF0000', fillColor:'#000000'}\"\n      @g-paths_changed=\"updatePolygonPaths($event)\">\n    </gmap-polygon>\n    <gmap-circle v-if=\"displayCircle\" :bounds=\"circleBounds\"\n      :center=\"center\" :radius=\"100000\"\n      :options=\"{editable: true}\"\n\n      @g-radius_changed=\"updateCircle('radius', $event)\"\n      @g-bounds_changed=\"updateCircle('bounds', $event)\"\n\n      ></gmap-circle>\n    <gmap-rectangle v-if=\"displayRectangle\" :bounds=\"rectangleBounds\"\n    :options=\"{editable: true}\"\n    @g-bounds_changed=\"updateRectangle('bounds', $event)\"></gmap-rectangle>\n  </gmap-map>\n</div>\n</div>\n";
