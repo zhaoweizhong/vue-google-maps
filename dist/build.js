@@ -8962,15 +8962,15 @@
 			    p = n(l),
 			    f = r(9),
 			    d = n(f),
-			    h = { center: { type: Object, twoWay: !0, required: !0 }, radius: { type: Number, default: 1e3, twoWay: !0 }, bounds: { type: Object, twoWay: !0 }, draggable: { type: Boolean, default: !1 }, editable: { type: Boolean, default: !1 }, options: { type: Object, twoWay: !1 } },
-			    y = ["click", "dblclick", "drag", "dragend", "dragstart", "mousedown", "mousemove", "mouseout", "mouseover", "mouseup", "radius_changed", "rightclick"];e.default = { mixins: [p.default, d.default], props: h, version: 2, render: function render() {
+			    h = { center: { type: Object, twoWay: !0, required: !0 }, radius: { type: Number, default: 1e3, twoWay: !0 }, draggable: { type: Boolean, default: !1 }, editable: { type: Boolean, default: !1 }, options: { type: Object, twoWay: !1 } },
+			    y = ["click", "dblclick", "drag", "dragend", "dragstart", "mousedown", "mousemove", "mouseout", "mouseover", "mouseup", "rightclick"];e.default = { mixins: [p.default, d.default], props: h, version: 2, render: function render() {
 					return "";
 				}, deferredReady: function deferredReady() {
 					var t = i.default.clone(this.getPropsValues());t.map = this.$map, delete t.bounds, this.createCircle(t, this.$map);
 				}, methods: { createCircle: function createCircle(t, e) {
 						var r = this;this.$circleObject = new google.maps.Circle(t);var n = i.default.clone(h);delete n.bounds, (0, c.default)(this, this.$circleObject, n), (0, a.default)(this, this.$circleObject, y);var o = function o() {
 							r.$emit("g-bounds_changed", r.$circleObject.getBounds());
-						};this.$watch("radius", o), this.$watch("center", o, { deep: !0 });
+						};this.$on("g-radius_changed", o), this.$on("g-center_changed", o);
 					} }, destroyed: function destroyed() {
 					this.$circleObject && this.$circleObject.setMap(null);
 				} };
@@ -8987,7 +8987,7 @@
 			    l = r(7),
 			    p = n(l),
 			    f = r(9),
-			    d = n(f);r(101);var h = { maxZoom: { type: Number, twoWay: !1 }, calculor: { type: Function, twoWay: !1 }, gridSize: { type: Number, twoWay: !1 }, styles: { type: Array, twoWay: !1 } };e.default = a.default.extend({ mixins: [p.default, d.default], props: h, deferredReady: function deferredReady() {
+			    d = n(f);r(101);var h = { maxZoom: { type: Number, twoWay: !1 }, calculator: { type: Function, twoWay: !1 }, gridSize: { type: Number, twoWay: !1 }, styles: { type: Array, twoWay: !1 } };e.default = a.default.extend({ mixins: [p.default, d.default], props: h, deferredReady: function deferredReady() {
 					var t = this,
 					    e = i.default.clone(this.getPropsValues());this.$clusterObject = new MarkerClusterer(this.$map, [], e), (0, c.default)(this, this.$clusterObject, h, { afterModelChanged: function afterModelChanged(e, r) {
 							var n = t.$clusterObject.getMarkers();t.$clusterObject.clearMarkers(), t.$clusterObject.addMarkers(n);
@@ -9235,15 +9235,15 @@
 			    m = ["click", "dblclick", "drag", "dragend", "dragstart", "mousedown", "mousemove", "mouseout", "mouseover", "mouseup", "rightclick"];e.default = { mixins: [d.default, y.default], props: g, render: function render() {
 					return "";
 				}, destroyed: function destroyed() {
-					this.$polyLineObject && this.$polyLineObject.setMap(null);
+					this.$polylineObject && this.$polylineObject.setMap(null);
 				}, deferredReady: function deferredReady() {
 					var t = this,
-					    e = a.default.clone(this.getPropsValues());delete e.options, a.default.assign(e, this.options), this.$polyLineObject = new google.maps.Polyline(e), this.$polyLineObject.setMap(this.$map), (0, p.default)(this, this.$polyLineObject, a.default.omit(g, ["deepWatch", "path"])), (0, c.default)(this, this.$polyLineObject, m);var r = function r() {};this.$watch("path", function (e) {
+					    e = a.default.clone(this.getPropsValues());delete e.options, a.default.assign(e, this.options), this.$polylineObject = new google.maps.Polyline(e), this.$polylineObject.setMap(this.$map), (0, p.default)(this, this.$polylineObject, a.default.omit(g, ["deepWatch", "path"])), (0, c.default)(this, this.$polylineObject, m);var r = function r() {};this.$watch("path", function (e) {
 						e && !function () {
-							r(), t.$polyLineObject.setPath(e);var n = t.$polyLineObject.getPath(),
+							r(), t.$polylineObject.setPath(e);var n = t.$polylineObject.getPath(),
 							    o = [],
 							    s = function s() {
-								t.$emit("g-path_changed", t.$polyLineObject.getPath());
+								t.$emit("g-path_changed", t.$polylineObject.getPath());
 							};o.push([n, n.addListener("insert_at", s)]), o.push([n, n.addListener("remove_at", s)]), o.push([n, n.addListener("set_at", s)]), r = function r() {
 								o.map(function (t) {
 									var e = (0, i.default)(t, 2),
@@ -9251,7 +9251,7 @@
 								});
 							};
 						}();
-					}, { deep: this.deepWatch }), this.$polyLineObject.setMap(this.$map);
+					}, { deep: this.deepWatch }), this.$polylineObject.setMap(this.$map);
 				} };
 		}, function (t, e, r) {
 			"use strict";
@@ -9714,42 +9714,42 @@
 						}r.length = 0, t.n = !1, e && setTimeout(function () {
 							var e,
 							    r,
-							    o = t.p;L(o) && (w ? x.emit("unhandledRejection", n, o) : (e = s.onunhandledrejection) ? e({ promise: o, reason: n }) : (r = s.console) && r.error && r.error("Unhandled promise rejection", n)), t.a = void 0;
+							    o = t.p;R(o) && (w ? x.emit("unhandledRejection", n, o) : (e = s.onunhandledrejection) ? e({ promise: o, reason: n }) : (r = s.console) && r.error && r.error("Unhandled promise rejection", n)), t.a = void 0;
 						}, 1);
 					});
 				}
 			},
-			    L = function L(t) {
+			    R = function R(t) {
 				var e,
 				    r = t._d,
 				    n = r.a || r.c,
 				    o = 0;if (r.h) return !1;for (; n.length > o;) {
-					if (e = n[o++], e.fail || !L(e.promise)) return !1;
+					if (e = n[o++], e.fail || !R(e.promise)) return !1;
 				}return !0;
 			},
-			    R = function R(t) {
+			    T = function T(t) {
 				var e = this;e.d || (e.d = !0, e = e.r || e, e.v = t, e.s = 2, e.a = e.c.slice(), A(e, !0));
 			},
-			    T = function T(t) {
+			    L = function L(t) {
 				var e,
 				    r = this;if (!r.d) {
 					r.d = !0, r = r.r || r;try {
 						if (r.p === t) throw TypeError("Promise can't be resolved itself");(e = $(t)) ? _(function () {
 							var n = { r: r, d: !1 };try {
-								e.call(t, a(T, n, 1), a(R, n, 1));
+								e.call(t, a(L, n, 1), a(T, n, 1));
 							} catch (t) {
-								R.call(n, t);
+								T.call(n, t);
 							}
 						}) : (r.v = t, r.s = 1, A(r, !1));
 					} catch (t) {
-						R.call({ r: r, d: !1 }, t);
+						T.call({ r: r, d: !1 }, t);
 					}
 				}
 			};k || (_M = function M(t) {
 				f(t);var e = this._d = { p: d(this, _M, b), c: [], a: void 0, s: 0, d: !1, v: void 0, h: !1, n: !1 };try {
-					t(a(T, e, 1), a(R, e, 1));
+					t(a(L, e, 1), a(T, e, 1));
 				} catch (t) {
-					R.call(e, t);
+					T.call(e, t);
 				}
 			}, r(83)(_M.prototype, { then: function then(t, e) {
 					var r = new P(v(this, _M)),
@@ -9821,25 +9821,25 @@
 			    P = n.isEnum,
 			    E = l("symbol-registry"),
 			    A = l("symbols"),
-			    L = "function" == typeof j,
-			    R = Object.prototype,
-			    T = s && c(function () {
+			    R = "function" == typeof j,
+			    T = Object.prototype,
+			    L = s && c(function () {
 				return 7 != M(w({}, "a", { get: function get() {
 						return w(this, "a", { value: 7 }).a;
 					} })).a;
 			}) ? function (t, e, r) {
-				var n = x(R, e);n && delete R[e], w(t, e, r), n && t !== R && w(R, e, n);
+				var n = x(T, e);n && delete T[e], w(t, e, r), n && t !== T && w(T, e, n);
 			} : w,
 			    z = function z(t) {
-				var e = A[t] = M(j.prototype);return e._k = t, s && C && T(R, t, { configurable: !0, set: function set(e) {
-						i(this, $) && i(this[$], t) && (this[$][t] = !1), T(this, t, b(1, e));
+				var e = A[t] = M(j.prototype);return e._k = t, s && C && L(T, t, { configurable: !0, set: function set(e) {
+						i(this, $) && i(this[$], t) && (this[$][t] = !1), L(this, t, b(1, e));
 					} }), e;
 			},
 			    B = function B(t) {
 				return "symbol" == (typeof t === "undefined" ? "undefined" : (0, _typeof3.default)(t));
 			},
 			    W = function W(t, e, r) {
-				return r && i(A, e) ? (r.enumerable ? (i(t, $) && t[$][e] && (t[$][e] = !1), r = M(r, { enumerable: b(0, !1) })) : (i(t, $) || w(t, $, b(1, {})), t[$][e] = !0), T(t, e, r)) : w(t, e, r);
+				return r && i(A, e) ? (r.enumerable ? (i(t, $) && t[$][e] && (t[$][e] = !1), r = M(r, { enumerable: b(0, !1) })) : (i(t, $) || w(t, $, b(1, {})), t[$][e] = !0), L(t, e, r)) : w(t, e, r);
 			},
 			    I = function I(t, e) {
 				v(t);for (var r, n = g(e = _(e)), o = 0, i = n.length; i > o;) {
@@ -9876,13 +9876,13 @@
 			},
 			    G = c(function () {
 				var t = j();return "[null]" != S([t]) || "{}" != S({ a: t }) || "{}" != S(Object(t));
-			});L || (j = function j() {
+			});R || (j = function j() {
 				if (B(this)) throw TypeError("Symbol is not a constructor");return z(f(arguments.length > 0 ? arguments[0] : void 0));
 			}, u(j.prototype, "toString", function () {
 				return this._k;
 			}), B = function B(t) {
 				return t instanceof j;
-			}, n.create = D, n.isEnum = N, n.getDesc = F, n.setDesc = W, n.setDescs = I, n.getNames = y.get = q, n.getSymbols = U, s && !r(29) && u(R, "propertyIsEnumerable", N, !0));var Z = { for: function _for(t) {
+			}, n.create = D, n.isEnum = N, n.getDesc = F, n.setDesc = W, n.setDescs = I, n.getNames = y.get = q, n.getSymbols = U, s && !r(29) && u(T, "propertyIsEnumerable", N, !0));var Z = { for: function _for(t) {
 					return i(E, t += "") ? E[t] : E[t] = j(t);
 				}, keyFor: function keyFor(t) {
 					return h(E, t);
@@ -9891,8 +9891,8 @@
 				}, useSimple: function useSimple() {
 					C = !1;
 				} };n.each.call("hasInstance,isConcatSpreadable,iterator,match,replace,search,species,split,toPrimitive,toStringTag,unscopables".split(","), function (t) {
-				var e = d(t);Z[t] = L ? e : z(e);
-			}), C = !0, a(a.G + a.W, { Symbol: j }), a(a.S, "Symbol", Z), a(a.S + a.F * !L, "Object", { create: D, defineProperty: W, defineProperties: I, getOwnPropertyDescriptor: F, getOwnPropertyNames: q, getOwnPropertySymbols: U }), k && a(a.S + a.F * (!L || G), "JSON", { stringify: V }), p(j, "Symbol"), p(Math, "Math", !0), p(o.JSON, "JSON", !0);
+				var e = d(t);Z[t] = R ? e : z(e);
+			}), C = !0, a(a.G + a.W, { Symbol: j }), a(a.S, "Symbol", Z), a(a.S + a.F * !R, "Object", { create: D, defineProperty: W, defineProperties: I, getOwnPropertyDescriptor: F, getOwnPropertyNames: q, getOwnPropertySymbols: U }), k && a(a.S + a.F * (!R || G), "JSON", { stringify: V }), p(j, "Symbol"), p(Math, "Math", !0), p(o.JSON, "JSON", !0);
 		}, function (t, e, r) {
 			e = t.exports = r(100)(), e.push([t.id, ".vue-map-container,.vue-map-container .vue-map{width:100%;height:100%}", "", { version: 3, sources: ["/./src/components/map.vue.style"], names: [], mappings: "AAA0C,+CAA4B,WAAW,WAAW,CAAC", file: "map.vue", sourcesContent: [".vue-map-container{width:100%;height:100%}.vue-map-container .vue-map{width:100%;height:100%}"], sourceRoot: "webpack://" }]);
 		}, function (t, e) {
@@ -10383,7 +10383,7 @@
 					return t < 10 ? "0" + t.toString(10) : t.toString(10);
 				}function P() {
 					var t = new Date(),
-					    e = [$(t.getHours()), $(t.getMinutes()), $(t.getSeconds())].join(":");return [t.getDate(), T[t.getMonth()], e].join(" ");
+					    e = [$(t.getHours()), $(t.getMinutes()), $(t.getSeconds())].join(":");return [t.getDate(), L[t.getMonth()], e].join(" ");
 				}function E(t, e) {
 					return Object.prototype.hasOwnProperty.call(t, e);
 				}var A = /%[sdj%]/g;e.format = function (t) {
@@ -10412,14 +10412,14 @@
 					}if (x(t.process)) return function () {
 						return e.deprecate(r, o).apply(this, arguments);
 					};if (n.noDeprecation === !0) return r;var s = !1;return i;
-				};var L,
-				    R = {};e.debuglog = function (t) {
-					if (x(L) && (L = { NODE_ENV: "production" }.NODE_DEBUG || ""), t = t.toUpperCase(), !R[t]) if (new RegExp("\\b" + t + "\\b", "i").test(L)) {
-						var r = n.pid;R[t] = function () {
+				};var R,
+				    T = {};e.debuglog = function (t) {
+					if (x(R) && (R = { NODE_ENV: "production" }.NODE_DEBUG || ""), t = t.toUpperCase(), !T[t]) if (new RegExp("\\b" + t + "\\b", "i").test(R)) {
+						var r = n.pid;T[t] = function () {
 							var n = e.format.apply(e, arguments);console.error("%s %d: %s", t, r, n);
 						};
-					} else R[t] = function () {};return R[t];
-				}, e.inspect = o, o.colors = { bold: [1, 22], italic: [3, 23], underline: [4, 24], inverse: [7, 27], white: [37, 39], grey: [90, 39], black: [30, 39], blue: [34, 39], cyan: [36, 39], green: [32, 39], magenta: [35, 39], red: [31, 39], yellow: [33, 39] }, o.styles = { special: "cyan", number: "yellow", boolean: "yellow", undefined: "grey", null: "bold", string: "green", date: "magenta", regexp: "red" }, e.isArray = h, e.isBoolean = y, e.isNull = g, e.isNullOrUndefined = m, e.isNumber = v, e.isString = _, e.isSymbol = b, e.isUndefined = x, e.isRegExp = w, e.isObject = M, e.isDate = O, e.isError = j, e.isFunction = k, e.isPrimitive = S, e.isBuffer = r(106);var T = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];e.log = function () {
+					} else T[t] = function () {};return T[t];
+				}, e.inspect = o, o.colors = { bold: [1, 22], italic: [3, 23], underline: [4, 24], inverse: [7, 27], white: [37, 39], grey: [90, 39], black: [30, 39], blue: [34, 39], cyan: [36, 39], green: [32, 39], magenta: [35, 39], red: [31, 39], yellow: [33, 39] }, o.styles = { special: "cyan", number: "yellow", boolean: "yellow", undefined: "grey", null: "bold", string: "green", date: "magenta", regexp: "red" }, e.isArray = h, e.isBoolean = y, e.isNull = g, e.isNullOrUndefined = m, e.isNumber = v, e.isString = _, e.isSymbol = b, e.isUndefined = x, e.isRegExp = w, e.isObject = M, e.isDate = O, e.isError = j, e.isFunction = k, e.isPrimitive = S, e.isBuffer = r(106);var L = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];e.log = function () {
 					console.log("%s - %s", P(), e.format.apply(e, arguments));
 				}, e.inherits = r(105), e._extend = function (t, e) {
 					if (!e || !M(e)) return t;for (var r = (0, _keys2.default)(e), n = r.length; n--;) {
