@@ -1,11 +1,16 @@
+
+Table of Contents
+=================
+
    * [vue2-google-maps](#vue2-google-maps)
       * [Note on events](#note-on-events)
       * [Table of Contents](#table-of-contents)
       * [<a name="user-content-getting-started-cdn"></a> Getting Started (with CDN)](#-getting-started-with-cdn)
       * [<a name="user-content-getting-started-npm"></a> Getting Started (with NPM)](#-getting-started-with-npm)
       * [Classes](#classes)
-         * [load(apiKey: string, version: string, libraries: string[]) : void](#loadapikey-string-version-string-libraries-string--void)
-         * [load(options: {[key: string]: [string]}) : void](#loadoptions-key-string-string--void)
+         * [install(Vue: Vue, options: InstallOptions) : void](#installvue-vue-options-installoptions--void)
+            * [installComponents : InstallOptions](#installcomponents--installoptions)
+            * [load : LoadOptions](#load--loadoptions)
          * [loaded() : Promise](#loaded--promise)
          * [Map class (mixes in <code>DeferredReadyMixin</code>)](#map-class-mixes-in-deferredreadymixin)
             * [Fields](#fields)
@@ -16,6 +21,8 @@
                * [panTo()](#panto)
                * [panToBounds()](#pantobounds)
                * [fitBounds()](#fitbounds)
+               * [resize()](#resize)
+               * [resizePreserveCenter()](#resizepreservecenter)
             * [Properties](#properties)
                * [center : {lat: number, lng: number} | google.maps.LatLng†](#center--lat-number-lng-number--googlemapslatlng)
                * [zoom : number†](#zoom--number)
@@ -31,7 +38,7 @@
                * [mousemove](#mousemove)
                * [mouseout](#mouseout)
                * [mouseover](#mouseover)
-               * [resize](#resize)
+               * [resize](#resize-1)
                * [rightclick](#rightclick)
                * [tilesloaded](#tilesloaded)
          * [Marker class (mixes in <code>MapElementMixin</code>)](#marker-class-mixes-in-mapelementmixin)
@@ -192,3 +199,5 @@
          * [MapElementMixin (mixes in <code>DeferredReadyMixin</code>)](#mapelementmixin-mixes-in-deferredreadymixin)
             * [Fields](#fields-6)
                * [$map : Map](#map--map)
+
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)

@@ -1,11 +1,8 @@
 /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
 
-import Vue from 'vue';
-import {DeferredReadyMixin} from '../deferredReady'
-import {DeferredReady} from '../deferredReady.js'
+import {DeferredReadyMixin} from '../utils/deferredReady'
+import {DeferredReady} from '../utils/deferredReady.js'
 import Map from './map.vue'
-
-Vue.use(DeferredReady);
 
 /**
  * @class MapElementMixin @mixins DeferredReadyMixin
@@ -22,7 +19,7 @@ export default {
 
   created() {
     /* Search for the Map component in the parent */
-    let search = this.$findAncestor(ans => ans instanceof Map);
+    let search = this.$findAncestor(ans => ans instanceof this.constructor.component('GmapMap'));
 
     if (!search) {
       throw new Error(`${this.constructor.name} component must be used within a <Map>`)
@@ -31,7 +28,8 @@ export default {
     this.$mapPromise = search.mapCreated.then((map) => {
       this.$map = map
     })
-    // This is a hack. FIXME
+    // FIXME: This is a hack to ensure correct loading
+    // when the map has already be instantiated.
     if (search.mapObject) {
       this.$map = search.mapObject;
     }
@@ -41,6 +39,10 @@ export default {
 
   beforeDeferredReady () {
     return this.$mapPromise;
+  },
+
+  components: {
+    GmapMap: Map
   },
 
   methods: {
