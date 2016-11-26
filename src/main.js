@@ -1,43 +1,22 @@
-import {load, loaded} from './manager.js';
-import Marker from './components/marker';
-import Cluster from './components/cluster'
-import Polyline from './components/polyline'
-import Polygon from './components/polygon'
-import Circle from './components/circle'
-import Rectangle from './components/rectangle'
+import Vue from 'vue/dist/vue.js'
+import App from './app.vue'
+import * as VueGoogleMaps from '../../dist/main.js'
 
-// Vue component imports
-import InfoWindow from './components/infoWindow.vue'
-import Map from './components/map.vue';
-import PlaceInput from './components/placeInput.vue'
-
-import MapElementMixin from './components/mapElementMixin'
-import {DeferredReady} from './utils/deferredReady'
-
-// export everything
-export {load, loaded, Marker, Cluster, Polyline, Polygon, Circle, Rectangle,
-  InfoWindow, Map, PlaceInput, MapElementMixin};
-
-export function install(Vue, options) {
-  options = _.defaults(options, {
-    installComponents: true,
-  });
-
-  Vue.use(DeferredReady);
-
-  if (options.load) {
-    load(options.load);
+Vue.use(VueGoogleMaps, {
+  installComponents: true,
+  load: {
+    key: 'AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw',
+    v: '3.26',
+    libraries: 'places'
   }
+})
 
-  if (options.installComponents) {
-    Vue.component('GmapMap', Map);
-    Vue.component('GmapMarker', Marker);
-    Vue.component('GmapCluster', Cluster);
-    Vue.component('GmapInfoWindow', InfoWindow);
-    Vue.component('GmapPolyline', Polyline);
-    Vue.component('GmapPolygon', Polygon);
-    Vue.component('GmapCircle', Circle);
-    Vue.component('GmapRectangle', Rectangle);
-    Vue.component('GmapPlaceInput', PlaceInput);
+// json filter is now not bundled with vue
+Vue.filter('json', x => JSON.stringify(x));
+
+new Vue({
+  el: '#root',
+  components: {
+    myApp: App
   }
-}
+})
