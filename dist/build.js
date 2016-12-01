@@ -113,8 +113,8 @@
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/*!
-	 * Vue.js v2.0.3
+	/* WEBPACK VAR INJECTION */(function(global) {/*!
+	 * Vue.js v2.1.3
 	 * (c) 2014-2016 Evan You
 	 * Released under the MIT License.
 	 */
@@ -347,6 +347,193 @@
 	
 	/*  */
 	
+	/**
+	 * Check if a string starts with $ or _
+	 */
+	function isReserved (str) {
+	  var c = (str + '').charCodeAt(0);
+	  return c === 0x24 || c === 0x5F
+	}
+	
+	/**
+	 * Define a property.
+	 */
+	function def (obj, key, val, enumerable) {
+	  Object.defineProperty(obj, key, {
+	    value: val,
+	    enumerable: !!enumerable,
+	    writable: true,
+	    configurable: true
+	  });
+	}
+	
+	/**
+	 * Parse simple path.
+	 */
+	var bailRE = /[^\w.$]/;
+	function parsePath (path) {
+	  if (bailRE.test(path)) {
+	    return
+	  } else {
+	    var segments = path.split('.');
+	    return function (obj) {
+	      for (var i = 0; i < segments.length; i++) {
+	        if (!obj) { return }
+	        obj = obj[segments[i]];
+	      }
+	      return obj
+	    }
+	  }
+	}
+	
+	/*  */
+	/* globals MutationObserver */
+	
+	// can we use __proto__?
+	var hasProto = '__proto__' in {};
+	
+	// Browser environment sniffing
+	var inBrowser =
+	  typeof window !== 'undefined' &&
+	  Object.prototype.toString.call(window) !== '[object Object]';
+	
+	var UA = inBrowser && window.navigator.userAgent.toLowerCase();
+	var isIE = UA && /msie|trident/.test(UA);
+	var isIE9 = UA && UA.indexOf('msie 9.0') > 0;
+	var isEdge = UA && UA.indexOf('edge/') > 0;
+	var isAndroid = UA && UA.indexOf('android') > 0;
+	var isIOS = UA && /iphone|ipad|ipod|ios/.test(UA);
+	
+	// this needs to be lazy-evaled because vue may be required before
+	// vue-server-renderer can set VUE_ENV
+	var _isServer;
+	var isServerRendering = function () {
+	  if (_isServer === undefined) {
+	    /* istanbul ignore if */
+	    if (!inBrowser && typeof global !== 'undefined') {
+	      // detect presence of vue-server-renderer and avoid
+	      // Webpack shimming the process
+	      _isServer = global['process'].env.VUE_ENV === 'server';
+	    } else {
+	      _isServer = false;
+	    }
+	  }
+	  return _isServer
+	};
+	
+	// detect devtools
+	var devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__;
+	
+	/* istanbul ignore next */
+	function isNative (Ctor) {
+	  return /native code/.test(Ctor.toString())
+	}
+	
+	/**
+	 * Defer a task to execute it asynchronously.
+	 */
+	var nextTick = (function () {
+	  var callbacks = [];
+	  var pending = false;
+	  var timerFunc;
+	
+	  function nextTickHandler () {
+	    pending = false;
+	    var copies = callbacks.slice(0);
+	    callbacks.length = 0;
+	    for (var i = 0; i < copies.length; i++) {
+	      copies[i]();
+	    }
+	  }
+	
+	  // the nextTick behavior leverages the microtask queue, which can be accessed
+	  // via either native Promise.then or MutationObserver.
+	  // MutationObserver has wider support, however it is seriously bugged in
+	  // UIWebView in iOS >= 9.3.3 when triggered in touch event handlers. It
+	  // completely stops working after triggering a few times... so, if native
+	  // Promise is available, we will use it:
+	  /* istanbul ignore if */
+	  if (typeof Promise !== 'undefined' && isNative(Promise)) {
+	    var p = Promise.resolve();
+	    timerFunc = function () {
+	      p.then(nextTickHandler);
+	      // in problematic UIWebViews, Promise.then doesn't completely break, but
+	      // it can get stuck in a weird state where callbacks are pushed into the
+	      // microtask queue but the queue isn't being flushed, until the browser
+	      // needs to do some other work, e.g. handle a timer. Therefore we can
+	      // "force" the microtask queue to be flushed by adding an empty timer.
+	      if (isIOS) { setTimeout(noop); }
+	    };
+	  } else if (typeof MutationObserver !== 'undefined' && (
+	    isNative(MutationObserver) ||
+	    // PhantomJS and iOS 7.x
+	    MutationObserver.toString() === '[object MutationObserverConstructor]'
+	  )) {
+	    // use MutationObserver where native Promise is not available,
+	    // e.g. PhantomJS IE11, iOS7, Android 4.4
+	    var counter = 1;
+	    var observer = new MutationObserver(nextTickHandler);
+	    var textNode = document.createTextNode(String(counter));
+	    observer.observe(textNode, {
+	      characterData: true
+	    });
+	    timerFunc = function () {
+	      counter = (counter + 1) % 2;
+	      textNode.data = String(counter);
+	    };
+	  } else {
+	    // fallback to setTimeout
+	    /* istanbul ignore next */
+	    timerFunc = function () {
+	      setTimeout(nextTickHandler, 0);
+	    };
+	  }
+	
+	  return function queueNextTick (cb, ctx) {
+	    var _resolve;
+	    callbacks.push(function () {
+	      if (cb) { cb.call(ctx); }
+	      if (_resolve) { _resolve(ctx); }
+	    });
+	    if (!pending) {
+	      pending = true;
+	      timerFunc();
+	    }
+	    if (!cb && typeof Promise !== 'undefined') {
+	      return new Promise(function (resolve) {
+	        _resolve = resolve;
+	      })
+	    }
+	  }
+	})();
+	
+	var _Set;
+	/* istanbul ignore if */
+	if (typeof Set !== 'undefined' && isNative(Set)) {
+	  // use native Set when available.
+	  _Set = Set;
+	} else {
+	  // a non-standard Set polyfill that only works with primitive keys.
+	  _Set = (function () {
+	    function Set () {
+	      this.set = Object.create(null);
+	    }
+	    Set.prototype.has = function has (key) {
+	      return this.set[key] !== undefined
+	    };
+	    Set.prototype.add = function add (key) {
+	      this.set[key] = 1;
+	    };
+	    Set.prototype.clear = function clear () {
+	      this.set = Object.create(null);
+	    };
+	
+	    return Set;
+	  }());
+	}
+	
+	/*  */
+	
 	var config = {
 	  /**
 	   * Option merge strategies (used in core/util/options)
@@ -429,232 +616,55 @@
 	  /**
 	   * Max circular updates allowed in a scheduler flush cycle.
 	   */
-	  _maxUpdateCount: 100,
-	
-	  /**
-	   * Server rendering?
-	   */
-	  _isServer: "client" === 'server'
+	  _maxUpdateCount: 100
 	};
 	
-	/*  */
-	
-	/**
-	 * Check if a string starts with $ or _
-	 */
-	function isReserved (str) {
-	  var c = (str + '').charCodeAt(0);
-	  return c === 0x24 || c === 0x5F
-	}
-	
-	/**
-	 * Define a property.
-	 */
-	function def (obj, key, val, enumerable) {
-	  Object.defineProperty(obj, key, {
-	    value: val,
-	    enumerable: !!enumerable,
-	    writable: true,
-	    configurable: true
-	  });
-	}
-	
-	/**
-	 * Parse simple path.
-	 */
-	var bailRE = /[^\w\.\$]/;
-	function parsePath (path) {
-	  if (bailRE.test(path)) {
-	    return
-	  } else {
-	    var segments = path.split('.');
-	    return function (obj) {
-	      for (var i = 0; i < segments.length; i++) {
-	        if (!obj) { return }
-	        obj = obj[segments[i]];
-	      }
-	      return obj
-	    }
-	  }
-	}
-	
-	/*  */
-	/* globals MutationObserver */
-	
-	// can we use __proto__?
-	var hasProto = '__proto__' in {};
-	
-	// Browser environment sniffing
-	var inBrowser =
-	  typeof window !== 'undefined' &&
-	  Object.prototype.toString.call(window) !== '[object Object]';
-	
-	var UA = inBrowser && window.navigator.userAgent.toLowerCase();
-	var isIE = UA && /msie|trident/.test(UA);
-	var isIE9 = UA && UA.indexOf('msie 9.0') > 0;
-	var isEdge = UA && UA.indexOf('edge/') > 0;
-	var isAndroid = UA && UA.indexOf('android') > 0;
-	var isIOS = UA && /iphone|ipad|ipod|ios/.test(UA);
-	
-	// detect devtools
-	var devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__;
-	
-	/* istanbul ignore next */
-	function isNative (Ctor) {
-	  return /native code/.test(Ctor.toString())
-	}
-	
-	/**
-	 * Defer a task to execute it asynchronously.
-	 */
-	var nextTick = (function () {
-	  var callbacks = [];
-	  var pending = false;
-	  var timerFunc;
-	
-	  function nextTickHandler () {
-	    pending = false;
-	    var copies = callbacks.slice(0);
-	    callbacks.length = 0;
-	    for (var i = 0; i < copies.length; i++) {
-	      copies[i]();
-	    }
-	  }
-	
-	  // the nextTick behavior leverages the microtask queue, which can be accessed
-	  // via either native Promise.then or MutationObserver.
-	  // MutationObserver has wider support, however it is seriously bugged in
-	  // UIWebView in iOS >= 9.3.3 when triggered in touch event handlers. It
-	  // completely stops working after triggering a few times... so, if native
-	  // Promise is available, we will use it:
-	  /* istanbul ignore if */
-	  if (typeof Promise !== 'undefined' && isNative(Promise)) {
-	    var p = Promise.resolve();
-	    timerFunc = function () {
-	      p.then(nextTickHandler);
-	      // in problematic UIWebViews, Promise.then doesn't completely break, but
-	      // it can get stuck in a weird state where callbacks are pushed into the
-	      // microtask queue but the queue isn't being flushed, until the browser
-	      // needs to do some other work, e.g. handle a timer. Therefore we can
-	      // "force" the microtask queue to be flushed by adding an empty timer.
-	      if (isIOS) { setTimeout(noop); }
-	    };
-	  } else if (typeof MutationObserver !== 'undefined' && (
-	    isNative(MutationObserver) ||
-	    // PhantomJS and iOS 7.x
-	    MutationObserver.toString() === '[object MutationObserverConstructor]'
-	  )) {
-	    // use MutationObserver where native Promise is not available,
-	    // e.g. PhantomJS IE11, iOS7, Android 4.4
-	    var counter = 1;
-	    var observer = new MutationObserver(nextTickHandler);
-	    var textNode = document.createTextNode(String(counter));
-	    observer.observe(textNode, {
-	      characterData: true
-	    });
-	    timerFunc = function () {
-	      counter = (counter + 1) % 2;
-	      textNode.data = String(counter);
-	    };
-	  } else {
-	    // fallback to setTimeout
-	    /* istanbul ignore next */
-	    timerFunc = function () {
-	      setTimeout(nextTickHandler, 0);
-	    };
-	  }
-	
-	  return function queueNextTick (cb, ctx) {
-	    var func = ctx
-	      ? function () { cb.call(ctx); }
-	      : cb;
-	    callbacks.push(func);
-	    if (!pending) {
-	      pending = true;
-	      timerFunc();
-	    }
-	  }
-	})();
-	
-	var _Set;
-	/* istanbul ignore if */
-	if (typeof Set !== 'undefined' && isNative(Set)) {
-	  // use native Set when available.
-	  _Set = Set;
-	} else {
-	  // a non-standard Set polyfill that only works with primitive keys.
-	  _Set = (function () {
-	    function Set () {
-	      this.set = Object.create(null);
-	    }
-	    Set.prototype.has = function has (key) {
-	      return this.set[key] !== undefined
-	    };
-	    Set.prototype.add = function add (key) {
-	      this.set[key] = 1;
-	    };
-	    Set.prototype.clear = function clear () {
-	      this.set = Object.create(null);
-	    };
-	
-	    return Set;
-	  }());
-	}
-	
-	/* not type checking this file because flow doesn't play well with Proxy */
-	
-	var hasProxy;
-	var proxyHandlers;
-	var initProxy;
+	var warn = noop;
+	var formatComponentName;
 	
 	{
-	  var allowedGlobals = makeMap(
-	    'Infinity,undefined,NaN,isFinite,isNaN,' +
-	    'parseFloat,parseInt,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,' +
-	    'Math,Number,Date,Array,Object,Boolean,String,RegExp,Map,Set,JSON,Intl,' +
-	    'require' // for Webpack/Browserify
-	  );
+	  var hasConsole = typeof console !== 'undefined';
 	
-	  hasProxy =
-	    typeof Proxy !== 'undefined' &&
-	    Proxy.toString().match(/native code/);
-	
-	  proxyHandlers = {
-	    has: function has (target, key) {
-	      var has = key in target;
-	      var isAllowed = allowedGlobals(key) || key.charAt(0) === '_';
-	      if (!has && !isAllowed) {
-	        warn(
-	          "Property or method \"" + key + "\" is not defined on the instance but " +
-	          "referenced during render. Make sure to declare reactive data " +
-	          "properties in the data option.",
-	          target
-	        );
-	      }
-	      return has || !isAllowed
+	  warn = function (msg, vm) {
+	    if (hasConsole && (!config.silent)) {
+	      console.error("[Vue warn]: " + msg + " " + (
+	        vm ? formatLocation(formatComponentName(vm)) : ''
+	      ));
 	    }
 	  };
 	
-	  initProxy = function initProxy (vm) {
-	    if (hasProxy) {
-	      vm._renderProxy = new Proxy(vm, proxyHandlers);
-	    } else {
-	      vm._renderProxy = vm;
+	  formatComponentName = function (vm) {
+	    if (vm.$root === vm) {
+	      return 'root instance'
 	    }
+	    var name = vm._isVue
+	      ? vm.$options.name || vm.$options._componentTag
+	      : vm.name;
+	    return (
+	      (name ? ("component <" + name + ">") : "anonymous component") +
+	      (vm._isVue && vm.$options.__file ? (" at " + (vm.$options.__file)) : '')
+	    )
+	  };
+	
+	  var formatLocation = function (str) {
+	    if (str === 'anonymous component') {
+	      str += " - use the \"name\" option for better debugging messages.";
+	    }
+	    return ("\n(found in " + str + ")")
 	  };
 	}
 	
 	/*  */
 	
 	
-	var uid$2 = 0;
+	var uid$1 = 0;
 	
 	/**
 	 * A dep is an observable that can have multiple
 	 * directives subscribing to it.
 	 */
 	var Dep = function Dep () {
-	  this.id = uid$2++;
+	  this.id = uid$1++;
 	  this.subs = [];
 	};
 	
@@ -693,6 +703,886 @@
 	
 	function popTarget () {
 	  Dep.target = targetStack.pop();
+	}
+	
+	/*
+	 * not type checking this file because flow doesn't play well with
+	 * dynamically accessing methods on Array prototype
+	 */
+	
+	var arrayProto = Array.prototype;
+	var arrayMethods = Object.create(arrayProto);[
+	  'push',
+	  'pop',
+	  'shift',
+	  'unshift',
+	  'splice',
+	  'sort',
+	  'reverse'
+	]
+	.forEach(function (method) {
+	  // cache original method
+	  var original = arrayProto[method];
+	  def(arrayMethods, method, function mutator () {
+	    var arguments$1 = arguments;
+	
+	    // avoid leaking arguments:
+	    // http://jsperf.com/closure-with-arguments
+	    var i = arguments.length;
+	    var args = new Array(i);
+	    while (i--) {
+	      args[i] = arguments$1[i];
+	    }
+	    var result = original.apply(this, args);
+	    var ob = this.__ob__;
+	    var inserted;
+	    switch (method) {
+	      case 'push':
+	        inserted = args;
+	        break
+	      case 'unshift':
+	        inserted = args;
+	        break
+	      case 'splice':
+	        inserted = args.slice(2);
+	        break
+	    }
+	    if (inserted) { ob.observeArray(inserted); }
+	    // notify change
+	    ob.dep.notify();
+	    return result
+	  });
+	});
+	
+	/*  */
+	
+	var arrayKeys = Object.getOwnPropertyNames(arrayMethods);
+	
+	/**
+	 * By default, when a reactive property is set, the new value is
+	 * also converted to become reactive. However when passing down props,
+	 * we don't want to force conversion because the value may be a nested value
+	 * under a frozen data structure. Converting it would defeat the optimization.
+	 */
+	var observerState = {
+	  shouldConvert: true,
+	  isSettingProps: false
+	};
+	
+	/**
+	 * Observer class that are attached to each observed
+	 * object. Once attached, the observer converts target
+	 * object's property keys into getter/setters that
+	 * collect dependencies and dispatches updates.
+	 */
+	var Observer = function Observer (value) {
+	  this.value = value;
+	  this.dep = new Dep();
+	  this.vmCount = 0;
+	  def(value, '__ob__', this);
+	  if (Array.isArray(value)) {
+	    var augment = hasProto
+	      ? protoAugment
+	      : copyAugment;
+	    augment(value, arrayMethods, arrayKeys);
+	    this.observeArray(value);
+	  } else {
+	    this.walk(value);
+	  }
+	};
+	
+	/**
+	 * Walk through each property and convert them into
+	 * getter/setters. This method should only be called when
+	 * value type is Object.
+	 */
+	Observer.prototype.walk = function walk (obj) {
+	  var keys = Object.keys(obj);
+	  for (var i = 0; i < keys.length; i++) {
+	    defineReactive$$1(obj, keys[i], obj[keys[i]]);
+	  }
+	};
+	
+	/**
+	 * Observe a list of Array items.
+	 */
+	Observer.prototype.observeArray = function observeArray (items) {
+	  for (var i = 0, l = items.length; i < l; i++) {
+	    observe(items[i]);
+	  }
+	};
+	
+	// helpers
+	
+	/**
+	 * Augment an target Object or Array by intercepting
+	 * the prototype chain using __proto__
+	 */
+	function protoAugment (target, src) {
+	  /* eslint-disable no-proto */
+	  target.__proto__ = src;
+	  /* eslint-enable no-proto */
+	}
+	
+	/**
+	 * Augment an target Object or Array by defining
+	 * hidden properties.
+	 *
+	 * istanbul ignore next
+	 */
+	function copyAugment (target, src, keys) {
+	  for (var i = 0, l = keys.length; i < l; i++) {
+	    var key = keys[i];
+	    def(target, key, src[key]);
+	  }
+	}
+	
+	/**
+	 * Attempt to create an observer instance for a value,
+	 * returns the new observer if successfully observed,
+	 * or the existing observer if the value already has one.
+	 */
+	function observe (value) {
+	  if (!isObject(value)) {
+	    return
+	  }
+	  var ob;
+	  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+	    ob = value.__ob__;
+	  } else if (
+	    observerState.shouldConvert &&
+	    !isServerRendering() &&
+	    (Array.isArray(value) || isPlainObject(value)) &&
+	    Object.isExtensible(value) &&
+	    !value._isVue
+	  ) {
+	    ob = new Observer(value);
+	  }
+	  return ob
+	}
+	
+	/**
+	 * Define a reactive property on an Object.
+	 */
+	function defineReactive$$1 (
+	  obj,
+	  key,
+	  val,
+	  customSetter
+	) {
+	  var dep = new Dep();
+	
+	  var property = Object.getOwnPropertyDescriptor(obj, key);
+	  if (property && property.configurable === false) {
+	    return
+	  }
+	
+	  // cater for pre-defined getter/setters
+	  var getter = property && property.get;
+	  var setter = property && property.set;
+	
+	  var childOb = observe(val);
+	  Object.defineProperty(obj, key, {
+	    enumerable: true,
+	    configurable: true,
+	    get: function reactiveGetter () {
+	      var value = getter ? getter.call(obj) : val;
+	      if (Dep.target) {
+	        dep.depend();
+	        if (childOb) {
+	          childOb.dep.depend();
+	        }
+	        if (Array.isArray(value)) {
+	          dependArray(value);
+	        }
+	      }
+	      return value
+	    },
+	    set: function reactiveSetter (newVal) {
+	      var value = getter ? getter.call(obj) : val;
+	      /* eslint-disable no-self-compare */
+	      if (newVal === value || (newVal !== newVal && value !== value)) {
+	        return
+	      }
+	      /* eslint-enable no-self-compare */
+	      if ("development" !== 'production' && customSetter) {
+	        customSetter();
+	      }
+	      if (setter) {
+	        setter.call(obj, newVal);
+	      } else {
+	        val = newVal;
+	      }
+	      childOb = observe(newVal);
+	      dep.notify();
+	    }
+	  });
+	}
+	
+	/**
+	 * Set a property on an object. Adds the new property and
+	 * triggers change notification if the property doesn't
+	 * already exist.
+	 */
+	function set (obj, key, val) {
+	  if (Array.isArray(obj)) {
+	    obj.length = Math.max(obj.length, key);
+	    obj.splice(key, 1, val);
+	    return val
+	  }
+	  if (hasOwn(obj, key)) {
+	    obj[key] = val;
+	    return
+	  }
+	  var ob = obj.__ob__;
+	  if (obj._isVue || (ob && ob.vmCount)) {
+	    "development" !== 'production' && warn(
+	      'Avoid adding reactive properties to a Vue instance or its root $data ' +
+	      'at runtime - declare it upfront in the data option.'
+	    );
+	    return
+	  }
+	  if (!ob) {
+	    obj[key] = val;
+	    return
+	  }
+	  defineReactive$$1(ob.value, key, val);
+	  ob.dep.notify();
+	  return val
+	}
+	
+	/**
+	 * Delete a property and trigger change if necessary.
+	 */
+	function del (obj, key) {
+	  var ob = obj.__ob__;
+	  if (obj._isVue || (ob && ob.vmCount)) {
+	    "development" !== 'production' && warn(
+	      'Avoid deleting properties on a Vue instance or its root $data ' +
+	      '- just set it to null.'
+	    );
+	    return
+	  }
+	  if (!hasOwn(obj, key)) {
+	    return
+	  }
+	  delete obj[key];
+	  if (!ob) {
+	    return
+	  }
+	  ob.dep.notify();
+	}
+	
+	/**
+	 * Collect dependencies on array elements when the array is touched, since
+	 * we cannot intercept array element access like property getters.
+	 */
+	function dependArray (value) {
+	  for (var e = (void 0), i = 0, l = value.length; i < l; i++) {
+	    e = value[i];
+	    e && e.__ob__ && e.__ob__.dep.depend();
+	    if (Array.isArray(e)) {
+	      dependArray(e);
+	    }
+	  }
+	}
+	
+	/*  */
+	
+	/**
+	 * Option overwriting strategies are functions that handle
+	 * how to merge a parent option value and a child option
+	 * value into the final value.
+	 */
+	var strats = config.optionMergeStrategies;
+	
+	/**
+	 * Options with restrictions
+	 */
+	{
+	  strats.el = strats.propsData = function (parent, child, vm, key) {
+	    if (!vm) {
+	      warn(
+	        "option \"" + key + "\" can only be used during instance " +
+	        'creation with the `new` keyword.'
+	      );
+	    }
+	    return defaultStrat(parent, child)
+	  };
+	}
+	
+	/**
+	 * Helper that recursively merges two data objects together.
+	 */
+	function mergeData (to, from) {
+	  if (!from) { return to }
+	  var key, toVal, fromVal;
+	  var keys = Object.keys(from);
+	  for (var i = 0; i < keys.length; i++) {
+	    key = keys[i];
+	    toVal = to[key];
+	    fromVal = from[key];
+	    if (!hasOwn(to, key)) {
+	      set(to, key, fromVal);
+	    } else if (isPlainObject(toVal) && isPlainObject(fromVal)) {
+	      mergeData(toVal, fromVal);
+	    }
+	  }
+	  return to
+	}
+	
+	/**
+	 * Data
+	 */
+	strats.data = function (
+	  parentVal,
+	  childVal,
+	  vm
+	) {
+	  if (!vm) {
+	    // in a Vue.extend merge, both should be functions
+	    if (!childVal) {
+	      return parentVal
+	    }
+	    if (typeof childVal !== 'function') {
+	      "development" !== 'production' && warn(
+	        'The "data" option should be a function ' +
+	        'that returns a per-instance value in component ' +
+	        'definitions.',
+	        vm
+	      );
+	      return parentVal
+	    }
+	    if (!parentVal) {
+	      return childVal
+	    }
+	    // when parentVal & childVal are both present,
+	    // we need to return a function that returns the
+	    // merged result of both functions... no need to
+	    // check if parentVal is a function here because
+	    // it has to be a function to pass previous merges.
+	    return function mergedDataFn () {
+	      return mergeData(
+	        childVal.call(this),
+	        parentVal.call(this)
+	      )
+	    }
+	  } else if (parentVal || childVal) {
+	    return function mergedInstanceDataFn () {
+	      // instance merge
+	      var instanceData = typeof childVal === 'function'
+	        ? childVal.call(vm)
+	        : childVal;
+	      var defaultData = typeof parentVal === 'function'
+	        ? parentVal.call(vm)
+	        : undefined;
+	      if (instanceData) {
+	        return mergeData(instanceData, defaultData)
+	      } else {
+	        return defaultData
+	      }
+	    }
+	  }
+	};
+	
+	/**
+	 * Hooks and param attributes are merged as arrays.
+	 */
+	function mergeHook (
+	  parentVal,
+	  childVal
+	) {
+	  return childVal
+	    ? parentVal
+	      ? parentVal.concat(childVal)
+	      : Array.isArray(childVal)
+	        ? childVal
+	        : [childVal]
+	    : parentVal
+	}
+	
+	config._lifecycleHooks.forEach(function (hook) {
+	  strats[hook] = mergeHook;
+	});
+	
+	/**
+	 * Assets
+	 *
+	 * When a vm is present (instance creation), we need to do
+	 * a three-way merge between constructor options, instance
+	 * options and parent options.
+	 */
+	function mergeAssets (parentVal, childVal) {
+	  var res = Object.create(parentVal || null);
+	  return childVal
+	    ? extend(res, childVal)
+	    : res
+	}
+	
+	config._assetTypes.forEach(function (type) {
+	  strats[type + 's'] = mergeAssets;
+	});
+	
+	/**
+	 * Watchers.
+	 *
+	 * Watchers hashes should not overwrite one
+	 * another, so we merge them as arrays.
+	 */
+	strats.watch = function (parentVal, childVal) {
+	  /* istanbul ignore if */
+	  if (!childVal) { return parentVal }
+	  if (!parentVal) { return childVal }
+	  var ret = {};
+	  extend(ret, parentVal);
+	  for (var key in childVal) {
+	    var parent = ret[key];
+	    var child = childVal[key];
+	    if (parent && !Array.isArray(parent)) {
+	      parent = [parent];
+	    }
+	    ret[key] = parent
+	      ? parent.concat(child)
+	      : [child];
+	  }
+	  return ret
+	};
+	
+	/**
+	 * Other object hashes.
+	 */
+	strats.props =
+	strats.methods =
+	strats.computed = function (parentVal, childVal) {
+	  if (!childVal) { return parentVal }
+	  if (!parentVal) { return childVal }
+	  var ret = Object.create(null);
+	  extend(ret, parentVal);
+	  extend(ret, childVal);
+	  return ret
+	};
+	
+	/**
+	 * Default strategy.
+	 */
+	var defaultStrat = function (parentVal, childVal) {
+	  return childVal === undefined
+	    ? parentVal
+	    : childVal
+	};
+	
+	/**
+	 * Validate component names
+	 */
+	function checkComponents (options) {
+	  for (var key in options.components) {
+	    var lower = key.toLowerCase();
+	    if (isBuiltInTag(lower) || config.isReservedTag(lower)) {
+	      warn(
+	        'Do not use built-in or reserved HTML elements as component ' +
+	        'id: ' + key
+	      );
+	    }
+	  }
+	}
+	
+	/**
+	 * Ensure all props option syntax are normalized into the
+	 * Object-based format.
+	 */
+	function normalizeProps (options) {
+	  var props = options.props;
+	  if (!props) { return }
+	  var res = {};
+	  var i, val, name;
+	  if (Array.isArray(props)) {
+	    i = props.length;
+	    while (i--) {
+	      val = props[i];
+	      if (typeof val === 'string') {
+	        name = camelize(val);
+	        res[name] = { type: null };
+	      } else {
+	        warn('props must be strings when using array syntax.');
+	      }
+	    }
+	  } else if (isPlainObject(props)) {
+	    for (var key in props) {
+	      val = props[key];
+	      name = camelize(key);
+	      res[name] = isPlainObject(val)
+	        ? val
+	        : { type: val };
+	    }
+	  }
+	  options.props = res;
+	}
+	
+	/**
+	 * Normalize raw function directives into object format.
+	 */
+	function normalizeDirectives (options) {
+	  var dirs = options.directives;
+	  if (dirs) {
+	    for (var key in dirs) {
+	      var def = dirs[key];
+	      if (typeof def === 'function') {
+	        dirs[key] = { bind: def, update: def };
+	      }
+	    }
+	  }
+	}
+	
+	/**
+	 * Merge two option objects into a new one.
+	 * Core utility used in both instantiation and inheritance.
+	 */
+	function mergeOptions (
+	  parent,
+	  child,
+	  vm
+	) {
+	  {
+	    checkComponents(child);
+	  }
+	  normalizeProps(child);
+	  normalizeDirectives(child);
+	  var extendsFrom = child.extends;
+	  if (extendsFrom) {
+	    parent = typeof extendsFrom === 'function'
+	      ? mergeOptions(parent, extendsFrom.options, vm)
+	      : mergeOptions(parent, extendsFrom, vm);
+	  }
+	  if (child.mixins) {
+	    for (var i = 0, l = child.mixins.length; i < l; i++) {
+	      var mixin = child.mixins[i];
+	      if (mixin.prototype instanceof Vue$3) {
+	        mixin = mixin.options;
+	      }
+	      parent = mergeOptions(parent, mixin, vm);
+	    }
+	  }
+	  var options = {};
+	  var key;
+	  for (key in parent) {
+	    mergeField(key);
+	  }
+	  for (key in child) {
+	    if (!hasOwn(parent, key)) {
+	      mergeField(key);
+	    }
+	  }
+	  function mergeField (key) {
+	    var strat = strats[key] || defaultStrat;
+	    options[key] = strat(parent[key], child[key], vm, key);
+	  }
+	  return options
+	}
+	
+	/**
+	 * Resolve an asset.
+	 * This function is used because child instances need access
+	 * to assets defined in its ancestor chain.
+	 */
+	function resolveAsset (
+	  options,
+	  type,
+	  id,
+	  warnMissing
+	) {
+	  /* istanbul ignore if */
+	  if (typeof id !== 'string') {
+	    return
+	  }
+	  var assets = options[type];
+	  var res = assets[id] ||
+	    // camelCase ID
+	    assets[camelize(id)] ||
+	    // Pascal Case ID
+	    assets[capitalize(camelize(id))];
+	  if ("development" !== 'production' && warnMissing && !res) {
+	    warn(
+	      'Failed to resolve ' + type.slice(0, -1) + ': ' + id,
+	      options
+	    );
+	  }
+	  return res
+	}
+	
+	/*  */
+	
+	function validateProp (
+	  key,
+	  propOptions,
+	  propsData,
+	  vm
+	) {
+	  var prop = propOptions[key];
+	  var absent = !hasOwn(propsData, key);
+	  var value = propsData[key];
+	  // handle boolean props
+	  if (isBooleanType(prop.type)) {
+	    if (absent && !hasOwn(prop, 'default')) {
+	      value = false;
+	    } else if (value === '' || value === hyphenate(key)) {
+	      value = true;
+	    }
+	  }
+	  // check default value
+	  if (value === undefined) {
+	    value = getPropDefaultValue(vm, prop, key);
+	    // since the default value is a fresh copy,
+	    // make sure to observe it.
+	    var prevShouldConvert = observerState.shouldConvert;
+	    observerState.shouldConvert = true;
+	    observe(value);
+	    observerState.shouldConvert = prevShouldConvert;
+	  }
+	  {
+	    assertProp(prop, key, value, vm, absent);
+	  }
+	  return value
+	}
+	
+	/**
+	 * Get the default value of a prop.
+	 */
+	function getPropDefaultValue (vm, prop, key) {
+	  // no default, return undefined
+	  if (!hasOwn(prop, 'default')) {
+	    return undefined
+	  }
+	  var def = prop.default;
+	  // warn against non-factory defaults for Object & Array
+	  if (isObject(def)) {
+	    "development" !== 'production' && warn(
+	      'Invalid default value for prop "' + key + '": ' +
+	      'Props with type Object/Array must use a factory function ' +
+	      'to return the default value.',
+	      vm
+	    );
+	  }
+	  // the raw prop value was also undefined from previous render,
+	  // return previous default value to avoid unnecessary watcher trigger
+	  if (vm && vm.$options.propsData &&
+	    vm.$options.propsData[key] === undefined &&
+	    vm[key] !== undefined) {
+	    return vm[key]
+	  }
+	  // call factory function for non-Function types
+	  return typeof def === 'function' && prop.type !== Function
+	    ? def.call(vm)
+	    : def
+	}
+	
+	/**
+	 * Assert whether a prop is valid.
+	 */
+	function assertProp (
+	  prop,
+	  name,
+	  value,
+	  vm,
+	  absent
+	) {
+	  if (prop.required && absent) {
+	    warn(
+	      'Missing required prop: "' + name + '"',
+	      vm
+	    );
+	    return
+	  }
+	  if (value == null && !prop.required) {
+	    return
+	  }
+	  var type = prop.type;
+	  var valid = !type || type === true;
+	  var expectedTypes = [];
+	  if (type) {
+	    if (!Array.isArray(type)) {
+	      type = [type];
+	    }
+	    for (var i = 0; i < type.length && !valid; i++) {
+	      var assertedType = assertType(value, type[i]);
+	      expectedTypes.push(assertedType.expectedType);
+	      valid = assertedType.valid;
+	    }
+	  }
+	  if (!valid) {
+	    warn(
+	      'Invalid prop: type check failed for prop "' + name + '".' +
+	      ' Expected ' + expectedTypes.map(capitalize).join(', ') +
+	      ', got ' + Object.prototype.toString.call(value).slice(8, -1) + '.',
+	      vm
+	    );
+	    return
+	  }
+	  var validator = prop.validator;
+	  if (validator) {
+	    if (!validator(value)) {
+	      warn(
+	        'Invalid prop: custom validator check failed for prop "' + name + '".',
+	        vm
+	      );
+	    }
+	  }
+	}
+	
+	/**
+	 * Assert the type of a value
+	 */
+	function assertType (value, type) {
+	  var valid;
+	  var expectedType = getType(type);
+	  if (expectedType === 'String') {
+	    valid = typeof value === (expectedType = 'string');
+	  } else if (expectedType === 'Number') {
+	    valid = typeof value === (expectedType = 'number');
+	  } else if (expectedType === 'Boolean') {
+	    valid = typeof value === (expectedType = 'boolean');
+	  } else if (expectedType === 'Function') {
+	    valid = typeof value === (expectedType = 'function');
+	  } else if (expectedType === 'Object') {
+	    valid = isPlainObject(value);
+	  } else if (expectedType === 'Array') {
+	    valid = Array.isArray(value);
+	  } else {
+	    valid = value instanceof type;
+	  }
+	  return {
+	    valid: valid,
+	    expectedType: expectedType
+	  }
+	}
+	
+	/**
+	 * Use function string name to check built-in types,
+	 * because a simple equality check will fail when running
+	 * across different vms / iframes.
+	 */
+	function getType (fn) {
+	  var match = fn && fn.toString().match(/^\s*function (\w+)/);
+	  return match && match[1]
+	}
+	
+	function isBooleanType (fn) {
+	  if (!Array.isArray(fn)) {
+	    return getType(fn) === 'Boolean'
+	  }
+	  for (var i = 0, len = fn.length; i < len; i++) {
+	    if (getType(fn[i]) === 'Boolean') {
+	      return true
+	    }
+	  }
+	  /* istanbul ignore next */
+	  return false
+	}
+	
+	
+	
+	var util = Object.freeze({
+		defineReactive: defineReactive$$1,
+		_toString: _toString,
+		toNumber: toNumber,
+		makeMap: makeMap,
+		isBuiltInTag: isBuiltInTag,
+		remove: remove$1,
+		hasOwn: hasOwn,
+		isPrimitive: isPrimitive,
+		cached: cached,
+		camelize: camelize,
+		capitalize: capitalize,
+		hyphenate: hyphenate,
+		bind: bind$1,
+		toArray: toArray,
+		extend: extend,
+		isObject: isObject,
+		isPlainObject: isPlainObject,
+		toObject: toObject,
+		noop: noop,
+		no: no,
+		genStaticKeys: genStaticKeys,
+		looseEqual: looseEqual,
+		looseIndexOf: looseIndexOf,
+		isReserved: isReserved,
+		def: def,
+		parsePath: parsePath,
+		hasProto: hasProto,
+		inBrowser: inBrowser,
+		UA: UA,
+		isIE: isIE,
+		isIE9: isIE9,
+		isEdge: isEdge,
+		isAndroid: isAndroid,
+		isIOS: isIOS,
+		isServerRendering: isServerRendering,
+		devtools: devtools,
+		nextTick: nextTick,
+		get _Set () { return _Set; },
+		mergeOptions: mergeOptions,
+		resolveAsset: resolveAsset,
+		get warn () { return warn; },
+		get formatComponentName () { return formatComponentName; },
+		validateProp: validateProp
+	});
+	
+	/* not type checking this file because flow doesn't play well with Proxy */
+	
+	var initProxy;
+	
+	{
+	  var allowedGlobals = makeMap(
+	    'Infinity,undefined,NaN,isFinite,isNaN,' +
+	    'parseFloat,parseInt,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,' +
+	    'Math,Number,Date,Array,Object,Boolean,String,RegExp,Map,Set,JSON,Intl,' +
+	    'require' // for Webpack/Browserify
+	  );
+	
+	  var warnNonPresent = function (target, key) {
+	    warn(
+	      "Property or method \"" + key + "\" is not defined on the instance but " +
+	      "referenced during render. Make sure to declare reactive data " +
+	      "properties in the data option.",
+	      target
+	    );
+	  };
+	
+	  var hasProxy =
+	    typeof Proxy !== 'undefined' &&
+	    Proxy.toString().match(/native code/);
+	
+	  var hasHandler = {
+	    has: function has (target, key) {
+	      var has = key in target;
+	      var isAllowed = allowedGlobals(key) || key.charAt(0) === '_';
+	      if (!has && !isAllowed) {
+	        warnNonPresent(target, key);
+	      }
+	      return has || !isAllowed
+	    }
+	  };
+	
+	  var getHandler = {
+	    get: function get (target, key) {
+	      if (typeof key === 'string' && !(key in target)) {
+	        warnNonPresent(target, key);
+	      }
+	      return target[key]
+	    }
+	  };
+	
+	  initProxy = function initProxy (vm) {
+	    if (hasProxy) {
+	      // determine which proxy handler to use
+	      var options = vm.$options;
+	      var handlers = options.render && options.render._withStripped
+	        ? getHandler
+	        : hasHandler;
+	      vm._renderProxy = new Proxy(vm, handlers);
+	    } else {
+	      vm._renderProxy = vm;
+	    }
+	  };
 	}
 	
 	/*  */
@@ -796,7 +1686,7 @@
 	
 	/*  */
 	
-	var uid$1 = 0;
+	var uid$2 = 0;
 	
 	/**
 	 * A watcher parses an expression, collects dependencies,
@@ -820,7 +1710,7 @@
 	  this.sync = !!options.sync;
 	  this.expression = expOrFn.toString();
 	  this.cb = cb;
-	  this.id = ++uid$1; // uid for batching
+	  this.id = ++uid$2; // uid for batching
 	  this.active = true;
 	  this.dirty = this.lazy; // for lazy watchers
 	  this.deps = [];
@@ -977,7 +1867,7 @@
 	};
 	
 	/**
-	 * Remove self from all dependencies' subcriber list.
+	 * Remove self from all dependencies' subscriber list.
 	 */
 	Watcher.prototype.teardown = function teardown () {
 	    var this$1 = this;
@@ -1004,310 +1894,31 @@
 	 * is collected as a "deep" dependency.
 	 */
 	var seenObjects = new _Set();
-	function traverse (val, seen) {
+	function traverse (val) {
+	  seenObjects.clear();
+	  _traverse(val, seenObjects);
+	}
+	
+	function _traverse (val, seen) {
 	  var i, keys;
-	  if (!seen) {
-	    seen = seenObjects;
-	    seen.clear();
-	  }
 	  var isA = Array.isArray(val);
-	  var isO = isObject(val);
-	  if ((isA || isO) && Object.isExtensible(val)) {
-	    if (val.__ob__) {
-	      var depId = val.__ob__.dep.id;
-	      if (seen.has(depId)) {
-	        return
-	      } else {
-	        seen.add(depId);
-	      }
-	    }
-	    if (isA) {
-	      i = val.length;
-	      while (i--) { traverse(val[i], seen); }
-	    } else if (isO) {
-	      keys = Object.keys(val);
-	      i = keys.length;
-	      while (i--) { traverse(val[keys[i]], seen); }
-	    }
+	  if ((!isA && !isObject(val)) || !Object.isExtensible(val)) {
+	    return
 	  }
-	}
-	
-	/*
-	 * not type checking this file because flow doesn't play well with
-	 * dynamically accessing methods on Array prototype
-	 */
-	
-	var arrayProto = Array.prototype;
-	var arrayMethods = Object.create(arrayProto);[
-	  'push',
-	  'pop',
-	  'shift',
-	  'unshift',
-	  'splice',
-	  'sort',
-	  'reverse'
-	]
-	.forEach(function (method) {
-	  // cache original method
-	  var original = arrayProto[method];
-	  def(arrayMethods, method, function mutator () {
-	    var arguments$1 = arguments;
-	
-	    // avoid leaking arguments:
-	    // http://jsperf.com/closure-with-arguments
-	    var i = arguments.length;
-	    var args = new Array(i);
-	    while (i--) {
-	      args[i] = arguments$1[i];
+	  if (val.__ob__) {
+	    var depId = val.__ob__.dep.id;
+	    if (seen.has(depId)) {
+	      return
 	    }
-	    var result = original.apply(this, args);
-	    var ob = this.__ob__;
-	    var inserted;
-	    switch (method) {
-	      case 'push':
-	        inserted = args;
-	        break
-	      case 'unshift':
-	        inserted = args;
-	        break
-	      case 'splice':
-	        inserted = args.slice(2);
-	        break
-	    }
-	    if (inserted) { ob.observeArray(inserted); }
-	    // notify change
-	    ob.dep.notify();
-	    return result
-	  });
-	});
-	
-	/*  */
-	
-	var arrayKeys = Object.getOwnPropertyNames(arrayMethods);
-	
-	/**
-	 * By default, when a reactive property is set, the new value is
-	 * also converted to become reactive. However when passing down props,
-	 * we don't want to force conversion because the value may be a nested value
-	 * under a frozen data structure. Converting it would defeat the optimization.
-	 */
-	var observerState = {
-	  shouldConvert: true,
-	  isSettingProps: false
-	};
-	
-	/**
-	 * Observer class that are attached to each observed
-	 * object. Once attached, the observer converts target
-	 * object's property keys into getter/setters that
-	 * collect dependencies and dispatches updates.
-	 */
-	var Observer = function Observer (value) {
-	  this.value = value;
-	  this.dep = new Dep();
-	  this.vmCount = 0;
-	  def(value, '__ob__', this);
-	  if (Array.isArray(value)) {
-	    var augment = hasProto
-	      ? protoAugment
-	      : copyAugment;
-	    augment(value, arrayMethods, arrayKeys);
-	    this.observeArray(value);
+	    seen.add(depId);
+	  }
+	  if (isA) {
+	    i = val.length;
+	    while (i--) { _traverse(val[i], seen); }
 	  } else {
-	    this.walk(value);
-	  }
-	};
-	
-	/**
-	 * Walk through each property and convert them into
-	 * getter/setters. This method should only be called when
-	 * value type is Object.
-	 */
-	Observer.prototype.walk = function walk (obj) {
-	  var keys = Object.keys(obj);
-	  for (var i = 0; i < keys.length; i++) {
-	    defineReactive$$1(obj, keys[i], obj[keys[i]]);
-	  }
-	};
-	
-	/**
-	 * Observe a list of Array items.
-	 */
-	Observer.prototype.observeArray = function observeArray (items) {
-	  for (var i = 0, l = items.length; i < l; i++) {
-	    observe(items[i]);
-	  }
-	};
-	
-	// helpers
-	
-	/**
-	 * Augment an target Object or Array by intercepting
-	 * the prototype chain using __proto__
-	 */
-	function protoAugment (target, src) {
-	  /* eslint-disable no-proto */
-	  target.__proto__ = src;
-	  /* eslint-enable no-proto */
-	}
-	
-	/**
-	 * Augment an target Object or Array by defining
-	 * hidden properties.
-	 *
-	 * istanbul ignore next
-	 */
-	function copyAugment (target, src, keys) {
-	  for (var i = 0, l = keys.length; i < l; i++) {
-	    var key = keys[i];
-	    def(target, key, src[key]);
-	  }
-	}
-	
-	/**
-	 * Attempt to create an observer instance for a value,
-	 * returns the new observer if successfully observed,
-	 * or the existing observer if the value already has one.
-	 */
-	function observe (value) {
-	  if (!isObject(value)) {
-	    return
-	  }
-	  var ob;
-	  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
-	    ob = value.__ob__;
-	  } else if (
-	    observerState.shouldConvert &&
-	    !config._isServer &&
-	    (Array.isArray(value) || isPlainObject(value)) &&
-	    Object.isExtensible(value) &&
-	    !value._isVue
-	  ) {
-	    ob = new Observer(value);
-	  }
-	  return ob
-	}
-	
-	/**
-	 * Define a reactive property on an Object.
-	 */
-	function defineReactive$$1 (
-	  obj,
-	  key,
-	  val,
-	  customSetter
-	) {
-	  var dep = new Dep();
-	
-	  var property = Object.getOwnPropertyDescriptor(obj, key);
-	  if (property && property.configurable === false) {
-	    return
-	  }
-	
-	  // cater for pre-defined getter/setters
-	  var getter = property && property.get;
-	  var setter = property && property.set;
-	
-	  var childOb = observe(val);
-	  Object.defineProperty(obj, key, {
-	    enumerable: true,
-	    configurable: true,
-	    get: function reactiveGetter () {
-	      var value = getter ? getter.call(obj) : val;
-	      if (Dep.target) {
-	        dep.depend();
-	        if (childOb) {
-	          childOb.dep.depend();
-	        }
-	        if (Array.isArray(value)) {
-	          dependArray(value);
-	        }
-	      }
-	      return value
-	    },
-	    set: function reactiveSetter (newVal) {
-	      var value = getter ? getter.call(obj) : val;
-	      if (newVal === value) {
-	        return
-	      }
-	      if ("development" !== 'production' && customSetter) {
-	        customSetter();
-	      }
-	      if (setter) {
-	        setter.call(obj, newVal);
-	      } else {
-	        val = newVal;
-	      }
-	      childOb = observe(newVal);
-	      dep.notify();
-	    }
-	  });
-	}
-	
-	/**
-	 * Set a property on an object. Adds the new property and
-	 * triggers change notification if the property doesn't
-	 * already exist.
-	 */
-	function set (obj, key, val) {
-	  if (Array.isArray(obj)) {
-	    obj.splice(key, 1, val);
-	    return val
-	  }
-	  if (hasOwn(obj, key)) {
-	    obj[key] = val;
-	    return
-	  }
-	  var ob = obj.__ob__;
-	  if (obj._isVue || (ob && ob.vmCount)) {
-	    "development" !== 'production' && warn(
-	      'Avoid adding reactive properties to a Vue instance or its root $data ' +
-	      'at runtime - declare it upfront in the data option.'
-	    );
-	    return
-	  }
-	  if (!ob) {
-	    obj[key] = val;
-	    return
-	  }
-	  defineReactive$$1(ob.value, key, val);
-	  ob.dep.notify();
-	  return val
-	}
-	
-	/**
-	 * Delete a property and trigger change if necessary.
-	 */
-	function del (obj, key) {
-	  var ob = obj.__ob__;
-	  if (obj._isVue || (ob && ob.vmCount)) {
-	    "development" !== 'production' && warn(
-	      'Avoid deleting properties on a Vue instance or its root $data ' +
-	      '- just set it to null.'
-	    );
-	    return
-	  }
-	  if (!hasOwn(obj, key)) {
-	    return
-	  }
-	  delete obj[key];
-	  if (!ob) {
-	    return
-	  }
-	  ob.dep.notify();
-	}
-	
-	/**
-	 * Collect dependencies on array elements when the array is touched, since
-	 * we cannot intercept array element access like property getters.
-	 */
-	function dependArray (value) {
-	  for (var e = void 0, i = 0, l = value.length; i < l; i++) {
-	    e = value[i];
-	    e && e.__ob__ && e.__ob__.dep.depend();
-	    if (Array.isArray(e)) {
-	      dependArray(e);
-	    }
+	    keys = Object.keys(val);
+	    i = keys.length;
+	    while (i--) { _traverse(val[keys[i]], seen); }
 	  }
 	}
 	
@@ -1322,6 +1933,8 @@
 	  initWatch(vm);
 	}
 	
+	var isReservedProp = makeMap('key,ref,slot');
+	
 	function initProps (vm) {
 	  var props = vm.$options.props;
 	  if (props) {
@@ -1334,6 +1947,12 @@
 	      var key = keys[i];
 	      /* istanbul ignore else */
 	      {
+	        if (isReservedProp(key)) {
+	          warn(
+	            ("\"" + key + "\" is a reserved attribute and cannot be used as component prop."),
+	            vm
+	          );
+	        }
 	        defineReactive$$1(vm, key, validateProp(key, props, propsData, vm), function () {
 	          if (vm.$parent && !observerState.isSettingProps) {
 	            warn(
@@ -1558,6 +2177,7 @@
 	  this.isRootInsert = true;
 	  this.isComment = false;
 	  this.isCloned = false;
+	  this.isOnce = false;
 	};
 	
 	var emptyVNode = function () {
@@ -1711,7 +2331,9 @@
 	        }
 	      } else if (c instanceof VNode) {
 	        if (c.text && last && last.text) {
-	          last.text += c.text;
+	          if (!last.isCloned) {
+	            last.text += c.text;
+	          }
 	        } else {
 	          // inherit parent namespace
 	          if (ns) {
@@ -1790,7 +2412,7 @@
 	      vm.$options.render = emptyVNode;
 	      {
 	        /* istanbul ignore if */
-	        if (vm.$options.template) {
+	        if (vm.$options.template && vm.$options.template.charAt(0) !== '#') {
 	          warn(
 	            'You are using the runtime-only build of Vue where the template ' +
 	            'option is not available. Either pre-compile the templates into ' +
@@ -1862,6 +2484,10 @@
 	    var vm = this;
 	    var hasChildren = !!(vm.$options._renderChildren || renderChildren);
 	    vm.$options._parentVnode = parentVnode;
+	    vm.$vnode = parentVnode; // update vm's placeholder node without re-render
+	    if (vm._vnode) { // update child tree's parent
+	      vm._vnode.parent = parentVnode;
+	    }
 	    vm.$options._renderChildren = renderChildren;
 	    // update props
 	    if (propsData && vm.$options.props) {
@@ -1878,6 +2504,7 @@
 	      {
 	        observerState.isSettingProps = false;
 	      }
+	      vm.$options.propsData = propsData;
 	    }
 	    // update listeners
 	    if (listeners) {
@@ -1964,8 +2591,9 @@
 	    return
 	  }
 	
+	  var baseCtor = context.$options._base;
 	  if (isObject(Ctor)) {
-	    Ctor = Vue$3.extend(Ctor);
+	    Ctor = baseCtor.extend(Ctor);
 	  }
 	
 	  if (typeof Ctor !== 'function') {
@@ -1980,7 +2608,7 @@
 	    if (Ctor.resolved) {
 	      Ctor = Ctor.resolved;
 	    } else {
-	      Ctor = resolveAsyncComponent(Ctor, function () {
+	      Ctor = resolveAsyncComponent(Ctor, baseCtor, function () {
 	        // it's ok to queue this on every render because
 	        // $forceUpdate is buffered by the scheduler.
 	        context.$forceUpdate();
@@ -1992,6 +2620,10 @@
 	      }
 	    }
 	  }
+	
+	  // resolve constructor options in case global mixins are applied after
+	  // component constructor creation
+	  resolveConstructorOptions(Ctor);
 	
 	  data = data || {};
 	
@@ -2091,6 +2723,10 @@
 	  if (!vnode.child || vnode.child._isDestroyed) {
 	    var child = vnode.child = createComponentInstanceForVnode(vnode, activeInstance);
 	    child.$mount(hydrating ? vnode.elm : undefined, hydrating);
+	  } else if (vnode.data.keepAlive) {
+	    // kept-alive components, treat as a patch
+	    var mountedNode = vnode; // work around flow
+	    prepatch(mountedNode, mountedNode);
 	  }
 	}
 	
@@ -2132,6 +2768,7 @@
 	
 	function resolveAsyncComponent (
 	  factory,
+	  baseCtor,
 	  cb
 	) {
 	  if (factory.requested) {
@@ -2144,7 +2781,7 @@
 	
 	    var resolve = function (res) {
 	      if (isObject(res)) {
-	        res = Vue$3.extend(res);
+	        res = baseCtor.extend(res);
 	      }
 	      // cache resolved
 	      factory.resolved = res;
@@ -2178,7 +2815,7 @@
 	}
 	
 	function extractProps (data, Ctor) {
-	  // we are only extrating raw values here.
+	  // we are only extracting raw values here.
 	  // validation and default values are handled in the child
 	  // component itself.
 	  var propOptions = Ctor.options.props;
@@ -2281,6 +2918,13 @@
 	    // in case of component :is set to falsy value
 	    return emptyVNode()
 	  }
+	  // support single function children as default scoped slot
+	  if (Array.isArray(children) &&
+	      typeof children[0] === 'function') {
+	    data = data || {};
+	    data.scopedSlots = { default: children[0] };
+	    children.length = 0;
+	  }
 	  if (typeof tag === 'string') {
 	    var Ctor;
 	    var ns = config.getTagNamespace(tag);
@@ -2297,8 +2941,9 @@
 	      // unknown or unlisted namespaced elements
 	      // check at runtime because it may get assigned a namespace when its
 	      // parent normalizes children
+	      var childNs = tag === 'foreignObject' ? 'xhtml' : ns;
 	      return new VNode(
-	        tag, data, normalizeChildren(children, ns),
+	        tag, data, normalizeChildren(children, childNs),
 	        undefined, undefined, ns, context
 	      )
 	    }
@@ -2316,6 +2961,7 @@
 	  vm._staticTrees = null;
 	  vm._renderContext = vm.$options._parentVnode && vm.$options._parentVnode.context;
 	  vm.$slots = resolveSlots(vm.$options._renderChildren, vm._renderContext);
+	  vm.$scopedSlots = {};
 	  // bind the public createElement fn to this instance
 	  // so that we get proper render context inside it.
 	  vm.$createElement = bind$1(createElement, vm);
@@ -2326,7 +2972,7 @@
 	
 	function renderMixin (Vue) {
 	  Vue.prototype.$nextTick = function (fn) {
-	    nextTick(fn, this);
+	    return nextTick(fn, this)
 	  };
 	
 	  Vue.prototype._render = function () {
@@ -2341,6 +2987,10 @@
 	      for (var key in vm.$slots) {
 	        vm.$slots[key] = cloneVNodes(vm.$slots[key]);
 	      }
+	    }
+	
+	    if (_parentVnode && _parentVnode.data.scopedSlots) {
+	      vm.$scopedSlots = _parentVnode.data.scopedSlots;
 	    }
 	
 	    if (staticRenderFns && !vm._staticTrees) {
@@ -2361,10 +3011,10 @@
 	      if (config.errorHandler) {
 	        config.errorHandler.call(null, e, vm);
 	      } else {
-	        if (config._isServer) {
+	        if (isServerRendering()) {
 	          throw e
 	        } else {
-	          setTimeout(function () { throw e }, 0);
+	          console.error(e);
 	        }
 	      }
 	      // return previous vnode to prevent render error causing blank component
@@ -2414,19 +3064,37 @@
 	    }
 	    // otherwise, render a fresh tree.
 	    tree = this._staticTrees[index] = this.$options.staticRenderFns[index].call(this._renderProxy);
+	    markStatic(tree, ("__static__" + index), false);
+	    return tree
+	  };
+	
+	  // mark node as static (v-once)
+	  Vue.prototype._o = function markOnce (
+	    tree,
+	    index,
+	    key
+	  ) {
+	    markStatic(tree, ("__once__" + index + (key ? ("_" + key) : "")), true);
+	    return tree
+	  };
+	
+	  function markStatic (tree, key, isOnce) {
 	    if (Array.isArray(tree)) {
 	      for (var i = 0; i < tree.length; i++) {
-	        if (typeof tree[i] !== 'string') {
-	          tree[i].isStatic = true;
-	          tree[i].key = "__static__" + index + "_" + i;
+	        if (tree[i] && typeof tree[i] !== 'string') {
+	          markStaticNode(tree[i], (key + "_" + i), isOnce);
 	        }
 	      }
 	    } else {
-	      tree.isStatic = true;
-	      tree.key = "__static__" + index;
+	      markStaticNode(tree, key, isOnce);
 	    }
-	    return tree
-	  };
+	  }
+	
+	  function markStaticNode (node, key, isOnce) {
+	    node.isStatic = true;
+	    node.key = key;
+	    node.isOnce = isOnce;
+	  }
 	
 	  // filter resolution helper
 	  var identity = function (_) { return _; };
@@ -2464,24 +3132,31 @@
 	  // renderSlot
 	  Vue.prototype._t = function (
 	    name,
-	    fallback
+	    fallback,
+	    props
 	  ) {
-	    var slotNodes = this.$slots[name];
-	    // warn duplicate slot usage
-	    if (slotNodes && "development" !== 'production') {
-	      slotNodes._rendered && warn(
-	        "Duplicate presence of slot \"" + name + "\" found in the same render tree " +
-	        "- this will likely cause render errors.",
-	        this
-	      );
-	      slotNodes._rendered = true;
+	    var scopedSlotFn = this.$scopedSlots[name];
+	    if (scopedSlotFn) { // scoped slot
+	      return scopedSlotFn(props || {}) || fallback
+	    } else {
+	      var slotNodes = this.$slots[name];
+	      // warn duplicate slot usage
+	      if (slotNodes && "development" !== 'production') {
+	        slotNodes._rendered && warn(
+	          "Duplicate presence of slot \"" + name + "\" found in the same render tree " +
+	          "- this will likely cause render errors.",
+	          this
+	        );
+	        slotNodes._rendered = true;
+	      }
+	      return slotNodes || fallback
 	    }
-	    return slotNodes || fallback
 	  };
 	
 	  // apply v-bind object
 	  Vue.prototype._b = function bindProps (
 	    data,
+	    tag,
 	    value,
 	    asProp
 	  ) {
@@ -2499,7 +3174,7 @@
 	          if (key === 'class' || key === 'style') {
 	            data[key] = value[key];
 	          } else {
-	            var hash = asProp || config.mustUseProp(key)
+	            var hash = asProp || config.mustUseProp(tag, key)
 	              ? data.domProps || (data.domProps = {})
 	              : data.attrs || (data.attrs = {});
 	            hash[key] = value[key];
@@ -2648,7 +3323,7 @@
 	      initInternalComponent(vm, options);
 	    } else {
 	      vm.$options = mergeOptions(
-	        resolveConstructorOptions(vm),
+	        resolveConstructorOptions(vm.constructor),
 	        options || {},
 	        vm
 	      );
@@ -2666,39 +3341,42 @@
 	    callHook(vm, 'created');
 	    initRender(vm);
 	  };
+	}
 	
-	  function initInternalComponent (vm, options) {
-	    var opts = vm.$options = Object.create(resolveConstructorOptions(vm));
-	    // doing this because it's faster than dynamic enumeration.
-	    opts.parent = options.parent;
-	    opts.propsData = options.propsData;
-	    opts._parentVnode = options._parentVnode;
-	    opts._parentListeners = options._parentListeners;
-	    opts._renderChildren = options._renderChildren;
-	    opts._componentTag = options._componentTag;
-	    if (options.render) {
-	      opts.render = options.render;
-	      opts.staticRenderFns = options.staticRenderFns;
-	    }
+	function initInternalComponent (vm, options) {
+	  var opts = vm.$options = Object.create(vm.constructor.options);
+	  // doing this because it's faster than dynamic enumeration.
+	  opts.parent = options.parent;
+	  opts.propsData = options.propsData;
+	  opts._parentVnode = options._parentVnode;
+	  opts._parentListeners = options._parentListeners;
+	  opts._renderChildren = options._renderChildren;
+	  opts._componentTag = options._componentTag;
+	  if (options.render) {
+	    opts.render = options.render;
+	    opts.staticRenderFns = options.staticRenderFns;
 	  }
+	}
 	
-	  function resolveConstructorOptions (vm) {
-	    var Ctor = vm.constructor;
-	    var options = Ctor.options;
-	    if (Ctor.super) {
-	      var superOptions = Ctor.super.options;
-	      var cachedSuperOptions = Ctor.superOptions;
-	      if (superOptions !== cachedSuperOptions) {
-	        // super option changed
-	        Ctor.superOptions = superOptions;
-	        options = Ctor.options = mergeOptions(superOptions, Ctor.extendOptions);
-	        if (options.name) {
-	          options.components[options.name] = Ctor;
-	        }
+	function resolveConstructorOptions (Ctor) {
+	  var options = Ctor.options;
+	  if (Ctor.super) {
+	    var superOptions = Ctor.super.options;
+	    var cachedSuperOptions = Ctor.superOptions;
+	    var extendOptions = Ctor.extendOptions;
+	    if (superOptions !== cachedSuperOptions) {
+	      // super option changed
+	      Ctor.superOptions = superOptions;
+	      extendOptions.render = options.render;
+	      extendOptions.staticRenderFns = options.staticRenderFns;
+	      extendOptions._scopeId = options._scopeId;
+	      options = Ctor.options = mergeOptions(superOptions, extendOptions);
+	      if (options.name) {
+	        options.components[options.name] = Ctor;
 	      }
 	    }
-	    return options
 	  }
+	  return options
 	}
 	
 	function Vue$3 (options) {
@@ -2714,577 +3392,6 @@
 	eventsMixin(Vue$3);
 	lifecycleMixin(Vue$3);
 	renderMixin(Vue$3);
-	
-	var warn = noop;
-	var formatComponentName;
-	
-	{
-	  var hasConsole = typeof console !== 'undefined';
-	
-	  warn = function (msg, vm) {
-	    if (hasConsole && (!config.silent)) {
-	      console.error("[Vue warn]: " + msg + " " + (
-	        vm ? formatLocation(formatComponentName(vm)) : ''
-	      ));
-	    }
-	  };
-	
-	  formatComponentName = function (vm) {
-	    if (vm.$root === vm) {
-	      return 'root instance'
-	    }
-	    var name = vm._isVue
-	      ? vm.$options.name || vm.$options._componentTag
-	      : vm.name;
-	    return (
-	      (name ? ("component <" + name + ">") : "anonymous component") +
-	      (vm._isVue && vm.$options.__file ? (" at " + (vm.$options.__file)) : '')
-	    )
-	  };
-	
-	  var formatLocation = function (str) {
-	    if (str === 'anonymous component') {
-	      str += " - use the \"name\" option for better debugging messages.";
-	    }
-	    return ("\n(found in " + str + ")")
-	  };
-	}
-	
-	/*  */
-	
-	/**
-	 * Option overwriting strategies are functions that handle
-	 * how to merge a parent option value and a child option
-	 * value into the final value.
-	 */
-	var strats = config.optionMergeStrategies;
-	
-	/**
-	 * Options with restrictions
-	 */
-	{
-	  strats.el = strats.propsData = function (parent, child, vm, key) {
-	    if (!vm) {
-	      warn(
-	        "option \"" + key + "\" can only be used during instance " +
-	        'creation with the `new` keyword.'
-	      );
-	    }
-	    return defaultStrat(parent, child)
-	  };
-	}
-	
-	/**
-	 * Helper that recursively merges two data objects together.
-	 */
-	function mergeData (to, from) {
-	  var key, toVal, fromVal;
-	  for (key in from) {
-	    toVal = to[key];
-	    fromVal = from[key];
-	    if (!hasOwn(to, key)) {
-	      set(to, key, fromVal);
-	    } else if (isObject(toVal) && isObject(fromVal)) {
-	      mergeData(toVal, fromVal);
-	    }
-	  }
-	  return to
-	}
-	
-	/**
-	 * Data
-	 */
-	strats.data = function (
-	  parentVal,
-	  childVal,
-	  vm
-	) {
-	  if (!vm) {
-	    // in a Vue.extend merge, both should be functions
-	    if (!childVal) {
-	      return parentVal
-	    }
-	    if (typeof childVal !== 'function') {
-	      "development" !== 'production' && warn(
-	        'The "data" option should be a function ' +
-	        'that returns a per-instance value in component ' +
-	        'definitions.',
-	        vm
-	      );
-	      return parentVal
-	    }
-	    if (!parentVal) {
-	      return childVal
-	    }
-	    // when parentVal & childVal are both present,
-	    // we need to return a function that returns the
-	    // merged result of both functions... no need to
-	    // check if parentVal is a function here because
-	    // it has to be a function to pass previous merges.
-	    return function mergedDataFn () {
-	      return mergeData(
-	        childVal.call(this),
-	        parentVal.call(this)
-	      )
-	    }
-	  } else if (parentVal || childVal) {
-	    return function mergedInstanceDataFn () {
-	      // instance merge
-	      var instanceData = typeof childVal === 'function'
-	        ? childVal.call(vm)
-	        : childVal;
-	      var defaultData = typeof parentVal === 'function'
-	        ? parentVal.call(vm)
-	        : undefined;
-	      if (instanceData) {
-	        return mergeData(instanceData, defaultData)
-	      } else {
-	        return defaultData
-	      }
-	    }
-	  }
-	};
-	
-	/**
-	 * Hooks and param attributes are merged as arrays.
-	 */
-	function mergeHook (
-	  parentVal,
-	  childVal
-	) {
-	  return childVal
-	    ? parentVal
-	      ? parentVal.concat(childVal)
-	      : Array.isArray(childVal)
-	        ? childVal
-	        : [childVal]
-	    : parentVal
-	}
-	
-	config._lifecycleHooks.forEach(function (hook) {
-	  strats[hook] = mergeHook;
-	});
-	
-	/**
-	 * Assets
-	 *
-	 * When a vm is present (instance creation), we need to do
-	 * a three-way merge between constructor options, instance
-	 * options and parent options.
-	 */
-	function mergeAssets (parentVal, childVal) {
-	  var res = Object.create(parentVal || null);
-	  return childVal
-	    ? extend(res, childVal)
-	    : res
-	}
-	
-	config._assetTypes.forEach(function (type) {
-	  strats[type + 's'] = mergeAssets;
-	});
-	
-	/**
-	 * Watchers.
-	 *
-	 * Watchers hashes should not overwrite one
-	 * another, so we merge them as arrays.
-	 */
-	strats.watch = function (parentVal, childVal) {
-	  /* istanbul ignore if */
-	  if (!childVal) { return parentVal }
-	  if (!parentVal) { return childVal }
-	  var ret = {};
-	  extend(ret, parentVal);
-	  for (var key in childVal) {
-	    var parent = ret[key];
-	    var child = childVal[key];
-	    if (parent && !Array.isArray(parent)) {
-	      parent = [parent];
-	    }
-	    ret[key] = parent
-	      ? parent.concat(child)
-	      : [child];
-	  }
-	  return ret
-	};
-	
-	/**
-	 * Other object hashes.
-	 */
-	strats.props =
-	strats.methods =
-	strats.computed = function (parentVal, childVal) {
-	  if (!childVal) { return parentVal }
-	  if (!parentVal) { return childVal }
-	  var ret = Object.create(null);
-	  extend(ret, parentVal);
-	  extend(ret, childVal);
-	  return ret
-	};
-	
-	/**
-	 * Default strategy.
-	 */
-	var defaultStrat = function (parentVal, childVal) {
-	  return childVal === undefined
-	    ? parentVal
-	    : childVal
-	};
-	
-	/**
-	 * Make sure component options get converted to actual
-	 * constructors.
-	 */
-	function normalizeComponents (options) {
-	  if (options.components) {
-	    var components = options.components;
-	    var def;
-	    for (var key in components) {
-	      var lower = key.toLowerCase();
-	      if (isBuiltInTag(lower) || config.isReservedTag(lower)) {
-	        "development" !== 'production' && warn(
-	          'Do not use built-in or reserved HTML elements as component ' +
-	          'id: ' + key
-	        );
-	        continue
-	      }
-	      def = components[key];
-	      if (isPlainObject(def)) {
-	        components[key] = Vue$3.extend(def);
-	      }
-	    }
-	  }
-	}
-	
-	/**
-	 * Ensure all props option syntax are normalized into the
-	 * Object-based format.
-	 */
-	function normalizeProps (options) {
-	  var props = options.props;
-	  if (!props) { return }
-	  var res = {};
-	  var i, val, name;
-	  if (Array.isArray(props)) {
-	    i = props.length;
-	    while (i--) {
-	      val = props[i];
-	      if (typeof val === 'string') {
-	        name = camelize(val);
-	        res[name] = { type: null };
-	      } else {
-	        warn('props must be strings when using array syntax.');
-	      }
-	    }
-	  } else if (isPlainObject(props)) {
-	    for (var key in props) {
-	      val = props[key];
-	      name = camelize(key);
-	      res[name] = isPlainObject(val)
-	        ? val
-	        : { type: val };
-	    }
-	  }
-	  options.props = res;
-	}
-	
-	/**
-	 * Normalize raw function directives into object format.
-	 */
-	function normalizeDirectives (options) {
-	  var dirs = options.directives;
-	  if (dirs) {
-	    for (var key in dirs) {
-	      var def = dirs[key];
-	      if (typeof def === 'function') {
-	        dirs[key] = { bind: def, update: def };
-	      }
-	    }
-	  }
-	}
-	
-	/**
-	 * Merge two option objects into a new one.
-	 * Core utility used in both instantiation and inheritance.
-	 */
-	function mergeOptions (
-	  parent,
-	  child,
-	  vm
-	) {
-	  normalizeComponents(child);
-	  normalizeProps(child);
-	  normalizeDirectives(child);
-	  var extendsFrom = child.extends;
-	  if (extendsFrom) {
-	    parent = typeof extendsFrom === 'function'
-	      ? mergeOptions(parent, extendsFrom.options, vm)
-	      : mergeOptions(parent, extendsFrom, vm);
-	  }
-	  if (child.mixins) {
-	    for (var i = 0, l = child.mixins.length; i < l; i++) {
-	      var mixin = child.mixins[i];
-	      if (mixin.prototype instanceof Vue$3) {
-	        mixin = mixin.options;
-	      }
-	      parent = mergeOptions(parent, mixin, vm);
-	    }
-	  }
-	  var options = {};
-	  var key;
-	  for (key in parent) {
-	    mergeField(key);
-	  }
-	  for (key in child) {
-	    if (!hasOwn(parent, key)) {
-	      mergeField(key);
-	    }
-	  }
-	  function mergeField (key) {
-	    var strat = strats[key] || defaultStrat;
-	    options[key] = strat(parent[key], child[key], vm, key);
-	  }
-	  return options
-	}
-	
-	/**
-	 * Resolve an asset.
-	 * This function is used because child instances need access
-	 * to assets defined in its ancestor chain.
-	 */
-	function resolveAsset (
-	  options,
-	  type,
-	  id,
-	  warnMissing
-	) {
-	  /* istanbul ignore if */
-	  if (typeof id !== 'string') {
-	    return
-	  }
-	  var assets = options[type];
-	  var res = assets[id] ||
-	    // camelCase ID
-	    assets[camelize(id)] ||
-	    // Pascal Case ID
-	    assets[capitalize(camelize(id))];
-	  if ("development" !== 'production' && warnMissing && !res) {
-	    warn(
-	      'Failed to resolve ' + type.slice(0, -1) + ': ' + id,
-	      options
-	    );
-	  }
-	  return res
-	}
-	
-	/*  */
-	
-	function validateProp (
-	  key,
-	  propOptions,
-	  propsData,
-	  vm
-	) {
-	  var prop = propOptions[key];
-	  var absent = !hasOwn(propsData, key);
-	  var value = propsData[key];
-	  // handle boolean props
-	  if (isBooleanType(prop.type)) {
-	    if (absent && !hasOwn(prop, 'default')) {
-	      value = false;
-	    } else if (value === '' || value === hyphenate(key)) {
-	      value = true;
-	    }
-	  }
-	  // check default value
-	  if (value === undefined) {
-	    value = getPropDefaultValue(vm, prop, key);
-	    // since the default value is a fresh copy,
-	    // make sure to observe it.
-	    var prevShouldConvert = observerState.shouldConvert;
-	    observerState.shouldConvert = true;
-	    observe(value);
-	    observerState.shouldConvert = prevShouldConvert;
-	  }
-	  {
-	    assertProp(prop, key, value, vm, absent);
-	  }
-	  return value
-	}
-	
-	/**
-	 * Get the default value of a prop.
-	 */
-	function getPropDefaultValue (vm, prop, name) {
-	  // no default, return undefined
-	  if (!hasOwn(prop, 'default')) {
-	    return undefined
-	  }
-	  var def = prop.default;
-	  // warn against non-factory defaults for Object & Array
-	  if (isObject(def)) {
-	    "development" !== 'production' && warn(
-	      'Invalid default value for prop "' + name + '": ' +
-	      'Props with type Object/Array must use a factory function ' +
-	      'to return the default value.',
-	      vm
-	    );
-	  }
-	  // call factory function for non-Function types
-	  return typeof def === 'function' && prop.type !== Function
-	    ? def.call(vm)
-	    : def
-	}
-	
-	/**
-	 * Assert whether a prop is valid.
-	 */
-	function assertProp (
-	  prop,
-	  name,
-	  value,
-	  vm,
-	  absent
-	) {
-	  if (prop.required && absent) {
-	    warn(
-	      'Missing required prop: "' + name + '"',
-	      vm
-	    );
-	    return
-	  }
-	  if (value == null && !prop.required) {
-	    return
-	  }
-	  var type = prop.type;
-	  var valid = !type || type === true;
-	  var expectedTypes = [];
-	  if (type) {
-	    if (!Array.isArray(type)) {
-	      type = [type];
-	    }
-	    for (var i = 0; i < type.length && !valid; i++) {
-	      var assertedType = assertType(value, type[i]);
-	      expectedTypes.push(assertedType.expectedType);
-	      valid = assertedType.valid;
-	    }
-	  }
-	  if (!valid) {
-	    warn(
-	      'Invalid prop: type check failed for prop "' + name + '".' +
-	      ' Expected ' + expectedTypes.map(capitalize).join(', ') +
-	      ', got ' + Object.prototype.toString.call(value).slice(8, -1) + '.',
-	      vm
-	    );
-	    return
-	  }
-	  var validator = prop.validator;
-	  if (validator) {
-	    if (!validator(value)) {
-	      warn(
-	        'Invalid prop: custom validator check failed for prop "' + name + '".',
-	        vm
-	      );
-	    }
-	  }
-	}
-	
-	/**
-	 * Assert the type of a value
-	 */
-	function assertType (value, type) {
-	  var valid;
-	  var expectedType = getType(type);
-	  if (expectedType === 'String') {
-	    valid = typeof value === (expectedType = 'string');
-	  } else if (expectedType === 'Number') {
-	    valid = typeof value === (expectedType = 'number');
-	  } else if (expectedType === 'Boolean') {
-	    valid = typeof value === (expectedType = 'boolean');
-	  } else if (expectedType === 'Function') {
-	    valid = typeof value === (expectedType = 'function');
-	  } else if (expectedType === 'Object') {
-	    valid = isPlainObject(value);
-	  } else if (expectedType === 'Array') {
-	    valid = Array.isArray(value);
-	  } else {
-	    valid = value instanceof type;
-	  }
-	  return {
-	    valid: valid,
-	    expectedType: expectedType
-	  }
-	}
-	
-	/**
-	 * Use function string name to check built-in types,
-	 * because a simple equality check will fail when running
-	 * across different vms / iframes.
-	 */
-	function getType (fn) {
-	  var match = fn && fn.toString().match(/^\s*function (\w+)/);
-	  return match && match[1]
-	}
-	
-	function isBooleanType (fn) {
-	  if (!Array.isArray(fn)) {
-	    return getType(fn) === 'Boolean'
-	  }
-	  for (var i = 0, len = fn.length; i < len; i++) {
-	    if (getType(fn[i]) === 'Boolean') {
-	      return true
-	    }
-	  }
-	  /* istanbul ignore next */
-	  return false
-	}
-	
-	
-	
-	var util = Object.freeze({
-		defineReactive: defineReactive$$1,
-		_toString: _toString,
-		toNumber: toNumber,
-		makeMap: makeMap,
-		isBuiltInTag: isBuiltInTag,
-		remove: remove$1,
-		hasOwn: hasOwn,
-		isPrimitive: isPrimitive,
-		cached: cached,
-		camelize: camelize,
-		capitalize: capitalize,
-		hyphenate: hyphenate,
-		bind: bind$1,
-		toArray: toArray,
-		extend: extend,
-		isObject: isObject,
-		isPlainObject: isPlainObject,
-		toObject: toObject,
-		noop: noop,
-		no: no,
-		genStaticKeys: genStaticKeys,
-		looseEqual: looseEqual,
-		looseIndexOf: looseIndexOf,
-		isReserved: isReserved,
-		def: def,
-		parsePath: parsePath,
-		hasProto: hasProto,
-		inBrowser: inBrowser,
-		UA: UA,
-		isIE: isIE,
-		isIE9: isIE9,
-		isEdge: isEdge,
-		isAndroid: isAndroid,
-		isIOS: isIOS,
-		devtools: devtools,
-		nextTick: nextTick,
-		get _Set () { return _Set; },
-		mergeOptions: mergeOptions,
-		resolveAsset: resolveAsset,
-		get warn () { return warn; },
-		get formatComponentName () { return formatComponentName; },
-		validateProp: validateProp
-	});
 	
 	/*  */
 	
@@ -3311,7 +3418,7 @@
 	
 	function initMixin$1 (Vue) {
 	  Vue.mixin = function (mixin) {
-	    Vue.options = mergeOptions(Vue.options, mixin);
+	    this.options = mergeOptions(this.options, mixin);
 	  };
 	}
 	
@@ -3332,9 +3439,10 @@
 	  Vue.extend = function (extendOptions) {
 	    extendOptions = extendOptions || {};
 	    var Super = this;
-	    var isFirstExtend = Super.cid === 0;
-	    if (isFirstExtend && extendOptions._Ctor) {
-	      return extendOptions._Ctor
+	    var SuperId = Super.cid;
+	    var cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {});
+	    if (cachedCtors[SuperId]) {
+	      return cachedCtors[SuperId]
 	    }
 	    var name = extendOptions.name || Super.options.name;
 	    {
@@ -3343,7 +3451,6 @@
 	          'Invalid component name: "' + name + '". Component names ' +
 	          'can only contain alphanumeric characaters and the hyphen.'
 	        );
-	        name = null;
 	      }
 	    }
 	    var Sub = function VueComponent (options) {
@@ -3357,8 +3464,10 @@
 	      extendOptions
 	    );
 	    Sub['super'] = Super;
-	    // allow further extension
+	    // allow further extension/mixin/plugin usage
 	    Sub.extend = Super.extend;
+	    Sub.mixin = Super.mixin;
+	    Sub.use = Super.use;
 	    // create asset registers, so extended classes
 	    // can have their private assets too.
 	    config._assetTypes.forEach(function (type) {
@@ -3374,9 +3483,7 @@
 	    Sub.superOptions = Super.options;
 	    Sub.extendOptions = extendOptions;
 	    // cache constructor
-	    if (isFirstExtend) {
-	      extendOptions._Ctor = Sub;
-	    }
+	    cachedCtors[SuperId] = Sub;
 	    return Sub
 	  };
 	}
@@ -3406,7 +3513,7 @@
 	        }
 	        if (type === 'component' && isPlainObject(definition)) {
 	          definition.name = definition.name || id;
-	          definition = Vue.extend(definition);
+	          definition = this.options._base.extend(definition);
 	        }
 	        if (type === 'directive' && typeof definition === 'function') {
 	          definition = { bind: definition, update: definition };
@@ -3418,9 +3525,25 @@
 	  });
 	}
 	
+	/*  */
+	
+	var patternTypes = [String, RegExp];
+	
+	function matches (pattern, name) {
+	  if (typeof pattern === 'string') {
+	    return pattern.split(',').indexOf(name) > -1
+	  } else {
+	    return pattern.test(name)
+	  }
+	}
+	
 	var KeepAlive = {
 	  name: 'keep-alive',
 	  abstract: true,
+	  props: {
+	    include: patternTypes,
+	    exclude: patternTypes
+	  },
 	  created: function created () {
 	    this.cache = Object.create(null);
 	  },
@@ -3428,10 +3551,18 @@
 	    var vnode = getFirstComponentChild(this.$slots.default);
 	    if (vnode && vnode.componentOptions) {
 	      var opts = vnode.componentOptions;
+	      // check pattern
+	      var name = opts.Ctor.options.name || opts.tag;
+	      if (name && (
+	        (this.include && !matches(this.include, name)) ||
+	        (this.exclude && matches(this.exclude, name))
+	      )) {
+	        return vnode
+	      }
 	      var key = vnode.key == null
 	        // same constructor may get registered as different local components
 	        // so cid alone is not enough (#3269)
-	        ? opts.Ctor.cid + '::' + opts.tag
+	        ? opts.Ctor.cid + (opts.tag ? ("::" + (opts.tag)) : '')
 	        : vnode.key;
 	      if (this.cache[key]) {
 	        vnode.child = this.cache[key].child;
@@ -3481,6 +3612,10 @@
 	    Vue.options[type + 's'] = Object.create(null);
 	  });
 	
+	  // this is used to identify the "base" constructor to extend all plain-object
+	  // components with in Weex's multi-instance scenarios.
+	  Vue.options._base = Vue;
+	
 	  extend(Vue.options.components, builtInComponents);
 	
 	  initUse(Vue);
@@ -3492,15 +3627,22 @@
 	initGlobalAPI(Vue$3);
 	
 	Object.defineProperty(Vue$3.prototype, '$isServer', {
-	  get: function () { return config._isServer; }
+	  get: isServerRendering
 	});
 	
-	Vue$3.version = '2.0.3';
+	Vue$3.version = '2.1.3';
 	
 	/*  */
 	
 	// attributes that should be using props for binding
-	var mustUseProp = makeMap('value,selected,checked,muted');
+	var mustUseProp = function (tag, attr) {
+	  return (
+	    (attr === 'value' && (tag === 'input' || tag === 'textarea' || tag === 'option')) ||
+	    (attr === 'selected' && tag === 'option') ||
+	    (attr === 'checked' && tag === 'input') ||
+	    (attr === 'muted' && tag === 'video')
+	  )
+	};
 	
 	var isEnumeratedAttr = makeMap('contenteditable,draggable,spellcheck');
 	
@@ -3621,7 +3763,8 @@
 	
 	var namespaceMap = {
 	  svg: 'http://www.w3.org/2000/svg',
-	  math: 'http://www.w3.org/1998/Math/MathML'
+	  math: 'http://www.w3.org/1998/Math/MathML',
+	  xhtml: 'http://www.w3.org/1999/xhtml'
 	};
 	
 	var isHTMLTag = makeMap(
@@ -3843,7 +3986,7 @@
 	    }
 	  } else {
 	    if (vnode.data.refInFor) {
-	      if (Array.isArray(refs[key])) {
+	      if (Array.isArray(refs[key]) && refs[key].indexOf(ref) < 0) {
 	        refs[key].push(ref);
 	      } else {
 	        refs[key] = [ref];
@@ -3929,7 +4072,10 @@
 	
 	  function removeElement (el) {
 	    var parent = nodeOps.parentNode(el);
-	    nodeOps.removeChild(parent, el);
+	    // element may have already been removed due to v-html
+	    if (parent) {
+	      nodeOps.removeChild(parent, el);
+	    }
 	  }
 	
 	  function createElm (vnode, insertedVnodeQueue, nested) {
@@ -4188,8 +4334,9 @@
 	    if (vnode.isStatic &&
 	        oldVnode.isStatic &&
 	        vnode.key === oldVnode.key &&
-	        vnode.isCloned) {
+	        (vnode.isCloned || vnode.isOnce)) {
 	      vnode.elm = oldVnode.elm;
+	      vnode.child = oldVnode.child;
 	      return
 	    }
 	    var i;
@@ -4296,7 +4443,7 @@
 	    if (vnode.tag) {
 	      return (
 	        vnode.tag.indexOf('vue-component') === 0 ||
-	        vnode.tag === nodeOps.tagName(node).toLowerCase()
+	        vnode.tag.toLowerCase() === nodeOps.tagName(node).toLowerCase()
 	      )
 	    } else {
 	      return _toString(vnode.text) === node.data
@@ -4354,9 +4501,13 @@
 	        createElm(vnode, insertedVnodeQueue);
 	
 	        // component root element replaced.
-	        // update parent placeholder node element.
+	        // update parent placeholder node element, recursively
 	        if (vnode.parent) {
-	          vnode.parent.elm = vnode.elm;
+	          var ancestor = vnode.parent;
+	          while (ancestor) {
+	            ancestor.elm = vnode.elm;
+	            ancestor = ancestor.parent;
+	          }
 	          if (isPatchable(vnode)) {
 	            for (var i = 0; i < cbs.create.length; ++i) {
 	              cbs.create[i](emptyNode, vnode.parent);
@@ -4626,17 +4777,18 @@
 	
 	  for (key in oldProps) {
 	    if (props[key] == null) {
-	      elm[key] = undefined;
+	      elm[key] = '';
 	    }
 	  }
 	  for (key in props) {
+	    cur = props[key];
 	    // ignore children if the node has textContent or innerHTML,
 	    // as these will throw away existing DOM nodes and cause removal errors
 	    // on subsequent patches (#3360)
-	    if ((key === 'textContent' || key === 'innerHTML') && vnode.children) {
-	      vnode.children.length = 0;
+	    if (key === 'textContent' || key === 'innerHTML') {
+	      if (vnode.children) { vnode.children.length = 0; }
+	      if (cur === oldProps[key]) { continue }
 	    }
-	    cur = props[key];
 	    if (key === 'value') {
 	      // store value as _value as well since
 	      // non-string values will be stringified
@@ -4659,6 +4811,85 @@
 	
 	/*  */
 	
+	var parseStyleText = cached(function (cssText) {
+	  var res = {};
+	  var hasBackground = cssText.indexOf('background') >= 0;
+	  // maybe with background-image: url(http://xxx) or base64 img
+	  var listDelimiter = hasBackground ? /;(?![^(]*\))/g : ';';
+	  var propertyDelimiter = hasBackground ? /:(.+)/ : ':';
+	  cssText.split(listDelimiter).forEach(function (item) {
+	    if (item) {
+	      var tmp = item.split(propertyDelimiter);
+	      tmp.length > 1 && (res[tmp[0].trim()] = tmp[1].trim());
+	    }
+	  });
+	  return res
+	});
+	
+	// merge static and dynamic style data on the same vnode
+	function normalizeStyleData (data) {
+	  var style = normalizeStyleBinding(data.style);
+	  // static style is pre-processed into an object during compilation
+	  // and is always a fresh object, so it's safe to merge into it
+	  return data.staticStyle
+	    ? extend(data.staticStyle, style)
+	    : style
+	}
+	
+	// normalize possible array / string values into Object
+	function normalizeStyleBinding (bindingStyle) {
+	  if (Array.isArray(bindingStyle)) {
+	    return toObject(bindingStyle)
+	  }
+	  if (typeof bindingStyle === 'string') {
+	    return parseStyleText(bindingStyle)
+	  }
+	  return bindingStyle
+	}
+	
+	/**
+	 * parent component style should be after child's
+	 * so that parent component's style could override it
+	 */
+	function getStyle (vnode, checkChild) {
+	  var res = {};
+	  var styleData;
+	
+	  if (checkChild) {
+	    var childNode = vnode;
+	    while (childNode.child) {
+	      childNode = childNode.child._vnode;
+	      if (childNode.data && (styleData = normalizeStyleData(childNode.data))) {
+	        extend(res, styleData);
+	      }
+	    }
+	  }
+	
+	  if ((styleData = normalizeStyleData(vnode.data))) {
+	    extend(res, styleData);
+	  }
+	
+	  var parentNode = vnode;
+	  while ((parentNode = parentNode.parent)) {
+	    if (parentNode.data && (styleData = normalizeStyleData(parentNode.data))) {
+	      extend(res, styleData);
+	    }
+	  }
+	  return res
+	}
+	
+	/*  */
+	
+	var cssVarRE = /^--/;
+	var setProp = function (el, name, val) {
+	  /* istanbul ignore if */
+	  if (cssVarRE.test(name)) {
+	    el.style.setProperty(name, val);
+	  } else {
+	    el.style[normalize(name)] = val;
+	  }
+	};
+	
 	var prefixes = ['Webkit', 'Moz', 'ms'];
 	
 	var testEl;
@@ -4678,43 +4909,38 @@
 	});
 	
 	function updateStyle (oldVnode, vnode) {
-	  if ((!oldVnode.data || !oldVnode.data.style) && !vnode.data.style) {
+	  var data = vnode.data;
+	  var oldData = oldVnode.data;
+	
+	  if (!data.staticStyle && !data.style &&
+	      !oldData.staticStyle && !oldData.style) {
 	    return
 	  }
+	
 	  var cur, name;
 	  var el = vnode.elm;
-	  var oldStyle = oldVnode.data.style || {};
-	  var style = vnode.data.style || {};
+	  var oldStaticStyle = oldVnode.data.staticStyle;
+	  var oldStyleBinding = oldVnode.data.style || {};
 	
-	  // handle string
-	  if (typeof style === 'string') {
-	    el.style.cssText = style;
-	    return
-	  }
+	  // if static style exists, stylebinding already merged into it when doing normalizeStyleData
+	  var oldStyle = oldStaticStyle || oldStyleBinding;
 	
-	  var needClone = style.__ob__;
+	  var style = normalizeStyleBinding(vnode.data.style) || {};
 	
-	  // handle array syntax
-	  if (Array.isArray(style)) {
-	    style = vnode.data.style = toObject(style);
-	  }
+	  vnode.data.style = style.__ob__ ? extend({}, style) : style;
 	
-	  // clone the style for future updates,
-	  // in case the user mutates the style object in-place.
-	  if (needClone) {
-	    style = vnode.data.style = extend({}, style);
-	  }
+	  var newStyle = getStyle(vnode, true);
 	
 	  for (name in oldStyle) {
-	    if (style[name] == null) {
-	      el.style[normalize(name)] = '';
+	    if (newStyle[name] == null) {
+	      setProp(el, name, '');
 	    }
 	  }
-	  for (name in style) {
-	    cur = style[name];
+	  for (name in newStyle) {
+	    cur = newStyle[name];
 	    if (cur !== oldStyle[name]) {
 	      // ie9 setting to null has no effect, must use empty string
-	      el.style[normalize(name)] = cur == null ? '' : cur;
+	      setProp(el, name, cur == null ? '' : cur);
 	    }
 	  }
 	}
@@ -4731,6 +4957,11 @@
 	 * SVG elements in IE
 	 */
 	function addClass (el, cls) {
+	  /* istanbul ignore if */
+	  if (!cls || !cls.trim()) {
+	    return
+	  }
+	
 	  /* istanbul ignore else */
 	  if (el.classList) {
 	    if (cls.indexOf(' ') > -1) {
@@ -4751,6 +4982,11 @@
 	 * SVG elements in IE
 	 */
 	function removeClass (el, cls) {
+	  /* istanbul ignore if */
+	  if (!cls || !cls.trim()) {
+	    return
+	  }
+	
 	  /* istanbul ignore else */
 	  if (el.classList) {
 	    if (cls.indexOf(' ') > -1) {
@@ -4895,6 +5131,11 @@
 	}
 	
 	function getTimeout (delays, durations) {
+	  /* istanbul ignore next */
+	  while (delays.length < durations.length) {
+	    delays = delays.concat(delays);
+	  }
+	
 	  return Math.max.apply(null, durations.map(function (d, i) {
 	    return toMs(d) + toMs(delays[i])
 	  }))
@@ -5182,7 +5423,7 @@
 	 * properties to Elements.
 	 */
 	
-	var modelableTagRE = /^input|select|textarea|vue-component-[0-9]+(-[0-9a-zA-Z_\-]*)?$/;
+	var modelableTagRE = /^input|select|textarea|vue-component-[0-9]+(-[0-9a-zA-Z_-]*)?$/;
 	
 	/* istanbul ignore if */
 	if (isIE9) {
@@ -5235,7 +5476,7 @@
 	      setSelected(el, binding, vnode.context);
 	      // in case the options rendered by v-for have changed,
 	      // it's possible that the value is out-of-sync with the rendered options.
-	      // detect such cases and filter out values that no longer has a matchig
+	      // detect such cases and filter out values that no longer has a matching
 	      // option in the DOM.
 	      var needReset = el.multiple
 	        ? binding.value.some(function (v) { return hasNoMatchingOption(v, el.options); })
@@ -5380,7 +5621,7 @@
 	};
 	
 	// in case the child is also an abstract component, e.g. <keep-alive>
-	// we want to recrusively retrieve the real component to be rendered
+	// we want to recursively retrieve the real component to be rendered
 	function getRealChild (vnode) {
 	  var compOptions = vnode && vnode.componentOptions;
 	  if (compOptions && compOptions.Ctor.options.abstract) {
@@ -5602,7 +5843,7 @@
 	
 	  updated: function updated () {
 	    var children = this.prevChildren;
-	    var moveClass = this.moveClass || (this.name + '-move');
+	    var moveClass = this.moveClass || ((this.name || 'v') + '-move');
 	    if (!children.length || !this.hasMove(children[0].elm, moveClass)) {
 	      return
 	    }
@@ -5696,14 +5937,14 @@
 	extend(Vue$3.options.components, platformComponents);
 	
 	// install platform patch function
-	Vue$3.prototype.__patch__ = config._isServer ? noop : patch$1;
+	Vue$3.prototype.__patch__ = inBrowser ? patch$1 : noop;
 	
 	// wrap mount
 	Vue$3.prototype.$mount = function (
 	  el,
 	  hydrating
 	) {
-	  el = el && !config._isServer ? query(el) : undefined;
+	  el = el && inBrowser ? query(el) : undefined;
 	  return this._mount(el, hydrating)
 	};
 	
@@ -5740,9 +5981,10 @@
 	
 	/*  */
 	
-	var decoder = document.createElement('div');
+	var decoder;
 	
 	function decode (html) {
+	  decoder = decoder || document.createElement('div');
 	  decoder.innerHTML = html;
 	  return decoder.textContent
 	}
@@ -5759,7 +6001,7 @@
 	 */
 	
 	// Regular Expressions for parsing tags and attributes
-	var singleAttrIdentifier = /([^\s"'<>\/=]+)/;
+	var singleAttrIdentifier = /([^\s"'<>/=]+)/;
 	var singleAttrAssign = /(?:=)/;
 	var singleAttrValues = [
 	  // attr value double quotes
@@ -5783,6 +6025,8 @@
 	var startTagClose = /^\s*(\/?)>/;
 	var endTag = new RegExp('^<\\/' + qnameCapture + '[^>]*>');
 	var doctype = /^<!DOCTYPE [^>]+>/i;
+	var comment = /^<!--/;
+	var conditionalComment = /^<!\[/;
 	
 	var IS_REGEX_CAPTURING_BROKEN = false;
 	'x'.replace(/x(.)?/g, function (m, g) {
@@ -5790,7 +6034,22 @@
 	});
 	
 	// Special Elements (can contain anything)
-	var isSpecialTag = makeMap('script,style', true);
+	var isScriptOrStyle = makeMap('script,style', true);
+	var hasLang = function (attr) { return attr.name === 'lang' && attr.value !== 'html'; };
+	var isSpecialTag = function (tag, isSFC, stack) {
+	  if (isScriptOrStyle(tag)) {
+	    return true
+	  }
+	  if (isSFC && stack.length === 1) {
+	    // top-level template that has no pre-processor
+	    if (tag === 'template' && !stack[0].attrs.some(hasLang)) {
+	      return false
+	    } else {
+	      return true
+	    }
+	  }
+	  return false
+	};
 	
 	var reCache = {};
 	
@@ -5820,11 +6079,11 @@
 	  while (html) {
 	    last = html;
 	    // Make sure we're not in a script or style element
-	    if (!lastTag || !isSpecialTag(lastTag)) {
+	    if (!lastTag || !isSpecialTag(lastTag, options.sfc, stack)) {
 	      var textEnd = html.indexOf('<');
 	      if (textEnd === 0) {
 	        // Comment:
-	        if (/^<!--/.test(html)) {
+	        if (comment.test(html)) {
 	          var commentEnd = html.indexOf('-->');
 	
 	          if (commentEnd >= 0) {
@@ -5834,7 +6093,7 @@
 	        }
 	
 	        // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
-	        if (/^<!\[/.test(html)) {
+	        if (conditionalComment.test(html)) {
 	          var conditionalEnd = html.indexOf(']>');
 	
 	          if (conditionalEnd >= 0) {
@@ -5867,16 +6126,31 @@
 	        }
 	      }
 	
-	      var text = void 0;
-	      if (textEnd >= 0) {
+	      var text = (void 0), rest$1 = (void 0), next = (void 0);
+	      if (textEnd > 0) {
+	        rest$1 = html.slice(textEnd);
+	        while (
+	          !endTag.test(rest$1) &&
+	          !startTagOpen.test(rest$1) &&
+	          !comment.test(rest$1) &&
+	          !conditionalComment.test(rest$1)
+	        ) {
+	          // < in plain text, be forgiving and treat it as text
+	          next = rest$1.indexOf('<', 1);
+	          if (next < 0) { break }
+	          textEnd += next;
+	          rest$1 = html.slice(textEnd);
+	        }
 	        text = html.substring(0, textEnd);
 	        advance(textEnd);
-	      } else {
+	      }
+	
+	      if (textEnd < 0) {
 	        text = html;
 	        html = '';
 	      }
 	
-	      if (options.chars) {
+	      if (options.chars && text) {
 	        options.chars(text);
 	      }
 	    } else {
@@ -5888,7 +6162,7 @@
 	        if (stackedTag !== 'script' && stackedTag !== 'style' && stackedTag !== 'noscript') {
 	          text = text
 	            .replace(/<!--([\s\S]*?)-->/g, '$1')
-	            .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+	            .replace(/<!\[CDATA\[([\s\S]*?)]]>/g, '$1');
 	        }
 	        if (options.chars) {
 	          options.chars(text);
@@ -5900,8 +6174,9 @@
 	      parseEndTag('</' + stackedTag + '>', stackedTag, index - endTagLength, index);
 	    }
 	
-	    if (html === last) {
-	      throw new Error('Error parsing template:\n\n' + html)
+	    if (html === last && options.chars) {
+	      options.chars(html);
+	      break
 	    }
 	  }
 	
@@ -6031,6 +6306,8 @@
 	function parseFilters (exp) {
 	  var inSingle = false;
 	  var inDouble = false;
+	  var inTemplateString = false;
+	  var inRegex = false;
 	  var curly = 0;
 	  var square = 0;
 	  var paren = 0;
@@ -6041,11 +6318,13 @@
 	    prev = c;
 	    c = exp.charCodeAt(i);
 	    if (inSingle) {
-	      // check single quote
-	      if (c === 0x27 && prev !== 0x5C) { inSingle = !inSingle; }
+	      if (c === 0x27 && prev !== 0x5C) { inSingle = false; }
 	    } else if (inDouble) {
-	      // check double quote
-	      if (c === 0x22 && prev !== 0x5C) { inDouble = !inDouble; }
+	      if (c === 0x22 && prev !== 0x5C) { inDouble = false; }
+	    } else if (inTemplateString) {
+	      if (c === 0x60 && prev !== 0x5C) { inTemplateString = false; }
+	    } else if (inRegex) {
+	      if (c === 0x2f && prev !== 0x5C) { inRegex = false; }
 	    } else if (
 	      c === 0x7C && // pipe
 	      exp.charCodeAt(i + 1) !== 0x7C &&
@@ -6061,14 +6340,16 @@
 	      }
 	    } else {
 	      switch (c) {
-	        case 0x22: inDouble = true; break // "
-	        case 0x27: inSingle = true; break // '
-	        case 0x28: paren++; break         // (
-	        case 0x29: paren--; break         // )
-	        case 0x5B: square++; break        // [
-	        case 0x5D: square--; break        // ]
-	        case 0x7B: curly++; break         // {
-	        case 0x7D: curly--; break         // }
+	        case 0x22: inDouble = true; break         // "
+	        case 0x27: inSingle = true; break         // '
+	        case 0x60: inTemplateString = true; break // `
+	        case 0x2f: inRegex = true; break          // /
+	        case 0x28: paren++; break                 // (
+	        case 0x29: paren--; break                 // )
+	        case 0x5B: square++; break                // [
+	        case 0x5D: square--; break                // ]
+	        case 0x7B: curly++; break                 // {
+	        case 0x7D: curly--; break                 // }
 	      }
 	    }
 	  }
@@ -6108,7 +6389,7 @@
 	/*  */
 	
 	var defaultTagRE = /\{\{((?:.|\n)+?)\}\}/g;
-	var regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g;
+	var regexEscapeRE = /[-.*+?^${}()|[\]/\\]/g;
 	
 	var buildRegex = cached(function (delimiters) {
 	  var open = delimiters[0].replace(regexEscapeRE, '\\$&');
@@ -6218,7 +6499,7 @@
 	    getAndRemoveAttr(el, ':' + name) ||
 	    getAndRemoveAttr(el, 'v-bind:' + name);
 	  if (dynamicValue != null) {
-	    return dynamicValue
+	    return parseFilters(dynamicValue)
 	  } else if (getStatic !== false) {
 	    var staticValue = getAndRemoveAttr(el, name);
 	    if (staticValue != null) {
@@ -6241,16 +6522,104 @@
 	  return val
 	}
 	
+	var len;
+	var str;
+	var chr;
+	var index$1;
+	var expressionPos;
+	var expressionEndPos;
+	
+	/**
+	 * parse directive model to do the array update transform. a[idx] = val => $$a.splice($$idx, 1, val)
+	 *
+	 * for loop possible cases:
+	 *
+	 * - test
+	 * - test[idx]
+	 * - test[test1[idx]]
+	 * - test["a"][idx]
+	 * - xxx.test[a[a].test1[idx]]
+	 * - test.xxx.a["asa"][test1[idx]]
+	 *
+	 */
+	
+	function parseModel (val) {
+	  str = val;
+	  len = str.length;
+	  index$1 = expressionPos = expressionEndPos = 0;
+	
+	  if (val.indexOf('[') < 0 || val.lastIndexOf(']') < len - 1) {
+	    return {
+	      exp: val,
+	      idx: null
+	    }
+	  }
+	
+	  while (!eof()) {
+	    chr = next();
+	    /* istanbul ignore if */
+	    if (isStringStart(chr)) {
+	      parseString(chr);
+	    } else if (chr === 0x5B) {
+	      parseBracket(chr);
+	    }
+	  }
+	
+	  return {
+	    exp: val.substring(0, expressionPos),
+	    idx: val.substring(expressionPos + 1, expressionEndPos)
+	  }
+	}
+	
+	function next () {
+	  return str.charCodeAt(++index$1)
+	}
+	
+	function eof () {
+	  return index$1 >= len
+	}
+	
+	function isStringStart (chr) {
+	  return chr === 0x22 || chr === 0x27
+	}
+	
+	function parseBracket (chr) {
+	  var inBracket = 1;
+	  expressionPos = index$1;
+	  while (!eof()) {
+	    chr = next();
+	    if (isStringStart(chr)) {
+	      parseString(chr);
+	      continue
+	    }
+	    if (chr === 0x5B) { inBracket++; }
+	    if (chr === 0x5D) { inBracket--; }
+	    if (inBracket === 0) {
+	      expressionEndPos = index$1;
+	      break
+	    }
+	  }
+	}
+	
+	function parseString (chr) {
+	  var stringQuote = chr;
+	  while (!eof()) {
+	    chr = next();
+	    if (chr === stringQuote) {
+	      break
+	    }
+	  }
+	}
+	
 	/*  */
 	
 	var dirRE = /^v-|^@|^:/;
 	var forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/;
-	var forIteratorRE = /\(([^,]*),([^,]*)(?:,([^,]*))?\)/;
+	var forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/;
 	var bindRE = /^:|^v-bind:/;
 	var onRE = /^@|^v-on:/;
 	var argRE = /:(.*)$/;
-	var modifierRE = /\.[^\.]+/g;
-	var specialNewlineRE = /\u2028|\u2029/g;
+	var modifierRE = /\.[^.]+/g;
 	
 	var decodeHTMLCached = cached(decode);
 	
@@ -6297,7 +6666,7 @@
 	
 	      // handle IE svg bug
 	      /* istanbul ignore if */
-	      if (options.isIE && ns === 'svg') {
+	      if (isIE && ns === 'svg') {
 	        attrs = guardIESVGBug(attrs);
 	      }
 	
@@ -6305,7 +6674,7 @@
 	        type: 1,
 	        tag: tag,
 	        attrsList: attrs,
-	        attrsMap: makeAttrsMap(attrs, options.isIE),
+	        attrsMap: makeAttrsMap(attrs),
 	        parent: currentParent,
 	        children: []
 	      };
@@ -6313,7 +6682,7 @@
 	        element.ns = ns;
 	      }
 	
-	      if ("client" !== 'server' && isForbiddenTag(element)) {
+	      if (isForbiddenTag(element) && !isServerRendering()) {
 	        element.forbidden = true;
 	        "development" !== 'production' && warn$1(
 	          'Templates should only be responsible for mapping the state to the ' +
@@ -6358,14 +6727,16 @@
 	      }
 	
 	      function checkRootConstraints (el) {
-	        {
+	        if ("development" !== 'production' && !warned) {
 	          if (el.tag === 'slot' || el.tag === 'template') {
+	            warned = true;
 	            warn$1(
 	              "Cannot use <" + (el.tag) + "> as component root element because it may " +
 	              'contain multiple nodes:\n' + template
 	            );
 	          }
 	          if (el.attrsMap.hasOwnProperty('v-for')) {
+	            warned = true;
 	            warn$1(
 	              'Cannot use v-for on stateful component root element because ' +
 	              'it renders multiple elements:\n' + template
@@ -6378,21 +6749,30 @@
 	      if (!root) {
 	        root = element;
 	        checkRootConstraints(root);
-	      } else if ("development" !== 'production' && !stack.length && !warned) {
-	        // allow 2 root elements with v-if and v-else
-	        if (root.if && element.else) {
+	      } else if (!stack.length) {
+	        // allow root elements with v-if, v-else-if and v-else
+	        if (root.if && (element.elseif || element.else)) {
 	          checkRootConstraints(element);
-	          root.elseBlock = element;
-	        } else {
+	          addIfCondition(root, {
+	            exp: element.elseif,
+	            block: element
+	          });
+	        } else if ("development" !== 'production' && !warned) {
 	          warned = true;
 	          warn$1(
-	            ("Component template should contain exactly one root element:\n\n" + template)
+	            "Component template should contain exactly one root element:" +
+	            "\n\n" + template + "\n\n" +
+	            "If you are using v-if on multiple elements, " +
+	            "use v-else-if to chain them instead."
 	          );
 	        }
 	      }
 	      if (currentParent && !element.forbidden) {
-	        if (element.else) {
-	          processElse(element, currentParent);
+	        if (element.elseif || element.else) {
+	          processIfConditions(element, currentParent);
+	        } else if (element.slotScope) { // scoped slot
+	          currentParent.plain = false;
+	          var name = element.slotTarget || 'default';(currentParent.scopedSlots || (currentParent.scopedSlots = {}))[name] = element;
 	        } else {
 	          currentParent.children.push(element);
 	          element.parent = currentParent;
@@ -6437,6 +6817,13 @@
 	        }
 	        return
 	      }
+	      // IE textarea placeholder bug
+	      /* istanbul ignore if */
+	      if (isIE &&
+	          currentParent.tag === 'textarea' &&
+	          currentParent.attrsMap.placeholder === text) {
+	        return
+	      }
 	      text = inPre || text.trim()
 	        ? decodeHTMLCached(text)
 	        // only preserve whitespace if its not right after a starting tag
@@ -6450,8 +6837,6 @@
 	            text: text
 	          });
 	        } else {
-	          // #3895 special character
-	          text = text.replace(specialNewlineRE, '');
 	          currentParent.children.push({
 	            type: 3,
 	            text: text
@@ -6532,21 +6917,41 @@
 	  var exp = getAndRemoveAttr(el, 'v-if');
 	  if (exp) {
 	    el.if = exp;
-	  }
-	  if (getAndRemoveAttr(el, 'v-else') != null) {
-	    el.else = true;
+	    addIfCondition(el, {
+	      exp: exp,
+	      block: el
+	    });
+	  } else {
+	    if (getAndRemoveAttr(el, 'v-else') != null) {
+	      el.else = true;
+	    }
+	    var elseif = getAndRemoveAttr(el, 'v-else-if');
+	    if (elseif) {
+	      el.elseif = elseif;
+	    }
 	  }
 	}
 	
-	function processElse (el, parent) {
+	function processIfConditions (el, parent) {
 	  var prev = findPrevElement(parent.children);
 	  if (prev && prev.if) {
-	    prev.elseBlock = el;
+	    addIfCondition(prev, {
+	      exp: el.elseif,
+	      block: el
+	    });
 	  } else {
 	    warn$1(
-	      ("v-else used on element <" + (el.tag) + "> without corresponding v-if.")
+	      "v-" + (el.elseif ? ('else-if="' + el.elseif + '"') : 'else') + " " +
+	      "used on element <" + (el.tag) + "> without corresponding v-if."
 	    );
 	  }
+	}
+	
+	function addIfCondition (el, condition) {
+	  if (!el.conditions) {
+	    el.conditions = [];
+	  }
+	  el.conditions.push(condition);
 	}
 	
 	function processOnce (el) {
@@ -6559,10 +6964,20 @@
 	function processSlot (el) {
 	  if (el.tag === 'slot') {
 	    el.slotName = getBindingAttr(el, 'name');
+	    if ("development" !== 'production' && el.key) {
+	      warn$1(
+	        "`key` does not work on <slot> because slots are abstract outlets " +
+	        "and can possibly expand into multiple elements. " +
+	        "Use the key on a wrapping element instead."
+	      );
+	    }
 	  } else {
 	    var slotTarget = getBindingAttr(el, 'slot');
 	    if (slotTarget) {
-	      el.slotTarget = slotTarget;
+	      el.slotTarget = slotTarget === '""' ? '"default"' : slotTarget;
+	    }
+	    if (el.tag === 'template') {
+	      el.slotScope = getAndRemoveAttr(el, 'scope');
 	    }
 	  }
 	}
@@ -6593,12 +7008,18 @@
 	      }
 	      if (bindRE.test(name)) { // v-bind
 	        name = name.replace(bindRE, '');
-	        if (modifiers && modifiers.prop) {
-	          isProp = true;
-	          name = camelize(name);
-	          if (name === 'innerHtml') { name = 'innerHTML'; }
+	        value = parseFilters(value);
+	        if (modifiers) {
+	          if (modifiers.prop) {
+	            isProp = true;
+	            name = camelize(name);
+	            if (name === 'innerHtml') { name = 'innerHTML'; }
+	          }
+	          if (modifiers.camel) {
+	            name = camelize(name);
+	          }
 	        }
-	        if (isProp || platformMustUseProp(name)) {
+	        if (isProp || platformMustUseProp(el.tag, name)) {
 	          addProp(el, name, value);
 	        } else {
 	          addAttr(el, name, value);
@@ -6625,8 +7046,9 @@
 	        if (expression) {
 	          warn$1(
 	            name + "=\"" + value + "\": " +
-	            'Interpolation inside attributes has been deprecated. ' +
-	            'Use v-bind or the colon shorthand instead.'
+	            'Interpolation inside attributes has been removed. ' +
+	            'Use v-bind or the colon shorthand instead. For example, ' +
+	            'instead of <div id="{{ val }}">, use <div :id="val">.'
 	          );
 	        }
 	      }
@@ -6655,7 +7077,7 @@
 	  }
 	}
 	
-	function makeAttrsMap (attrs, isIE) {
+	function makeAttrsMap (attrs) {
 	  var map = {};
 	  for (var i = 0, l = attrs.length; i < l; i++) {
 	    if ("development" !== 'production' && map[attrs[i].name] && !isIE) {
@@ -6723,7 +7145,7 @@
 	var genStaticKeysCached = cached(genStaticKeys$1);
 	
 	/**
-	 * Goal of the optimizier: walk the generated template AST tree
+	 * Goal of the optimizer: walk the generated template AST tree
 	 * and detect sub-trees that are purely static, i.e. parts of
 	 * the DOM that never needs to change.
 	 *
@@ -6753,6 +7175,16 @@
 	function markStatic (node) {
 	  node.static = isStatic(node);
 	  if (node.type === 1) {
+	    // do not make component slot content static. this avoids
+	    // 1. components not able to mutate slot nodes
+	    // 2. static slot content fails for hot-reloading
+	    if (
+	      !isPlatformReservedTag(node.tag) &&
+	      node.tag !== 'slot' &&
+	      node.attrsMap['inline-template'] == null
+	    ) {
+	      return
+	    }
 	    for (var i = 0, l = node.children.length; i < l; i++) {
 	      var child = node.children[i];
 	      markStatic(child);
@@ -6765,16 +7197,35 @@
 	
 	function markStaticRoots (node, isInFor) {
 	  if (node.type === 1) {
-	    if (node.once || node.static) {
-	      node.staticRoot = true;
+	    if (node.static || node.once) {
 	      node.staticInFor = isInFor;
+	    }
+	    // For a node to qualify as a static root, it should have children that
+	    // are not just static text. Otherwise the cost of hoisting out will
+	    // outweigh the benefits and it's better off to just always render it fresh.
+	    if (node.static && node.children.length && !(
+	      node.children.length === 1 &&
+	      node.children[0].type === 3
+	    )) {
+	      node.staticRoot = true;
 	      return
+	    } else {
+	      node.staticRoot = false;
 	    }
 	    if (node.children) {
 	      for (var i = 0, l = node.children.length; i < l; i++) {
 	        markStaticRoots(node.children[i], isInFor || !!node.for);
 	      }
 	    }
+	    if (node.conditions) {
+	      walkThroughConditionsBlocks(node.conditions, isInFor);
+	    }
+	  }
+	}
+	
+	function walkThroughConditionsBlocks (conditionBlocks, isInFor) {
+	  for (var i = 1, len = conditionBlocks.length; i < len; i++) {
+	    markStaticRoots(conditionBlocks[i].block, isInFor);
 	  }
 	}
 	
@@ -6810,7 +7261,8 @@
 	
 	/*  */
 	
-	var simplePathRE = /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?'\]|\[".*?"\]|\[\d+\]|\[[A-Za-z_$][\w$]*\])*\s*$/;
+	var fnExpRE = /^\s*([\w$_]+|\([^)]*?\))\s*=>|^function\s*\(/;
+	var simplePathRE = /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?']|\[".*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*\s*$/;
 	
 	// keyCode aliases
 	var keyCodes = {
@@ -6831,31 +7283,43 @@
 	  self: 'if($event.target !== $event.currentTarget)return;'
 	};
 	
+	var isMouseEventRE = /^mouse|^pointer|^(click|dblclick|contextmenu|wheel)$/;
+	var mouseEventModifierCode = {
+	  ctrl: 'if(!$event.ctrlKey)return;',
+	  shift: 'if(!$event.shiftKey)return;',
+	  alt: 'if(!$event.altKey)return;',
+	  meta: 'if(!$event.metaKey)return;'
+	};
+	
 	function genHandlers (events, native) {
 	  var res = native ? 'nativeOn:{' : 'on:{';
 	  for (var name in events) {
-	    res += "\"" + name + "\":" + (genHandler(events[name])) + ",";
+	    res += "\"" + name + "\":" + (genHandler(name, events[name])) + ",";
 	  }
 	  return res.slice(0, -1) + '}'
 	}
 	
 	function genHandler (
+	  name,
 	  handler
 	) {
 	  if (!handler) {
 	    return 'function(){}'
 	  } else if (Array.isArray(handler)) {
-	    return ("[" + (handler.map(genHandler).join(',')) + "]")
+	    return ("[" + (handler.map(function (handler) { return genHandler(name, handler); }).join(',')) + "]")
 	  } else if (!handler.modifiers) {
-	    return simplePathRE.test(handler.value)
+	    return fnExpRE.test(handler.value) || simplePathRE.test(handler.value)
 	      ? handler.value
 	      : ("function($event){" + (handler.value) + "}")
 	  } else {
 	    var code = '';
 	    var keys = [];
+	    var isMouseEvnet = isMouseEventRE.test(name);
 	    for (var key in handler.modifiers) {
 	      if (modifierCode[key]) {
 	        code += modifierCode[key];
+	      } else if (isMouseEvnet && mouseEventModifierCode[key]) {
+	        code += mouseEventModifierCode[key];
 	      } else {
 	        keys.push(key);
 	      }
@@ -6893,7 +7357,7 @@
 	
 	function bind$2 (el, dir) {
 	  el.wrapData = function (code) {
-	    return ("_b(" + code + "," + (dir.value) + (dir.modifiers && dir.modifiers.prop ? ',true' : '') + ")")
+	    return ("_b(" + code + ",'" + (el.tag) + "'," + (dir.value) + (dir.modifiers && dir.modifiers.prop ? ',true' : '') + ")")
 	  };
 	}
 	
@@ -6910,6 +7374,7 @@
 	var dataGenFns;
 	var platformDirectives$1;
 	var staticRenderFns;
+	var onceCount;
 	var currentOptions;
 	
 	function generate (
@@ -6919,6 +7384,8 @@
 	  // save previous staticRenderFns so generate calls can be nested
 	  var prevStaticRenderFns = staticRenderFns;
 	  var currentStaticRenderFns = staticRenderFns = [];
+	  var prevOnceCount = onceCount;
+	  onceCount = 0;
 	  currentOptions = options;
 	  warn$2 = options.warn || baseWarn;
 	  transforms$1 = pluckModuleFunction(options.modules, 'transformCode');
@@ -6926,6 +7393,7 @@
 	  platformDirectives$1 = options.directives || {};
 	  var code = ast ? genElement(ast) : '_h("div")';
 	  staticRenderFns = prevStaticRenderFns;
+	  onceCount = prevOnceCount;
 	  return {
 	    render: ("with(this){return " + code + "}"),
 	    staticRenderFns: currentStaticRenderFns
@@ -6934,10 +7402,9 @@
 	
 	function genElement (el) {
 	  if (el.staticRoot && !el.staticProcessed) {
-	    // hoist static sub-trees out
-	    el.staticProcessed = true;
-	    staticRenderFns.push(("with(this){return " + (genElement(el)) + "}"));
-	    return ("_m(" + (staticRenderFns.length - 1) + (el.staticInFor ? ',true' : '') + ")")
+	    return genStatic(el)
+	  } else if (el.once && !el.onceProcessed) {
+	    return genOnce(el)
 	  } else if (el.for && !el.forProcessed) {
 	    return genFor(el)
 	  } else if (el.if && !el.ifProcessed) {
@@ -6950,9 +7417,10 @@
 	    // component or element
 	    var code;
 	    if (el.component) {
-	      code = genComponent(el);
+	      code = genComponent(el.component, el);
 	    } else {
-	      var data = genData(el);
+	      var data = el.plain ? undefined : genData(el);
+	
 	      var children = el.inlineTemplate ? null : genChildren(el);
 	      code = "_h('" + (el.tag) + "'" + (data ? ("," + data) : '') + (children ? ("," + children) : '') + ")";
 	    }
@@ -6964,16 +7432,61 @@
 	  }
 	}
 	
-	function genIf (el) {
-	  var exp = el.if;
-	  el.ifProcessed = true; // avoid recursion
-	  return ("(" + exp + ")?" + (genElement(el)) + ":" + (genElse(el)))
+	// hoist static sub-trees out
+	function genStatic (el) {
+	  el.staticProcessed = true;
+	  staticRenderFns.push(("with(this){return " + (genElement(el)) + "}"));
+	  return ("_m(" + (staticRenderFns.length - 1) + (el.staticInFor ? ',true' : '') + ")")
 	}
 	
-	function genElse (el) {
-	  return el.elseBlock
-	    ? genElement(el.elseBlock)
-	    : '_e()'
+	// v-once
+	function genOnce (el) {
+	  el.onceProcessed = true;
+	  if (el.if && !el.ifProcessed) {
+	    return genIf(el)
+	  } else if (el.staticInFor) {
+	    var key = '';
+	    var parent = el.parent;
+	    while (parent) {
+	      if (parent.for) {
+	        key = parent.key;
+	        break
+	      }
+	      parent = parent.parent;
+	    }
+	    if (!key) {
+	      "development" !== 'production' && warn$2(
+	        "v-once can only be used inside v-for that is keyed. "
+	      );
+	      return genElement(el)
+	    }
+	    return ("_o(" + (genElement(el)) + "," + (onceCount++) + (key ? ("," + key) : "") + ")")
+	  } else {
+	    return genStatic(el)
+	  }
+	}
+	
+	function genIf (el) {
+	  el.ifProcessed = true; // avoid recursion
+	  return genIfConditions(el.conditions)
+	}
+	
+	function genIfConditions (conditions) {
+	  if (!conditions.length) {
+	    return '_e()'
+	  }
+	
+	  var condition = conditions.shift();
+	  if (condition.exp) {
+	    return ("(" + (condition.exp) + ")?" + (genTernaryExp(condition.block)) + ":" + (genIfConditions(conditions)))
+	  } else {
+	    return ("" + (genTernaryExp(condition.block)))
+	  }
+	
+	  // v-if with v-once shuold generate code like (a)?_m(0):_m(1)
+	  function genTernaryExp (el) {
+	    return el.once ? genOnce(el) : genElement(el)
+	  }
 	}
 	
 	function genFor (el) {
@@ -6989,10 +7502,6 @@
 	}
 	
 	function genData (el) {
-	  if (el.plain) {
-	    return
-	  }
-	
 	  var data = '{';
 	
 	  // directives first.
@@ -7015,10 +7524,6 @@
 	  if (el.component) {
 	    data += "tag:\"" + (el.tag) + "\",";
 	  }
-	  // slot target
-	  if (el.slotTarget) {
-	    data += "slot:" + (el.slotTarget) + ",";
-	  }
 	  // module data generation functions
 	  for (var i = 0; i < dataGenFns.length; i++) {
 	    data += dataGenFns[i](el);
@@ -7038,17 +7543,19 @@
 	  if (el.nativeEvents) {
 	    data += (genHandlers(el.nativeEvents, true)) + ",";
 	  }
+	  // slot target
+	  if (el.slotTarget) {
+	    data += "slot:" + (el.slotTarget) + ",";
+	  }
+	  // scoped slots
+	  if (el.scopedSlots) {
+	    data += (genScopedSlots(el.scopedSlots)) + ",";
+	  }
 	  // inline-template
 	  if (el.inlineTemplate) {
-	    var ast = el.children[0];
-	    if ("development" !== 'production' && (
-	      el.children.length > 1 || ast.type !== 1
-	    )) {
-	      warn$2('Inline-template components must have exactly one child element.');
-	    }
-	    if (ast.type === 1) {
-	      var inlineRenderFns = generate(ast, currentOptions);
-	      data += "inlineTemplate:{render:function(){" + (inlineRenderFns.render) + "},staticRenderFns:[" + (inlineRenderFns.staticRenderFns.map(function (code) { return ("function(){" + code + "}"); }).join(',')) + "]}";
+	    var inlineTemplate = genInlineTemplate(el);
+	    if (inlineTemplate) {
+	      data += inlineTemplate + ",";
 	    }
 	  }
 	  data = data.replace(/,$/, '') + '}';
@@ -7084,6 +7591,30 @@
 	  }
 	}
 	
+	function genInlineTemplate (el) {
+	  var ast = el.children[0];
+	  if ("development" !== 'production' && (
+	    el.children.length > 1 || ast.type !== 1
+	  )) {
+	    warn$2('Inline-template components must have exactly one child element.');
+	  }
+	  if (ast.type === 1) {
+	    var inlineRenderFns = generate(ast, currentOptions);
+	    return ("inlineTemplate:{render:function(){" + (inlineRenderFns.render) + "},staticRenderFns:[" + (inlineRenderFns.staticRenderFns.map(function (code) { return ("function(){" + code + "}"); }).join(',')) + "]}")
+	  }
+	}
+	
+	function genScopedSlots (slots) {
+	  return ("scopedSlots:{" + (Object.keys(slots).map(function (key) { return genScopedSlot(key, slots[key]); }).join(',')) + "}")
+	}
+	
+	function genScopedSlot (key, el) {
+	  return key + ":function(" + (String(el.attrsMap.scope)) + "){" +
+	    "return " + (el.tag === 'template'
+	      ? genChildren(el) || 'void 0'
+	      : genElement(el)) + "}"
+	}
+	
 	function genChildren (el) {
 	  if (el.children.length) {
 	    return '[' + el.children.map(genNode).join(',') + ']'
@@ -7101,29 +7632,35 @@
 	function genText (text) {
 	  return text.type === 2
 	    ? text.expression // no need for () because already wrapped in _s()
-	    : JSON.stringify(text.text)
+	    : transformSpecialNewlines(JSON.stringify(text.text))
 	}
 	
 	function genSlot (el) {
 	  var slotName = el.slotName || '"default"';
 	  var children = genChildren(el);
-	  return children
-	    ? ("_t(" + slotName + "," + children + ")")
-	    : ("_t(" + slotName + ")")
+	  return ("_t(" + slotName + (children ? ("," + children) : '') + (el.attrs ? ((children ? '' : ',null') + ",{" + (el.attrs.map(function (a) { return ((camelize(a.name)) + ":" + (a.value)); }).join(',')) + "}") : '') + ")")
 	}
 	
-	function genComponent (el) {
+	// componentName is el.component, take it as argument to shun flow's pessimistic refinement
+	function genComponent (componentName, el) {
 	  var children = el.inlineTemplate ? null : genChildren(el);
-	  return ("_h(" + (el.component) + "," + (genData(el)) + (children ? ("," + children) : '') + ")")
+	  return ("_h(" + componentName + "," + (genData(el)) + (children ? ("," + children) : '') + ")")
 	}
 	
 	function genProps (props) {
 	  var res = '';
 	  for (var i = 0; i < props.length; i++) {
 	    var prop = props[i];
-	    res += "\"" + (prop.name) + "\":" + (prop.value) + ",";
+	    res += "\"" + (prop.name) + "\":" + (transformSpecialNewlines(prop.value)) + ",";
 	  }
 	  return res.slice(0, -1)
+	}
+	
+	// #3895, #4268
+	function transformSpecialNewlines (text) {
+	  return text
+	    .replace(/\u2028/g, '\\u2028')
+	    .replace(/\u2029/g, '\\u2029')
 	}
 	
 	/*  */
@@ -7230,8 +7767,9 @@
 	    if (expression) {
 	      warn(
 	        "class=\"" + staticClass + "\": " +
-	        'Interpolation inside attributes has been deprecated. ' +
-	        'Use v-bind or the colon shorthand instead.'
+	        'Interpolation inside attributes has been removed. ' +
+	        'Use v-bind or the colon shorthand instead. For example, ' +
+	        'instead of <div class="{{ val }}">, use <div :class="val">.'
 	      );
 	    }
 	  }
@@ -7263,7 +7801,25 @@
 	
 	/*  */
 	
-	function transformNode$1 (el) {
+	function transformNode$1 (el, options) {
+	  var warn = options.warn || baseWarn;
+	  var staticStyle = getAndRemoveAttr(el, 'style');
+	  if (staticStyle) {
+	    /* istanbul ignore if */
+	    {
+	      var expression = parseText(staticStyle, options.delimiters);
+	      if (expression) {
+	        warn(
+	          "style=\"" + staticStyle + "\": " +
+	          'Interpolation inside attributes has been removed. ' +
+	          'Use v-bind or the colon shorthand instead. For example, ' +
+	          'instead of <div style="{{ val }}">, use <div :style="val">.'
+	        );
+	      }
+	    }
+	    el.staticStyle = JSON.stringify(parseStyleText(staticStyle));
+	  }
+	
 	  var styleBinding = getBindingAttr(el, 'style', false /* getStatic */);
 	  if (styleBinding) {
 	    el.styleBinding = styleBinding;
@@ -7271,12 +7827,18 @@
 	}
 	
 	function genData$2 (el) {
-	  return el.styleBinding
-	    ? ("style:(" + (el.styleBinding) + "),")
-	    : ''
+	  var data = '';
+	  if (el.staticStyle) {
+	    data += "staticStyle:" + (el.staticStyle) + ",";
+	  }
+	  if (el.styleBinding) {
+	    data += "style:(" + (el.styleBinding) + "),";
+	  }
+	  return data
 	}
 	
 	var style$1 = {
+	  staticKeys: ['staticStyle'],
 	  transformNode: transformNode$1,
 	  genData: genData$2
 	};
@@ -7310,11 +7872,11 @@
 	    }
 	  }
 	  if (tag === 'select') {
-	    genSelect(el, value);
+	    genSelect(el, value, modifiers);
 	  } else if (tag === 'input' && type === 'checkbox') {
-	    genCheckboxModel(el, value);
+	    genCheckboxModel(el, value, modifiers);
 	  } else if (tag === 'input' && type === 'radio') {
-	    genRadioModel(el, value);
+	    genRadioModel(el, value, modifiers);
 	  } else {
 	    genDefaultModel(el, value, modifiers);
 	  }
@@ -7322,7 +7884,11 @@
 	  return true
 	}
 	
-	function genCheckboxModel (el, value) {
+	function genCheckboxModel (
+	  el,
+	  value,
+	  modifiers
+	) {
 	  if ("development" !== 'production' &&
 	    el.attrsMap.checked != null) {
 	    warn$3(
@@ -7331,6 +7897,7 @@
 	      'Declare initial values in the component\'s data option instead.'
 	    );
 	  }
+	  var number = modifiers && modifiers.number;
 	  var valueBinding = getBindingAttr(el, 'value') || 'null';
 	  var trueValueBinding = getBindingAttr(el, 'true-value') || 'true';
 	  var falseValueBinding = getBindingAttr(el, 'false-value') || 'false';
@@ -7344,7 +7911,7 @@
 	        '$$el=$event.target,' +
 	        "$$c=$$el.checked?(" + trueValueBinding + "):(" + falseValueBinding + ");" +
 	    'if(Array.isArray($$a)){' +
-	      "var $$v=" + valueBinding + "," +
+	      "var $$v=" + (number ? '_n(' + valueBinding + ')' : valueBinding) + "," +
 	          '$$i=_i($$a,$$v);' +
 	      "if($$c){$$i<0&&(" + value + "=$$a.concat($$v))}" +
 	      "else{$$i>-1&&(" + value + "=$$a.slice(0,$$i).concat($$a.slice($$i+1)))}" +
@@ -7353,7 +7920,11 @@
 	  );
 	}
 	
-	function genRadioModel (el, value) {
+	function genRadioModel (
+	    el,
+	    value,
+	    modifiers
+	) {
 	  if ("development" !== 'production' &&
 	    el.attrsMap.checked != null) {
 	    warn$3(
@@ -7362,9 +7933,11 @@
 	      'Declare initial values in the component\'s data option instead.'
 	    );
 	  }
+	  var number = modifiers && modifiers.number;
 	  var valueBinding = getBindingAttr(el, 'value') || 'null';
+	  valueBinding = number ? ("_n(" + valueBinding + ")") : valueBinding;
 	  addProp(el, 'checked', ("_q(" + value + "," + valueBinding + ")"));
-	  addHandler(el, 'change', (value + "=" + valueBinding), null, true);
+	  addHandler(el, 'change', genAssignmentCode(value, valueBinding), null, true);
 	}
 	
 	function genDefaultModel (
@@ -7400,10 +7973,11 @@
 	
 	  var valueExpression = isNative
 	    ? ("$event.target.value" + (trim ? '.trim()' : ''))
-	    : "$event";
-	  var code = number || type === 'number'
-	    ? (value + "=_n(" + valueExpression + ")")
-	    : (value + "=" + valueExpression);
+	    : trim ? "(typeof $event === 'string' ? $event.trim() : $event)" : "$event";
+	  valueExpression = number || type === 'number'
+	    ? ("_n(" + valueExpression + ")")
+	    : valueExpression;
+	  var code = genAssignmentCode(value, valueExpression);
 	  if (isNative && needCompositionGuard) {
 	    code = "if($event.target.composing)return;" + code;
 	  }
@@ -7420,14 +7994,23 @@
 	  addHandler(el, event, code, null, true);
 	}
 	
-	function genSelect (el, value) {
+	function genSelect (
+	    el,
+	    value,
+	    modifiers
+	) {
 	  {
 	    el.children.some(checkOptionWarning);
 	  }
-	  var code = value + "=Array.prototype.filter" +
+	
+	  var number = modifiers && modifiers.number;
+	  var assignment = "Array.prototype.filter" +
 	    ".call($event.target.options,function(o){return o.selected})" +
-	    ".map(function(o){return \"_value\" in o ? o._value : o.value})" +
+	    ".map(function(o){var val = \"_value\" in o ? o._value : o.value;" +
+	    "return " + (number ? '_n(val)' : 'val') + "})" +
 	    (el.attrsMap.multiple == null ? '[0]' : '');
+	
+	  var code = genAssignmentCode(value, assignment);
 	  addHandler(el, 'change', code, null, true);
 	}
 	
@@ -7443,6 +8026,18 @@
 	    return true
 	  }
 	  return false
+	}
+	
+	function genAssignmentCode (value, assignment) {
+	  var modelRs = parseModel(value);
+	  if (modelRs.idx === null) {
+	    return (value + "=" + assignment)
+	  } else {
+	    return "var $$exp = " + (modelRs.exp) + ", $$idx = " + (modelRs.idx) + ";" +
+	      "if (!Array.isArray($$exp)){" +
+	        value + "=" + assignment + "}" +
+	      "else{$$exp.splice($$idx, 1, " + assignment + ")}"
+	  }
 	}
 	
 	/*  */
@@ -7472,7 +8067,6 @@
 	var cache = Object.create(null);
 	
 	var baseOptions = {
-	  isIE: isIE,
 	  expectHTML: true,
 	  modules: modules$1,
 	  staticKeys: genStaticKeys(modules$1),
@@ -7582,6 +8176,13 @@
 	      if (typeof template === 'string') {
 	        if (template.charAt(0) === '#') {
 	          template = idToTemplate(template);
+	          /* istanbul ignore if */
+	          if ("development" !== 'production' && !template) {
+	            warn(
+	              ("Template element not found or is empty: " + (options.template)),
+	              this
+	            );
+	          }
 	        }
 	      } else if (template.nodeType) {
 	        template = template.innerHTML;
@@ -7628,7 +8229,8 @@
 	return Vue$3;
 	
 	})));
-
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
 /* 5 */
@@ -7656,7 +8258,7 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\src\\app.vue"
+	__vue_options__.__file = "/home/daniel/vue-google-maps/examples/src/app.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
@@ -7667,9 +8269,9 @@
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-97185a80", __vue_options__)
+	    hotAPI.createRecord("data-v-269515cc", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-97185a80", __vue_options__)
+	    hotAPI.reload("data-v-269515cc", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] app.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -7693,8 +8295,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-97185a80!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-97185a80!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-269515cc!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-269515cc!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -8422,12 +9024,12 @@
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;
-	  return _vm._h('div', {
+	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;
+	  return _h('div', {
 	    staticClass: "app-panel"
-	  }, [_vm._h('div', {
+	  }, [_h('div', {
 	    staticClass: "settings-panel"
-	  }, [_vm._m(0), "\n  Map center latitude:\n    ", _vm._h('input', {
+	  }, [_h('h1', ["Map information"]), "\n  Map center latitude:\n    ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8448,7 +9050,7 @@
 	        _vm.reportedCenter.lat = _vm._n($event.target.value)
 	      }
 	    }
-	  }), " ", _vm._m(1), "\n  Map center longitude:\n    ", _vm._h('input', {
+	  }), " ", _h('br'), "\n  Map center longitude:\n    ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8469,7 +9071,7 @@
 	        _vm.reportedCenter.lng = _vm._n($event.target.value)
 	      }
 	    }
-	  }), " ", _vm._m(2), "\n  Map bounds: " + _vm._s(_vm._f("json")(_vm.mapBounds)) + "\n  ", _vm._m(3), "\n  Map zoom: ", _vm._h('input', {
+	  }), " ", _h('br'), "\n  Map bounds: " + _vm._s(_vm._f("json")(_vm.mapBounds)) + "\n  ", _h('br'), "\n  Map zoom: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8489,7 +9091,7 @@
 	        _vm.zoom = _vm._n($event.target.value)
 	      }
 	    }
-	  }), " ", _vm._m(4), "\n  Dragged " + _vm._s(_vm.drag) + " times\n  ", _vm._m(5), "\n  Left clicked " + _vm._s(_vm.mapClickedCount) + " times\n  ", _vm._m(6), "\n  Map type: ", _vm._h('select', {
+	  }), " ", _h('br'), "\n  Dragged " + _vm._s(_vm.drag) + " times\n  ", _h('br'), "\n  Left clicked " + _vm._s(_vm.mapClickedCount) + " times\n  ", _h('br'), "\n  Map type: ", _h('select', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8505,11 +9107,28 @@
 	        _vm.mapType = Array.prototype.filter.call($event.target.options, function(o) {
 	          return o.selected
 	        }).map(function(o) {
-	          return "_value" in o ? o._value : o.value
+	          var val = "_value" in o ? o._value : o.value;
+	          return val
 	        })[0]
 	      }
 	    }
-	  }, [_vm._m(7), " ", _vm._m(8), " ", _vm._m(9), " ", _vm._m(10)]), " ", _vm._m(11), "\n  Map style: ", _vm._h('select', {
+	  }, [_h('option', {
+	    attrs: {
+	      "value": "roadmap"
+	    }
+	  }, ["roadmap"]), " ", _h('option', {
+	    attrs: {
+	      "value": "hybrid"
+	    }
+	  }, ["hybrid"]), " ", _h('option', {
+	    attrs: {
+	      "value": "satellite"
+	    }
+	  }, ["satellite"]), " ", _h('option', {
+	    attrs: {
+	      "value": "terrain"
+	    }
+	  }, ["terrain"])]), " ", _h('br'), "\n  Map style: ", _h('select', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8525,11 +9144,24 @@
 	        _vm.mapStyle = Array.prototype.filter.call($event.target.options, function(o) {
 	          return o.selected
 	        }).map(function(o) {
-	          return "_value" in o ? o._value : o.value
+	          var val = "_value" in o ? o._value : o.value;
+	          return val
 	        })[0]
 	      }
 	    }
-	  }, [_vm._m(12), " ", _vm._m(13), " ", _vm._m(14)]), " ", _vm._m(15), "\n  Enable scrollwheel zooming on the map: ", _vm._h('input', {
+	  }, [_h('option', {
+	    attrs: {
+	      "value": "red"
+	    }
+	  }, ["red"]), " ", _h('option', {
+	    attrs: {
+	      "value": "green"
+	    }
+	  }, ["green"]), " ", _h('option', {
+	    attrs: {
+	      "value": "normal"
+	    }
+	  }, ["normal"])]), " ", _h('br'), "\n  Enable scrollwheel zooming on the map: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8560,11 +9192,11 @@
 	        }
 	      }
 	    }
-	  }), " ", _vm._m(16), " ", _vm._h('button', {
+	  }), " ", _h('br'), " ", _h('button', {
 	    on: {
 	      "click": _vm.addMarker
 	    }
-	  }, [" Add a new Marker"]), " (or right click on the map :) )\n  ", _vm._m(17), "\n  enabled: ", _vm._h('input', {
+	  }, [" Add a new Marker"]), " (or right click on the map :) )\n  ", _h('h1', ["Clusters"]), "\n  enabled: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8596,7 +9228,7 @@
 	        }
 	      }
 	    }
-	  }), " ", _vm._m(18), "\n  Grid size: ", _vm._h('input', {
+	  }), " ", _h('br'), "\n  Grid size: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8616,7 +9248,7 @@
 	        _vm.gridSize = _vm._n($event.target.value)
 	      }
 	    }
-	  }), " ", _vm._m(19), " ", _vm._m(20), "\n  Editable: ", _vm._h('input', {
+	  }), " ", _h('br'), " ", _h('h1', ["Polyline"]), "\n  Editable: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8648,11 +9280,11 @@
 	        }
 	      }
 	    }
-	  }), " ", _vm._h('button', {
+	  }), " ", _h('button', {
 	    on: {
 	      "click": _vm.resetPlPath
 	    }
-	  }, ["Reset path"]), " ", _vm._m(21), "\n  Visible: ", _vm._h('input', {
+	  }, ["Reset path"]), " ", _h('br'), "\n  Visible: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8684,7 +9316,7 @@
 	        }
 	      }
 	    }
-	  }), " ", _vm._m(22), " ", _vm._m(23), "\n  Visible: ", _vm._h('input', {
+	  }), " ", _h('br'), " ", _h('h1', ["Polygon"]), "\n  Visible: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8716,19 +9348,19 @@
 	        }
 	      }
 	    }
-	  }), " ", _vm._m(24), " ", _vm._h('button', {
+	  }), " ", _h('br'), " ", _h('button', {
 	    on: {
 	      "click": function($event) {
 	        _vm.pgPath = _vm.opgPath
 	      }
 	    }
-	  }, ["Reset Polygon to pentagon"]), _vm._m(25), " ", _vm._h('button', {
+	  }, ["Reset Polygon to pentagon"]), _h('br'), " ", _h('button', {
 	    on: {
 	      "click": function($event) {
 	        _vm.pgPath = _vm.originalPlPath
 	      }
 	    }
-	  }, ["Reset Polygon to a simple polygon"]), _vm._m(26), "\n  Path: " + _vm._s(_vm._f("json")(_vm.pgPath)) + "\n  ", _vm._m(27), " ", _vm._m(28), "\n  Visible: ", _vm._h('input', {
+	  }, ["Reset Polygon to a simple polygon"]), _h('br'), "\n  Path: " + _vm._s(_vm._f("json")(_vm.pgPath)) + "\n  ", _h('br'), " ", _h('h1', ["Circle"]), "\n  Visible: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8760,7 +9392,7 @@
 	        }
 	      }
 	    }
-	  }), _vm._m(29), "\n  " + _vm._s(_vm._f("json")(_vm.circleBounds)) + "\n  ", _vm._m(30), " ", _vm._m(31), "\n  Visible: ", _vm._h('input', {
+	  }), _h('br'), "\n  " + _vm._s(_vm._f("json")(_vm.circleBounds)) + "\n  ", _h('br'), " ", _h('h1', ["Rectangle"]), "\n  Visible: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8792,7 +9424,7 @@
 	        }
 	      }
 	    }
-	  }), _vm._m(32), "\n  " + _vm._s(_vm._f("json")(_vm.rectangleBounds)) + "\n  ", _vm._m(33), " ", _vm._m(34), " ", _vm._h('gmap-place-input', {
+	  }), _h('br'), "\n  " + _vm._s(_vm._f("json")(_vm.rectangleBounds)) + "\n  ", _h('br'), " ", _h('h1', ["PlaceInput"]), " ", _h('gmap-place-input', {
 	    attrs: {
 	      "label": "Add a marker at this place",
 	      "select-first-on-enter": true
@@ -8802,7 +9434,7 @@
 	        _vm.updatePlace($event)
 	      }
 	    }
-	  }), " ", _vm._m(35), " ", _vm._m(36), "\n  modal 1 : ", _vm._h('input', {
+	  }), " ", _h('br'), " ", _h('h1', [" Standalone infoWindow "]), "\n  modal 1 : ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8834,7 +9466,7 @@
 	        }
 	      }
 	    }
-	  }), _vm._m(37), "\n  modal 2: ", _vm._h('input', {
+	  }), _h('br'), "\n  modal 2: ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8866,7 +9498,7 @@
 	        }
 	      }
 	    }
-	  }), " ", _vm._h('input', {
+	  }), " ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8885,7 +9517,7 @@
 	        _vm.ifw2text = $event.target.value
 	      }
 	    }
-	  }), " ", _vm._m(38), "\n  Display only markers with even ID (to test filters) ", _vm._h('input', {
+	  }), " ", _h('h1', ["Markers"]), "\n  Display only markers with even ID (to test filters) ", _h('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -8917,8 +9549,8 @@
 	        }
 	      }
 	    }
-	  }), _vm._m(39), " ", _vm._h('table', [_vm._m(40), " ", _vm._l((_vm.markers), function(m) {
-	    return _vm._h('tr', [_vm._h('td', [_vm._h('input', {
+	  }), _h('br'), " ", _h('table', [_vm._m(0), " ", _vm._l((_vm.markers), function(m) {
+	    return _h('tr', [_h('td', [_h('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -8938,7 +9570,7 @@
 	          m.position.lat = _vm._n($event.target.value)
 	        }
 	      }
-	    })]), " ", _vm._h('td', [_vm._h('input', {
+	    })]), " ", _h('td', [_h('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -8958,7 +9590,7 @@
 	          m.position.lng = _vm._n($event.target.value)
 	        }
 	      }
-	    })]), " ", _vm._h('td', [_vm._h('input', {
+	    })]), " ", _h('td', [_h('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -8978,7 +9610,7 @@
 	          m.opacity = _vm._n($event.target.value)
 	        }
 	      }
-	    })]), " ", _vm._h('td', [_vm._h('input', {
+	    })]), " ", _h('td', [_h('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -9010,7 +9642,7 @@
 	          }
 	        }
 	      }
-	    })]), " ", _vm._h('td', [_vm._h('input', {
+	    })]), " ", _h('td', [_h('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -9042,7 +9674,7 @@
 	          }
 	        }
 	      }
-	    })]), " ", _vm._h('td', [_vm._s(m.clicked)]), " ", _vm._h('td', [_vm._s(m.rightClicked)]), " ", _vm._h('td', [_vm._s(m.dragended)]), " ", _vm._h('td', [_vm._h('input', {
+	    })]), " ", _h('td', [_vm._s(m.clicked)]), " ", _h('td', [_vm._s(m.rightClicked)]), " ", _h('td', [_vm._s(m.dragended)]), " ", _h('td', [_h('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -9074,7 +9706,7 @@
 	          }
 	        }
 	      }
-	    })]), " ", _vm._h('td', [_vm._h('input', {
+	    })]), " ", _h('td', [_h('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -9093,16 +9725,16 @@
 	          m.ifw2text = $event.target.value
 	        }
 	      }
-	    })]), " ", _vm._h('td', [_vm._h('button', {
+	    })]), " ", _h('td', [_h('button', {
 	      on: {
 	        "click": function($event) {
 	          _vm.markers.splice(_vm.markers.indexOf(m), 1)
 	        }
 	      }
 	    }, ["Delete me "])])])
-	  })])]), " ", _vm._h('div', {
+	  })])]), " ", _h('div', {
 	    staticClass: "map-panel"
-	  }, [_vm._h('gmap-map', {
+	  }, [_h('gmap-map', {
 	    attrs: {
 	      "center": _vm.center,
 	      "zoom": _vm.zoom,
@@ -9133,12 +9765,12 @@
 	        _vm.update('bounds', $event)
 	      }
 	    }
-	  }, [(_vm.clustering) ? _vm._h('gmap-cluster', {
+	  }, [(_vm.clustering) ? _h('gmap-cluster', {
 	    attrs: {
 	      "grid-size": _vm.gridSize
 	    }
 	  }, [_vm._l((_vm.activeMarkers), function(m) {
-	    return (m.enabled) ? _vm._h('gmap-marker', {
+	    return (m.enabled) ? _h('gmap-marker', {
 	      attrs: {
 	        "position": m.position,
 	        "opacity": m.opacity,
@@ -9158,14 +9790,14 @@
 	          _vm.updateChild(m, 'position', $event)
 	        }
 	      }
-	    }, [_vm._h('gmap-info-window', {
+	    }, [_h('gmap-info-window', {
 	      attrs: {
 	        "opened": m.ifw,
 	        "content": m.ifw2text
 	      }
 	    })]) : _vm._e()
-	  })]) : _vm._e(), " ", (!_vm.clustering) ? _vm._h('div', [_vm._l((_vm.activeMarkers), function(m) {
-	    return (m.enabled) ? _vm._h('gmap-marker', {
+	  })]) : _vm._e(), " ", (!_vm.clustering) ? _h('div', [_vm._l((_vm.activeMarkers), function(m) {
+	    return (m.enabled) ? _h('gmap-marker', {
 	      attrs: {
 	        "position": m.position,
 	        "opacity": m.opacity,
@@ -9185,24 +9817,24 @@
 	          _vm.updateChild(m, 'position', $event)
 	        }
 	      }
-	    }, [_vm._h('gmap-info-window', {
+	    }, [_h('gmap-info-window', {
 	      attrs: {
 	        "opened": m.ifw,
 	        "content": m.ifw2text
 	      }
 	    })]) : _vm._e()
-	  })]) : _vm._e(), " ", _vm._h('gmap-info-window', {
+	  })]) : _vm._e(), " ", _h('gmap-info-window', {
 	    attrs: {
 	      "position": _vm.reportedCenter,
 	      "opened": _vm.ifw
 	    }
-	  }, ["\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    ", _vm._m(41), "\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    ", _vm._h('b', [_vm._s(_vm.mapClickedCount)])]), " ", _vm._h('gmap-info-window', {
+	  }, ["\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    ", _h('br'), "\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    ", _h('b', [_vm._s(_vm.mapClickedCount)])]), " ", _h('gmap-info-window', {
 	    attrs: {
 	      "position": _vm.reportedCenter,
 	      "opened": _vm.ifw2,
 	      "content": _vm.ifw2text
 	    }
-	  }), " ", (_vm.plvisible) ? _vm._h('gmap-polyline', {
+	  }), " ", (_vm.plvisible) ? _h('gmap-polyline', {
 	    attrs: {
 	      "path": _vm.plPath,
 	      "editable": _vm.pleditable,
@@ -9217,7 +9849,7 @@
 	        _vm.updatePolylinePath($event)
 	      }
 	    }
-	  }) : _vm._e(), " ", (_vm.pgvisible) ? _vm._h('gmap-polygon', {
+	  }) : _vm._e(), " ", (_vm.pgvisible) ? _h('gmap-polygon', {
 	    attrs: {
 	      "paths": _vm.pgPath,
 	      "editable": true,
@@ -9232,7 +9864,7 @@
 	        _vm.updatePolygonPaths($event)
 	      }
 	    }
-	  }) : _vm._e(), " ", (_vm.displayCircle) ? _vm._h('gmap-circle', {
+	  }) : _vm._e(), " ", (_vm.displayCircle) ? _h('gmap-circle', {
 	    attrs: {
 	      "bounds": _vm.circleBounds,
 	      "center": _vm.reportedCenter,
@@ -9249,7 +9881,7 @@
 	        _vm.updateCircle('bounds', $event)
 	      }
 	    }
-	  }) : _vm._e(), " ", (_vm.displayRectangle) ? _vm._h('gmap-rectangle', {
+	  }) : _vm._e(), " ", (_vm.displayRectangle) ? _h('gmap-rectangle', {
 	    attrs: {
 	      "bounds": _vm.rectangleBounds,
 	      "options": {
@@ -9262,123 +9894,14 @@
 	      }
 	    }
 	  }) : _vm._e()])])])
-	},staticRenderFns: [function (){var _vm=this;
-	  return _vm._h('h1', ["Map information"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('option', {
-	    attrs: {
-	      "value": "roadmap"
-	    }
-	  }, ["roadmap"])
-	},function (){var _vm=this;
-	  return _vm._h('option', {
-	    attrs: {
-	      "value": "hybrid"
-	    }
-	  }, ["hybrid"])
-	},function (){var _vm=this;
-	  return _vm._h('option', {
-	    attrs: {
-	      "value": "satellite"
-	    }
-	  }, ["satellite"])
-	},function (){var _vm=this;
-	  return _vm._h('option', {
-	    attrs: {
-	      "value": "terrain"
-	    }
-	  }, ["terrain"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('option', {
-	    attrs: {
-	      "value": "red"
-	    }
-	  }, ["red"])
-	},function (){var _vm=this;
-	  return _vm._h('option', {
-	    attrs: {
-	      "value": "green"
-	    }
-	  }, ["green"])
-	},function (){var _vm=this;
-	  return _vm._h('option', {
-	    attrs: {
-	      "value": "normal"
-	    }
-	  }, ["normal"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', ["Clusters"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', ["Polyline"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', ["Polygon"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', ["Circle"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', ["Rectangle"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', ["PlaceInput"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', [" Standalone infoWindow "])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('h1', ["Markers"])
-	},function (){var _vm=this;
-	  return _vm._h('br')
-	},function (){var _vm=this;
-	  return _vm._h('tr', [_vm._h('th', ["lat"]), " ", _vm._h('th', ["lng"]), " ", _vm._h('th', ["opacity"]), " ", _vm._h('th', ["enabled"]), " ", _vm._h('th', ["draggable"]), " ", _vm._h('th', ["clicked"]), " ", _vm._h('th', ["right clicked"]), " ", _vm._h('th', ["Drag-ended"]), " ", _vm._h('th', ["Open info window"]), " ", _vm._h('th', ["infoWIndow text"]), " ", _vm._h('th', ["Delete me"])])
-	},function (){var _vm=this;
-	  return _vm._h('br')
+	},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;
+	  return _h('tr', [_h('th', ["lat"]), " ", _h('th', ["lng"]), " ", _h('th', ["opacity"]), " ", _h('th', ["enabled"]), " ", _h('th', ["draggable"]), " ", _h('th', ["clicked"]), " ", _h('th', ["right clicked"]), " ", _h('th', ["Drag-ended"]), " ", _h('th', ["Open info window"]), " ", _h('th', ["infoWIndow text"]), " ", _h('th', ["Delete me"])])
 	}]}
+	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-97185a80", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-269515cc", module.exports)
 	  }
 	}
 
@@ -11364,7 +11887,7 @@
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {/**
 	 * @license
 	 * lodash <https://lodash.com/>
-	 * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+	 * Copyright JS Foundation and other contributors <https://js.foundation/>
 	 * Released under MIT license <https://lodash.com/license>
 	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
 	 * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -11375,7 +11898,7 @@
 	  var undefined;
 	
 	  /** Used as the semantic version number. */
-	  var VERSION = '4.16.4';
+	  var VERSION = '4.16.6';
 	
 	  /** Used as the size to enable large array optimizations. */
 	  var LARGE_ARRAY_SIZE = 200;
@@ -11414,7 +11937,7 @@
 	      DEFAULT_TRUNC_OMISSION = '...';
 	
 	  /** Used to detect hot functions by number of calls within a span of milliseconds. */
-	  var HOT_COUNT = 500,
+	  var HOT_COUNT = 800,
 	      HOT_SPAN = 16;
 	
 	  /** Used to indicate the type of lazy iteratees. */
@@ -11449,13 +11972,16 @@
 	  /** `Object#toString` result references. */
 	  var argsTag = '[object Arguments]',
 	      arrayTag = '[object Array]',
+	      asyncTag = '[object AsyncFunction]',
 	      boolTag = '[object Boolean]',
 	      dateTag = '[object Date]',
+	      domExcTag = '[object DOMException]',
 	      errorTag = '[object Error]',
 	      funcTag = '[object Function]',
 	      genTag = '[object GeneratorFunction]',
 	      mapTag = '[object Map]',
 	      numberTag = '[object Number]',
+	      nullTag = '[object Null]',
 	      objectTag = '[object Object]',
 	      promiseTag = '[object Promise]',
 	      proxyTag = '[object Proxy]',
@@ -11463,6 +11989,7 @@
 	      setTag = '[object Set]',
 	      stringTag = '[object String]',
 	      symbolTag = '[object Symbol]',
+	      undefinedTag = '[object Undefined]',
 	      weakMapTag = '[object WeakMap]',
 	      weakSetTag = '[object WeakSet]';
 	
@@ -11588,13 +12115,15 @@
 	      rsZWJ = '\\u200d';
 	
 	  /** Used to compose unicode regexes. */
-	  var rsLowerMisc = '(?:' + rsLower + '|' + rsMisc + ')',
-	      rsUpperMisc = '(?:' + rsUpper + '|' + rsMisc + ')',
-	      rsOptLowerContr = '(?:' + rsApos + '(?:d|ll|m|re|s|t|ve))?',
-	      rsOptUpperContr = '(?:' + rsApos + '(?:D|LL|M|RE|S|T|VE))?',
+	  var rsMiscLower = '(?:' + rsLower + '|' + rsMisc + ')',
+	      rsMiscUpper = '(?:' + rsUpper + '|' + rsMisc + ')',
+	      rsOptContrLower = '(?:' + rsApos + '(?:d|ll|m|re|s|t|ve))?',
+	      rsOptContrUpper = '(?:' + rsApos + '(?:D|LL|M|RE|S|T|VE))?',
 	      reOptMod = rsModifier + '?',
 	      rsOptVar = '[' + rsVarRange + ']?',
 	      rsOptJoin = '(?:' + rsZWJ + '(?:' + [rsNonAstral, rsRegional, rsSurrPair].join('|') + ')' + rsOptVar + reOptMod + ')*',
+	      rsOrdLower = '\\d*(?:(?:1st|2nd|3rd|(?![123])\\dth)\\b)',
+	      rsOrdUpper = '\\d*(?:(?:1ST|2ND|3RD|(?![123])\\dTH)\\b)',
 	      rsSeq = rsOptVar + reOptMod + rsOptJoin,
 	      rsEmoji = '(?:' + [rsDingbat, rsRegional, rsSurrPair].join('|') + ')' + rsSeq,
 	      rsSymbol = '(?:' + [rsNonAstral + rsCombo + '?', rsCombo, rsRegional, rsSurrPair, rsAstral].join('|') + ')';
@@ -11613,10 +12142,12 @@
 	
 	  /** Used to match complex or compound words. */
 	  var reUnicodeWord = RegExp([
-	    rsUpper + '?' + rsLower + '+' + rsOptLowerContr + '(?=' + [rsBreak, rsUpper, '$'].join('|') + ')',
-	    rsUpperMisc + '+' + rsOptUpperContr + '(?=' + [rsBreak, rsUpper + rsLowerMisc, '$'].join('|') + ')',
-	    rsUpper + '?' + rsLowerMisc + '+' + rsOptLowerContr,
-	    rsUpper + '+' + rsOptUpperContr,
+	    rsUpper + '?' + rsLower + '+' + rsOptContrLower + '(?=' + [rsBreak, rsUpper, '$'].join('|') + ')',
+	    rsMiscUpper + '+' + rsOptContrUpper + '(?=' + [rsBreak, rsUpper + rsMiscLower, '$'].join('|') + ')',
+	    rsUpper + '?' + rsMiscLower + '+' + rsOptContrLower,
+	    rsUpper + '+' + rsOptContrUpper,
+	    rsOrdUpper,
+	    rsOrdLower,
 	    rsDigits,
 	    rsEmoji
 	  ].join('|'), 'g');
@@ -11859,7 +12390,7 @@
 	   */
 	  function arrayAggregator(array, setter, iteratee, accumulator) {
 	    var index = -1,
-	        length = array ? array.length : 0;
+	        length = array == null ? 0 : array.length;
 	
 	    while (++index < length) {
 	      var value = array[index];
@@ -11879,7 +12410,7 @@
 	   */
 	  function arrayEach(array, iteratee) {
 	    var index = -1,
-	        length = array ? array.length : 0;
+	        length = array == null ? 0 : array.length;
 	
 	    while (++index < length) {
 	      if (iteratee(array[index], index, array) === false) {
@@ -11899,7 +12430,7 @@
 	   * @returns {Array} Returns `array`.
 	   */
 	  function arrayEachRight(array, iteratee) {
-	    var length = array ? array.length : 0;
+	    var length = array == null ? 0 : array.length;
 	
 	    while (length--) {
 	      if (iteratee(array[length], length, array) === false) {
@@ -11921,7 +12452,7 @@
 	   */
 	  function arrayEvery(array, predicate) {
 	    var index = -1,
-	        length = array ? array.length : 0;
+	        length = array == null ? 0 : array.length;
 	
 	    while (++index < length) {
 	      if (!predicate(array[index], index, array)) {
@@ -11942,7 +12473,7 @@
 	   */
 	  function arrayFilter(array, predicate) {
 	    var index = -1,
-	        length = array ? array.length : 0,
+	        length = array == null ? 0 : array.length,
 	        resIndex = 0,
 	        result = [];
 	
@@ -11965,7 +12496,7 @@
 	   * @returns {boolean} Returns `true` if `target` is found, else `false`.
 	   */
 	  function arrayIncludes(array, value) {
-	    var length = array ? array.length : 0;
+	    var length = array == null ? 0 : array.length;
 	    return !!length && baseIndexOf(array, value, 0) > -1;
 	  }
 	
@@ -11980,7 +12511,7 @@
 	   */
 	  function arrayIncludesWith(array, value, comparator) {
 	    var index = -1,
-	        length = array ? array.length : 0;
+	        length = array == null ? 0 : array.length;
 	
 	    while (++index < length) {
 	      if (comparator(value, array[index])) {
@@ -12001,7 +12532,7 @@
 	   */
 	  function arrayMap(array, iteratee) {
 	    var index = -1,
-	        length = array ? array.length : 0,
+	        length = array == null ? 0 : array.length,
 	        result = Array(length);
 	
 	    while (++index < length) {
@@ -12043,7 +12574,7 @@
 	   */
 	  function arrayReduce(array, iteratee, accumulator, initAccum) {
 	    var index = -1,
-	        length = array ? array.length : 0;
+	        length = array == null ? 0 : array.length;
 	
 	    if (initAccum && length) {
 	      accumulator = array[++index];
@@ -12067,7 +12598,7 @@
 	   * @returns {*} Returns the accumulated value.
 	   */
 	  function arrayReduceRight(array, iteratee, accumulator, initAccum) {
-	    var length = array ? array.length : 0;
+	    var length = array == null ? 0 : array.length;
 	    if (initAccum && length) {
 	      accumulator = array[--length];
 	    }
@@ -12089,7 +12620,7 @@
 	   */
 	  function arraySome(array, predicate) {
 	    var index = -1,
-	        length = array ? array.length : 0;
+	        length = array == null ? 0 : array.length;
 	
 	    while (++index < length) {
 	      if (predicate(array[index], index, array)) {
@@ -12233,7 +12764,7 @@
 	   * @returns {number} Returns the mean.
 	   */
 	  function baseMean(array, iteratee) {
-	    var length = array ? array.length : 0;
+	    var length = array == null ? 0 : array.length;
 	    return length ? (baseSum(array, iteratee) / length) : NAN;
 	  }
 	
@@ -12773,7 +13304,7 @@
 	   * var defer = _.runInContext({ 'setTimeout': setImmediate }).defer;
 	   */
 	  var runInContext = (function runInContext(context) {
-	    context = context ? _.defaults(root.Object(), context, _.pick(root, contextProps)) : root;
+	    context = context == null ? root : _.defaults(root.Object(), context, _.pick(root, contextProps));
 	
 	    /** Built-in constructor references. */
 	    var Array = context.Array,
@@ -12794,12 +13325,6 @@
 	    /** Used to detect overreaching core-js shims. */
 	    var coreJsData = context['__core-js_shared__'];
 	
-	    /** Used to detect methods masquerading as native. */
-	    var maskSrcKey = (function() {
-	      var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
-	      return uid ? ('Symbol(src)_1.' + uid) : '';
-	    }());
-	
 	    /** Used to resolve the decompiled source of functions. */
 	    var funcToString = funcProto.toString;
 	
@@ -12809,15 +13334,21 @@
 	    /** Used to generate unique IDs. */
 	    var idCounter = 0;
 	
-	    /** Used to infer the `Object` constructor. */
-	    var objectCtorString = funcToString.call(Object);
+	    /** Used to detect methods masquerading as native. */
+	    var maskSrcKey = (function() {
+	      var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
+	      return uid ? ('Symbol(src)_1.' + uid) : '';
+	    }());
 	
 	    /**
 	     * Used to resolve the
 	     * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
 	     * of values.
 	     */
-	    var objectToString = objectProto.toString;
+	    var nativeObjectToString = objectProto.toString;
+	
+	    /** Used to infer the `Object` constructor. */
+	    var objectCtorString = funcToString.call(Object);
 	
 	    /** Used to restore the original `_` reference in `_.noConflict`. */
 	    var oldDash = root._;
@@ -12834,11 +13365,12 @@
 	        Uint8Array = context.Uint8Array,
 	        allocUnsafe = Buffer ? Buffer.allocUnsafe : undefined,
 	        getPrototype = overArg(Object.getPrototypeOf, Object),
-	        iteratorSymbol = Symbol ? Symbol.iterator : undefined,
 	        objectCreate = Object.create,
 	        propertyIsEnumerable = objectProto.propertyIsEnumerable,
 	        splice = arrayProto.splice,
-	        spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
+	        spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined,
+	        symIterator = Symbol ? Symbol.iterator : undefined,
+	        symToStringTag = Symbol ? Symbol.toStringTag : undefined;
 	
 	    var defineProperty = (function() {
 	      try {
@@ -13272,7 +13804,7 @@
 	     */
 	    function Hash(entries) {
 	      var index = -1,
-	          length = entries ? entries.length : 0;
+	          length = entries == null ? 0 : entries.length;
 	
 	      this.clear();
 	      while (++index < length) {
@@ -13376,7 +13908,7 @@
 	     */
 	    function ListCache(entries) {
 	      var index = -1,
-	          length = entries ? entries.length : 0;
+	          length = entries == null ? 0 : entries.length;
 	
 	      this.clear();
 	      while (++index < length) {
@@ -13493,7 +14025,7 @@
 	     */
 	    function MapCache(entries) {
 	      var index = -1,
-	          length = entries ? entries.length : 0;
+	          length = entries == null ? 0 : entries.length;
 	
 	      this.clear();
 	      while (++index < length) {
@@ -13597,7 +14129,7 @@
 	     */
 	    function SetCache(values) {
 	      var index = -1,
-	          length = values ? values.length : 0;
+	          length = values == null ? 0 : values.length;
 	
 	      this.__data__ = new MapCache;
 	      while (++index < length) {
@@ -13944,12 +14476,12 @@
 	     */
 	    function baseAt(object, paths) {
 	      var index = -1,
-	          isNil = object == null,
 	          length = paths.length,
-	          result = Array(length);
+	          result = Array(length),
+	          skip = object == null;
 	
 	      while (++index < length) {
-	        result[index] = isNil ? undefined : get(object, paths[index]);
+	        result[index] = skip ? undefined : get(object, paths[index]);
 	      }
 	      return result;
 	    }
@@ -14139,7 +14671,7 @@
 	      outer:
 	      while (++index < length) {
 	        var value = array[index],
-	            computed = iteratee ? iteratee(value) : value;
+	            computed = iteratee == null ? value : iteratee(value);
 	
 	        value = (comparator || value !== 0) ? value : 0;
 	        if (isCommon && computed === computed) {
@@ -14406,14 +14938,20 @@
 	    }
 	
 	    /**
-	     * The base implementation of `getTag`.
+	     * The base implementation of `getTag` without fallbacks for buggy environments.
 	     *
 	     * @private
 	     * @param {*} value The value to query.
 	     * @returns {string} Returns the `toStringTag`.
 	     */
 	    function baseGetTag(value) {
-	      return objectToString.call(value);
+	      if (value == null) {
+	        return value === undefined ? undefinedTag : nullTag;
+	      }
+	      value = Object(value);
+	      return (symToStringTag && symToStringTag in value)
+	        ? getRawTag(value)
+	        : objectToString(value);
 	    }
 	
 	    /**
@@ -14575,7 +15113,7 @@
 	     * @returns {boolean} Returns `true` if `value` is an `arguments` object,
 	     */
 	    function baseIsArguments(value) {
-	      return isObjectLike(value) && objectToString.call(value) == argsTag;
+	      return isObjectLike(value) && baseGetTag(value) == argsTag;
 	    }
 	
 	    /**
@@ -14586,7 +15124,7 @@
 	     * @returns {boolean} Returns `true` if `value` is an array buffer, else `false`.
 	     */
 	    function baseIsArrayBuffer(value) {
-	      return isObjectLike(value) && objectToString.call(value) == arrayBufferTag;
+	      return isObjectLike(value) && baseGetTag(value) == arrayBufferTag;
 	    }
 	
 	    /**
@@ -14597,7 +15135,7 @@
 	     * @returns {boolean} Returns `true` if `value` is a date object, else `false`.
 	     */
 	    function baseIsDate(value) {
-	      return isObjectLike(value) && objectToString.call(value) == dateTag;
+	      return isObjectLike(value) && baseGetTag(value) == dateTag;
 	    }
 	
 	    /**
@@ -14779,7 +15317,7 @@
 	     * @returns {boolean} Returns `true` if `value` is a regexp, else `false`.
 	     */
 	    function baseIsRegExp(value) {
-	      return isObject(value) && objectToString.call(value) == regexpTag;
+	      return isObjectLike(value) && baseGetTag(value) == regexpTag;
 	    }
 	
 	    /**
@@ -14802,7 +15340,7 @@
 	     */
 	    function baseIsTypedArray(value) {
 	      return isObjectLike(value) &&
-	        isLength(value.length) && !!typedArrayTags[objectToString.call(value)];
+	        isLength(value.length) && !!typedArrayTags[baseGetTag(value)];
 	    }
 	
 	    /**
@@ -15463,7 +16001,7 @@
 	     */
 	    function baseSortedIndex(array, value, retHighest) {
 	      var low = 0,
-	          high = array ? array.length : low;
+	          high = array == null ? low : array.length;
 	
 	      if (typeof value == 'number' && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
 	        while (low < high) {
@@ -15499,7 +16037,7 @@
 	      value = iteratee(value);
 	
 	      var low = 0,
-	          high = array ? array.length : 0,
+	          high = array == null ? 0 : array.length,
 	          valIsNaN = value !== value,
 	          valIsNull = value === null,
 	          valIsSymbol = isSymbol(value),
@@ -15749,18 +16287,24 @@
 	     * @returns {Array} Returns the new array of values.
 	     */
 	    function baseXor(arrays, iteratee, comparator) {
+	      var length = arrays.length;
+	      if (length < 2) {
+	        return length ? baseUniq(arrays[0]) : [];
+	      }
 	      var index = -1,
-	          length = arrays.length;
+	          result = Array(length);
 	
 	      while (++index < length) {
-	        var result = result
-	          ? arrayPush(
-	              baseDifference(result, arrays[index], iteratee, comparator),
-	              baseDifference(arrays[index], result, iteratee, comparator)
-	            )
-	          : arrays[index];
+	        var array = arrays[index],
+	            othIndex = -1;
+	
+	        while (++othIndex < length) {
+	          if (othIndex != index) {
+	            result[index] = baseDifference(result[index] || array, arrays[othIndex], iteratee, comparator);
+	          }
+	        }
 	      }
-	      return (result && result.length) ? baseUniq(result, iteratee, comparator) : [];
+	      return baseUniq(baseFlatten(result, 1), iteratee, comparator);
 	    }
 	
 	    /**
@@ -17298,6 +17842,33 @@
 	    }
 	
 	    /**
+	     * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
+	     *
+	     * @private
+	     * @param {*} value The value to query.
+	     * @returns {string} Returns the raw `toStringTag`.
+	     */
+	    function getRawTag(value) {
+	      var isOwn = hasOwnProperty.call(value, symToStringTag),
+	          tag = value[symToStringTag];
+	
+	      try {
+	        value[symToStringTag] = undefined;
+	        var unmasked = true;
+	      } catch (e) {}
+	
+	      var result = nativeObjectToString.call(value);
+	      if (unmasked) {
+	        if (isOwn) {
+	          value[symToStringTag] = tag;
+	        } else {
+	          delete value[symToStringTag];
+	        }
+	      }
+	      return result;
+	    }
+	
+	    /**
 	     * Creates an array of the own enumerable symbol properties of `object`.
 	     *
 	     * @private
@@ -17339,9 +17910,9 @@
 	        (Set && getTag(new Set) != setTag) ||
 	        (WeakMap && getTag(new WeakMap) != weakMapTag)) {
 	      getTag = function(value) {
-	        var result = objectToString.call(value),
+	        var result = baseGetTag(value),
 	            Ctor = result == objectTag ? value.constructor : undefined,
-	            ctorString = Ctor ? toSource(Ctor) : undefined;
+	            ctorString = Ctor ? toSource(Ctor) : '';
 	
 	        if (ctorString) {
 	          switch (ctorString) {
@@ -17422,7 +17993,7 @@
 	      if (result || ++index != length) {
 	        return result;
 	      }
-	      length = object ? object.length : 0;
+	      length = object == null ? 0 : object.length;
 	      return !!length && isLength(length) && isIndex(key, length) &&
 	        (isArray(object) || isArguments(object));
 	    }
@@ -17834,6 +18405,17 @@
 	    }
 	
 	    /**
+	     * Converts `value` to a string using `Object.prototype.toString`.
+	     *
+	     * @private
+	     * @param {*} value The value to convert.
+	     * @returns {string} Returns the converted string.
+	     */
+	    function objectToString(value) {
+	      return nativeObjectToString.call(value);
+	    }
+	
+	    /**
 	     * A specialized version of `baseRest` which transforms the rest array.
 	     *
 	     * @private
@@ -18043,7 +18625,7 @@
 	     * Converts `func` to its source code.
 	     *
 	     * @private
-	     * @param {Function} func The function to process.
+	     * @param {Function} func The function to convert.
 	     * @returns {string} Returns the source code.
 	     */
 	    function toSource(func) {
@@ -18123,7 +18705,7 @@
 	      } else {
 	        size = nativeMax(toInteger(size), 0);
 	      }
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length || size < 1) {
 	        return [];
 	      }
@@ -18154,7 +18736,7 @@
 	     */
 	    function compact(array) {
 	      var index = -1,
-	          length = array ? array.length : 0,
+	          length = array == null ? 0 : array.length,
 	          resIndex = 0,
 	          result = [];
 	
@@ -18326,7 +18908,7 @@
 	     * // => [1, 2, 3]
 	     */
 	    function drop(array, n, guard) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return [];
 	      }
@@ -18360,7 +18942,7 @@
 	     * // => [1, 2, 3]
 	     */
 	    function dropRight(array, n, guard) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return [];
 	      }
@@ -18420,8 +19002,7 @@
 	     * @since 3.0.0
 	     * @category Array
 	     * @param {Array} array The array to query.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
@@ -18482,7 +19063,7 @@
 	     * // => [4, '*', '*', 10]
 	     */
 	    function fill(array, value, start, end) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return [];
 	      }
@@ -18502,8 +19083,7 @@
 	     * @since 1.1.0
 	     * @category Array
 	     * @param {Array} array The array to inspect.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @param {number} [fromIndex=0] The index to search from.
 	     * @returns {number} Returns the index of the found element, else `-1`.
 	     * @example
@@ -18530,7 +19110,7 @@
 	     * // => 2
 	     */
 	    function findIndex(array, predicate, fromIndex) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return -1;
 	      }
@@ -18550,8 +19130,7 @@
 	     * @since 2.0.0
 	     * @category Array
 	     * @param {Array} array The array to inspect.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @param {number} [fromIndex=array.length-1] The index to search from.
 	     * @returns {number} Returns the index of the found element, else `-1`.
 	     * @example
@@ -18578,7 +19157,7 @@
 	     * // => 0
 	     */
 	    function findLastIndex(array, predicate, fromIndex) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return -1;
 	      }
@@ -18607,7 +19186,7 @@
 	     * // => [1, 2, [3, [4]], 5]
 	     */
 	    function flatten(array) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      return length ? baseFlatten(array, 1) : [];
 	    }
 	
@@ -18626,7 +19205,7 @@
 	     * // => [1, 2, 3, 4, 5]
 	     */
 	    function flattenDeep(array) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      return length ? baseFlatten(array, INFINITY) : [];
 	    }
 	
@@ -18651,7 +19230,7 @@
 	     * // => [1, 2, 3, [4], 5]
 	     */
 	    function flattenDepth(array, depth) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return [];
 	      }
@@ -18676,7 +19255,7 @@
 	     */
 	    function fromPairs(pairs) {
 	      var index = -1,
-	          length = pairs ? pairs.length : 0,
+	          length = pairs == null ? 0 : pairs.length,
 	          result = {};
 	
 	      while (++index < length) {
@@ -18732,7 +19311,7 @@
 	     * // => 3
 	     */
 	    function indexOf(array, value, fromIndex) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return -1;
 	      }
@@ -18758,7 +19337,7 @@
 	     * // => [1, 2]
 	     */
 	    function initial(array) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      return length ? baseSlice(array, 0, -1) : [];
 	    }
 	
@@ -18848,9 +19427,8 @@
 	      var comparator = last(arrays),
 	          mapped = arrayMap(arrays, castArrayLikeObject);
 	
-	      if (comparator === last(mapped)) {
-	        comparator = undefined;
-	      } else {
+	      comparator = typeof comparator == 'function' ? comparator : undefined;
+	      if (comparator) {
 	        mapped.pop();
 	      }
 	      return (mapped.length && mapped[0] === arrays[0])
@@ -18874,7 +19452,7 @@
 	     * // => 'a~b~c'
 	     */
 	    function join(array, separator) {
-	      return array ? nativeJoin.call(array, separator) : '';
+	      return array == null ? '' : nativeJoin.call(array, separator);
 	    }
 	
 	    /**
@@ -18892,7 +19470,7 @@
 	     * // => 3
 	     */
 	    function last(array) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      return length ? array[length - 1] : undefined;
 	    }
 	
@@ -18918,7 +19496,7 @@
 	     * // => 1
 	     */
 	    function lastIndexOf(array, value, fromIndex) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return -1;
 	      }
@@ -19021,8 +19599,7 @@
 	     * @category Array
 	     * @param {Array} array The array to modify.
 	     * @param {Array} values The values to remove.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
 	     * @returns {Array} Returns `array`.
 	     * @example
 	     *
@@ -19092,7 +19669,7 @@
 	     * // => ['b', 'd']
 	     */
 	    var pullAt = flatRest(function(array, indexes) {
-	      var length = array ? array.length : 0,
+	      var length = array == null ? 0 : array.length,
 	          result = baseAt(array, indexes);
 	
 	      basePullAt(array, arrayMap(indexes, function(index) {
@@ -19115,8 +19692,7 @@
 	     * @since 2.0.0
 	     * @category Array
 	     * @param {Array} array The array to modify.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @returns {Array} Returns the new array of removed elements.
 	     * @example
 	     *
@@ -19176,7 +19752,7 @@
 	     * // => [3, 2, 1]
 	     */
 	    function reverse(array) {
-	      return array ? nativeReverse.call(array) : array;
+	      return array == null ? array : nativeReverse.call(array);
 	    }
 	
 	    /**
@@ -19196,7 +19772,7 @@
 	     * @returns {Array} Returns the slice of `array`.
 	     */
 	    function slice(array, start, end) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return [];
 	      }
@@ -19243,8 +19819,7 @@
 	     * @category Array
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
 	     * @example
@@ -19279,7 +19854,7 @@
 	     * // => 1
 	     */
 	    function sortedIndexOf(array, value) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (length) {
 	        var index = baseSortedIndex(array, value);
 	        if (index < length && eq(array[index], value)) {
@@ -19322,8 +19897,7 @@
 	     * @category Array
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
 	     * @example
@@ -19358,7 +19932,7 @@
 	     * // => 3
 	     */
 	    function sortedLastIndexOf(array, value) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (length) {
 	        var index = baseSortedIndex(array, value, true) - 1;
 	        if (eq(array[index], value)) {
@@ -19426,7 +20000,7 @@
 	     * // => [2, 3]
 	     */
 	    function tail(array) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      return length ? baseSlice(array, 1, length) : [];
 	    }
 	
@@ -19489,7 +20063,7 @@
 	     * // => []
 	     */
 	    function takeRight(array, n, guard) {
-	      var length = array ? array.length : 0;
+	      var length = array == null ? 0 : array.length;
 	      if (!length) {
 	        return [];
 	      }
@@ -19508,8 +20082,7 @@
 	     * @since 3.0.0
 	     * @category Array
 	     * @param {Array} array The array to query.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
@@ -19550,8 +20123,7 @@
 	     * @since 3.0.0
 	     * @category Array
 	     * @param {Array} array The array to query.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
@@ -19614,8 +20186,7 @@
 	     * @since 4.0.0
 	     * @category Array
 	     * @param {...Array} [arrays] The arrays to inspect.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
 	     * @returns {Array} Returns the new array of combined values.
 	     * @example
 	     *
@@ -19657,9 +20228,7 @@
 	     */
 	    var unionWith = baseRest(function(arrays) {
 	      var comparator = last(arrays);
-	      if (isArrayLikeObject(comparator)) {
-	        comparator = undefined;
-	      }
+	      comparator = typeof comparator == 'function' ? comparator : undefined;
 	      return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), undefined, comparator);
 	    });
 	
@@ -19682,9 +20251,7 @@
 	     * // => [2, 1]
 	     */
 	    function uniq(array) {
-	      return (array && array.length)
-	        ? baseUniq(array)
-	        : [];
+	      return (array && array.length) ? baseUniq(array) : [];
 	    }
 	
 	    /**
@@ -19699,8 +20266,7 @@
 	     * @since 4.0.0
 	     * @category Array
 	     * @param {Array} array The array to inspect.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
 	     * @returns {Array} Returns the new duplicate free array.
 	     * @example
 	     *
@@ -19712,9 +20278,7 @@
 	     * // => [{ 'x': 1 }, { 'x': 2 }]
 	     */
 	    function uniqBy(array, iteratee) {
-	      return (array && array.length)
-	        ? baseUniq(array, getIteratee(iteratee, 2))
-	        : [];
+	      return (array && array.length) ? baseUniq(array, getIteratee(iteratee, 2)) : [];
 	    }
 	
 	    /**
@@ -19738,9 +20302,8 @@
 	     * // => [{ 'x': 1, 'y': 2 }, { 'x': 2, 'y': 1 }]
 	     */
 	    function uniqWith(array, comparator) {
-	      return (array && array.length)
-	        ? baseUniq(array, undefined, comparator)
-	        : [];
+	      comparator = typeof comparator == 'function' ? comparator : undefined;
+	      return (array && array.length) ? baseUniq(array, undefined, comparator) : [];
 	    }
 	
 	    /**
@@ -19872,8 +20435,7 @@
 	     * @since 4.0.0
 	     * @category Array
 	     * @param {...Array} [arrays] The arrays to inspect.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
 	     * @returns {Array} Returns the new array of filtered values.
 	     * @example
 	     *
@@ -19915,9 +20477,7 @@
 	     */
 	    var xorWith = baseRest(function(arrays) {
 	      var comparator = last(arrays);
-	      if (isArrayLikeObject(comparator)) {
-	        comparator = undefined;
-	      }
+	      comparator = typeof comparator == 'function' ? comparator : undefined;
 	      return baseXor(arrayFilter(arrays, isArrayLikeObject), undefined, comparator);
 	    });
 	
@@ -19988,7 +20548,8 @@
 	     * @since 3.8.0
 	     * @category Array
 	     * @param {...Array} [arrays] The arrays to process.
-	     * @param {Function} [iteratee=_.identity] The function to combine grouped values.
+	     * @param {Function} [iteratee=_.identity] The function to combine
+	     *  grouped values.
 	     * @returns {Array} Returns the new array of grouped elements.
 	     * @example
 	     *
@@ -20365,8 +20926,7 @@
 	     * @since 0.5.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee to transform keys.
+	     * @param {Function} [iteratee=_.identity] The iteratee to transform keys.
 	     * @returns {Object} Returns the composed aggregate object.
 	     * @example
 	     *
@@ -20400,8 +20960,7 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @param- {Object} [guard] Enables use as an iteratee for methods like `_.map`.
 	     * @returns {boolean} Returns `true` if all elements pass the predicate check,
 	     *  else `false`.
@@ -20447,8 +21006,7 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @returns {Array} Returns the new filtered array.
 	     * @see _.reject
 	     * @example
@@ -20488,8 +21046,7 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to inspect.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @param {number} [fromIndex=0] The index to search from.
 	     * @returns {*} Returns the matched element, else `undefined`.
 	     * @example
@@ -20526,8 +21083,7 @@
 	     * @since 2.0.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to inspect.
-	     * @param {Function} [predicate=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
 	     * @param {number} [fromIndex=collection.length-1] The index to search from.
 	     * @returns {*} Returns the matched element, else `undefined`.
 	     * @example
@@ -20549,8 +21105,7 @@
 	     * @since 4.0.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
 	     *
@@ -20574,8 +21129,7 @@
 	     * @since 4.7.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
 	     *
@@ -20599,8 +21153,7 @@
 	     * @since 4.7.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The function invoked per iteration.
+	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
 	     * @param {number} [depth=1] The maximum recursion depth.
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
@@ -20689,8 +21242,7 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee to transform keys.
+	     * @param {Function} [iteratee=_.identity] The iteratee to transform keys.
 	     * @returns {Object} Returns the composed aggregate object.
 	     * @example
 	     *
@@ -20799,8 +21351,7 @@
 	     * @since 4.0.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity]
-	     *  The iteratee to transform keys.
+	     * @param {Function} [iteratee=_.identity] The iteratee to transform keys.
 	     * @returns {Object} Returns the composed aggregate object.
 	     * @example
 	     *
@@ -21815,7 +22366,7 @@
 	     * function. Its creation may be customized by replacing the `_.memoize.Cache`
 	     * constructor with one whose instances implement the
 	     * [`Map`](http://ecma-international.org/ecma-262/7.0/#sec-properties-of-the-map-prototype-object)
-	     * method interface of `delete`, `get`, `has`, and `set`.
+	     * method interface of `clear`, `delete`, `get`, `has`, and `set`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -21849,7 +22400,7 @@
 	     * _.memoize.Cache = WeakMap;
 	     */
 	    function memoize(func, resolver) {
-	      if (typeof func != 'function' || (resolver && typeof resolver != 'function')) {
+	      if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      var memoized = function() {
@@ -22265,8 +22816,7 @@
 	     * // => '<p>fred, barney, &amp; pebbles</p>'
 	     */
 	    function wrap(value, wrapper) {
-	      wrapper = wrapper == null ? identity : wrapper;
-	      return partial(wrapper, value);
+	      return partial(castFunction(wrapper), value);
 	    }
 	
 	    /*------------------------------------------------------------------------*/
@@ -22374,6 +22924,7 @@
 	     * // => 0
 	     */
 	    function cloneWith(value, customizer) {
+	      customizer = typeof customizer == 'function' ? customizer : undefined;
 	      return baseClone(value, false, true, customizer);
 	    }
 	
@@ -22428,6 +22979,7 @@
 	     * // => 20
 	     */
 	    function cloneDeepWith(value, customizer) {
+	      customizer = typeof customizer == 'function' ? customizer : undefined;
 	      return baseClone(value, true, true, customizer);
 	    }
 	
@@ -22691,7 +23243,7 @@
 	     */
 	    function isBoolean(value) {
 	      return value === true || value === false ||
-	        (isObjectLike(value) && objectToString.call(value) == boolTag);
+	        (isObjectLike(value) && baseGetTag(value) == boolTag);
 	    }
 	
 	    /**
@@ -22750,7 +23302,7 @@
 	     * // => false
 	     */
 	    function isElement(value) {
-	      return value != null && value.nodeType === 1 && isObjectLike(value) && !isPlainObject(value);
+	      return isObjectLike(value) && value.nodeType === 1 && !isPlainObject(value);
 	    }
 	
 	    /**
@@ -22787,6 +23339,9 @@
 	     * // => false
 	     */
 	    function isEmpty(value) {
+	      if (value == null) {
+	        return true;
+	      }
 	      if (isArrayLike(value) &&
 	          (isArray(value) || typeof value == 'string' || typeof value.splice == 'function' ||
 	            isBuffer(value) || isTypedArray(value) || isArguments(value))) {
@@ -22899,8 +23454,9 @@
 	      if (!isObjectLike(value)) {
 	        return false;
 	      }
-	      return (objectToString.call(value) == errorTag) ||
-	        (typeof value.message == 'string' && typeof value.name == 'string');
+	      var tag = baseGetTag(value);
+	      return tag == errorTag || tag == domExcTag ||
+	        (typeof value.message == 'string' && typeof value.name == 'string' && !isPlainObject(value));
 	    }
 	
 	    /**
@@ -22951,10 +23507,13 @@
 	     * // => false
 	     */
 	    function isFunction(value) {
+	      if (!isObject(value)) {
+	        return false;
+	      }
 	      // The use of `Object#toString` avoids issues with the `typeof` operator
-	      // in Safari 9 which returns 'object' for typed array and other constructors.
-	      var tag = isObject(value) ? objectToString.call(value) : '';
-	      return tag == funcTag || tag == genTag || tag == proxyTag;
+	      // in Safari 9 which returns 'object' for typed arrays and other constructors.
+	      var tag = baseGetTag(value);
+	      return tag == funcTag || tag == genTag || tag == asyncTag || tag == proxyTag;
 	    }
 	
 	    /**
@@ -23305,7 +23864,7 @@
 	     */
 	    function isNumber(value) {
 	      return typeof value == 'number' ||
-	        (isObjectLike(value) && objectToString.call(value) == numberTag);
+	        (isObjectLike(value) && baseGetTag(value) == numberTag);
 	    }
 	
 	    /**
@@ -23337,7 +23896,7 @@
 	     * // => true
 	     */
 	    function isPlainObject(value) {
-	      if (!isObjectLike(value) || objectToString.call(value) != objectTag) {
+	      if (!isObjectLike(value) || baseGetTag(value) != objectTag) {
 	        return false;
 	      }
 	      var proto = getPrototype(value);
@@ -23345,8 +23904,8 @@
 	        return true;
 	      }
 	      var Ctor = hasOwnProperty.call(proto, 'constructor') && proto.constructor;
-	      return (typeof Ctor == 'function' &&
-	        Ctor instanceof Ctor && funcToString.call(Ctor) == objectCtorString);
+	      return typeof Ctor == 'function' && Ctor instanceof Ctor &&
+	        funcToString.call(Ctor) == objectCtorString;
 	    }
 	
 	    /**
@@ -23437,7 +23996,7 @@
 	     */
 	    function isString(value) {
 	      return typeof value == 'string' ||
-	        (!isArray(value) && isObjectLike(value) && objectToString.call(value) == stringTag);
+	        (!isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag);
 	    }
 	
 	    /**
@@ -23459,7 +24018,7 @@
 	     */
 	    function isSymbol(value) {
 	      return typeof value == 'symbol' ||
-	        (isObjectLike(value) && objectToString.call(value) == symbolTag);
+	        (isObjectLike(value) && baseGetTag(value) == symbolTag);
 	    }
 	
 	    /**
@@ -23541,7 +24100,7 @@
 	     * // => false
 	     */
 	    function isWeakSet(value) {
-	      return isObjectLike(value) && objectToString.call(value) == weakSetTag;
+	      return isObjectLike(value) && baseGetTag(value) == weakSetTag;
 	    }
 	
 	    /**
@@ -23626,8 +24185,8 @@
 	      if (isArrayLike(value)) {
 	        return isString(value) ? stringToArray(value) : copyArray(value);
 	      }
-	      if (iteratorSymbol && value[iteratorSymbol]) {
-	        return iteratorToArray(value[iteratorSymbol]());
+	      if (symIterator && value[symIterator]) {
+	        return iteratorToArray(value[symIterator]());
 	      }
 	      var tag = getTag(value),
 	          func = tag == mapTag ? mapToArray : (tag == setTag ? setToArray : values);
@@ -24060,7 +24619,7 @@
 	     */
 	    function create(prototype, properties) {
 	      var result = baseCreate(prototype);
-	      return properties ? baseAssign(result, properties) : result;
+	      return properties == null ? result : baseAssign(result, properties);
 	    }
 	
 	    /**
@@ -25167,7 +25726,7 @@
 	     * // => ['h', 'i']
 	     */
 	    function values(object) {
-	      return object ? baseValues(object, keys(object)) : [];
+	      return object == null ? [] : baseValues(object, keys(object));
 	    }
 	
 	    /**
@@ -26554,7 +27113,7 @@
 	     * // => 'no match'
 	     */
 	    function cond(pairs) {
-	      var length = pairs ? pairs.length : 0,
+	      var length = pairs == null ? 0 : pairs.length,
 	          toIteratee = getIteratee();
 	
 	      pairs = !length ? [] : arrayMap(pairs, function(pair) {
@@ -28306,8 +28865,8 @@
 	    // Add lazy aliases.
 	    lodash.prototype.first = lodash.prototype.head;
 	
-	    if (iteratorSymbol) {
-	      lodash.prototype[iteratorSymbol] = wrapperToIterator;
+	    if (symIterator) {
+	      lodash.prototype[symIterator] = wrapperToIterator;
 	    }
 	    return lodash;
 	  });
@@ -28706,7 +29265,7 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\map.vue"
+	__vue_options__.__file = "/home/daniel/vue-google-maps/dist/components/map.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
@@ -28717,9 +29276,9 @@
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-4d9eec52", __vue_options__)
+	    hotAPI.createRecord("data-v-48954500", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-4d9eec52", __vue_options__)
+	    hotAPI.reload("data-v-48954500", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] map.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -28743,8 +29302,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-4d9eec52!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./map.vue", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-4d9eec52!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./map.vue");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-48954500!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./map.vue", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-48954500!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./map.vue");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -28944,18 +29503,19 @@
 /* 93 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;
-	  return _vm._h('div', {
+	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;
+	  return _h('div', {
 	    staticClass: "vue-map-container"
-	  }, [_vm._h('div', {
+	  }, [_h('div', {
 	    ref: "vue-map",
 	    staticClass: "vue-map"
 	  }), " ", _vm._t("default")])
 	},staticRenderFns: []}
+	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-4d9eec52", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-48954500", module.exports)
 	  }
 	}
 
@@ -28985,20 +29545,13 @@
 	
 	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 	
+	var _markerClustererPlus = __webpack_require__(95);
+	
+	var _markerClustererPlus2 = _interopRequireDefault(_markerClustererPlus);
+	
 	function _interopRequireDefault(obj) {
 	  return obj && obj.__esModule ? obj : { default: obj };
 	}
-	
-	/* vim: set softtabstop=2 shiftwidth=2 expandtab : */
-	
-	/**
-	  * @class Cluster
-	  * @prop $clusterObject -- Exposes the marker clusterer to
-	        descendent Marker classes. Override this if you area
-	        extending the class
-	**/
-	
-	__webpack_require__(95);
 	
 	var props = {
 	  maxZoom: {
@@ -29017,7 +29570,14 @@
 	    type: Array,
 	    twoWay: false
 	  }
-	};
+	}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
+	
+	/**
+	  * @class Cluster
+	  * @prop $clusterObject -- Exposes the marker clusterer to
+	        descendent Marker classes. Override this if you area
+	        extending the class
+	**/
 	
 	exports.default = {
 	  mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
@@ -29031,7 +29591,13 @@
 	    var _this = this;
 	
 	    var options = _lodash2.default.clone(this.getPropsValues());
-	    this.$clusterObject = new MarkerClusterer(this.$map, [], options);
+	
+	    if (typeof _markerClustererPlus2.default === 'undefined') {
+	      console.error("MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js");
+	      throw new Error("MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js");
+	    }
+	
+	    this.$clusterObject = new _markerClustererPlus2.default(this.$map, [], options);
 	
 	    (0, _propsBinder2.default)(this, this.$clusterObject, props, {
 	      afterModelChanged: function afterModelChanged(a, v) {
@@ -29050,22 +29616,27 @@
 /* 95 */
 /***/ function(module, exports) {
 
-	// ==ClosureCompiler==
-	// @compilation_level ADVANCED_OPTIMIZATIONS
-	// @externs_url http://closure-compiler.googlecode.com/svn/trunk/contrib/externs/maps/google_maps_api_v3_3.js
-	// ==/ClosureCompiler==
-	
 	/**
-	 * @name MarkerClusterer for Google Maps v3
-	 * @version version 1.0
-	 * @author Luke Mahe
+	 * @name MarkerClustererPlus for Google Maps V3
+	 * @version 2.1.2 [May 28, 2014]
+	 * @author Gary Little
 	 * @fileoverview
-	 * The library creates and manages per-zoom-level clusters for large amounts of
-	 * markers.
-	 * <br/>
-	 * This is a v3 implementation of the
+	 * The library creates and manages per-zoom-level clusters for large amounts of markers.
+	 * <p>
+	 * This is an enhanced V3 implementation of the
 	 * <a href="http://gmaps-utility-library-dev.googlecode.com/svn/tags/markerclusterer/"
-	 * >v2 MarkerClusterer</a>.
+	 * >V2 MarkerClusterer</a> by Xiaoxi Wu. It is based on the
+	 * <a href="http://google-maps-utility-library-v3.googlecode.com/svn/tags/markerclusterer/"
+	 * >V3 MarkerClusterer</a> port by Luke Mahe. MarkerClustererPlus was created by Gary Little.
+	 * <p>
+	 * v2.0 release: MarkerClustererPlus v2.0 is backward compatible with MarkerClusterer v1.0. It
+	 *  adds support for the <code>ignoreHidden</code>, <code>title</code>, <code>batchSizeIE</code>,
+	 *  and <code>calculator</code> properties as well as support for four more events. It also allows
+	 *  greater control over the styling of the text that appears on the cluster marker. The
+	 *  documentation has been significantly improved and the overall code has been simplified and
+	 *  polished. Very large numbers of markers can now be managed without causing Javascript timeout
+	 *  errors on Internet Explorer. Note that the name of the <code>clusterclick</code> event has been
+	 *  deprecated. The new name is <code>click</code>, so please change your application code now.
 	 */
 	
 	/**
@@ -29084,33 +29655,628 @@
 	
 	
 	/**
-	 * A Marker Clusterer that clusters markers.
+	 * @name ClusterIconStyle
+	 * @class This class represents the object for values in the <code>styles</code> array passed
+	 *  to the {@link MarkerClusterer} constructor. The element in this array that is used to
+	 *  style the cluster icon is determined by calling the <code>calculator</code> function.
 	 *
-	 * @param {google.maps.Map} map The Google map to attach to.
-	 * @param {Array.<google.maps.Marker>=} opt_markers Optional markers to add to
-	 *   the cluster.
-	 * @param {Object=} opt_options support the following options:
-	 *     'gridSize': (number) The grid size of a cluster in pixels.
-	 *     'maxZoom': (number) The maximum zoom level that a marker can be part of a
-	 *                cluster.
-	 *     'zoomOnClick': (boolean) Whether the default behaviour of clicking on a
-	 *                    cluster is to zoom into it.
-	 *     'averageCenter': (boolean) Wether the center of each cluster should be
-	 *                      the average of all markers in the cluster.
-	 *     'minimumClusterSize': (number) The minimum number of markers to be in a
-	 *                           cluster before the markers are hidden and a count
-	 *                           is shown.
-	 *     'styles': (object) An object that has style properties:
-	 *       'url': (string) The image url.
-	 *       'height': (number) The image height.
-	 *       'width': (number) The image width.
-	 *       'anchor': (Array) The anchor position of the label text.
-	 *       'textColor': (string) The text color.
-	 *       'textSize': (number) The text size.
-	 *       'backgroundPosition': (string) The position of the backgound x, y.
-	 *       'iconAnchor': (Array) The anchor position of the icon x, y.
+	 * @property {string} url The URL of the cluster icon image file. Required.
+	 * @property {number} height The display height (in pixels) of the cluster icon. Required.
+	 * @property {number} width The display width (in pixels) of the cluster icon. Required.
+	 * @property {Array} [anchorText] The position (in pixels) from the center of the cluster icon to
+	 *  where the text label is to be centered and drawn. The format is <code>[yoffset, xoffset]</code>
+	 *  where <code>yoffset</code> increases as you go down from center and <code>xoffset</code>
+	 *  increases to the right of center. The default is <code>[0, 0]</code>.
+	 * @property {Array} [anchorIcon] The anchor position (in pixels) of the cluster icon. This is the
+	 *  spot on the cluster icon that is to be aligned with the cluster position. The format is
+	 *  <code>[yoffset, xoffset]</code> where <code>yoffset</code> increases as you go down and
+	 *  <code>xoffset</code> increases to the right of the top-left corner of the icon. The default
+	 *  anchor position is the center of the cluster icon.
+	 * @property {string} [textColor="black"] The color of the label text shown on the
+	 *  cluster icon.
+	 * @property {number} [textSize=11] The size (in pixels) of the label text shown on the
+	 *  cluster icon.
+	 * @property {string} [textDecoration="none"] The value of the CSS <code>text-decoration</code>
+	 *  property for the label text shown on the cluster icon.
+	 * @property {string} [fontWeight="bold"] The value of the CSS <code>font-weight</code>
+	 *  property for the label text shown on the cluster icon.
+	 * @property {string} [fontStyle="normal"] The value of the CSS <code>font-style</code>
+	 *  property for the label text shown on the cluster icon.
+	 * @property {string} [fontFamily="Arial,sans-serif"] The value of the CSS <code>font-family</code>
+	 *  property for the label text shown on the cluster icon.
+	 * @property {string} [backgroundPosition="0 0"] The position of the cluster icon image
+	 *  within the image defined by <code>url</code>. The format is <code>"xpos ypos"</code>
+	 *  (the same format as for the CSS <code>background-position</code> property). You must set
+	 *  this property appropriately when the image defined by <code>url</code> represents a sprite
+	 *  containing multiple images. Note that the position <i>must</i> be specified in px units.
+	 */
+	/**
+	 * @name ClusterIconInfo
+	 * @class This class is an object containing general information about a cluster icon. This is
+	 *  the object that a <code>calculator</code> function returns.
+	 *
+	 * @property {string} text The text of the label to be shown on the cluster icon.
+	 * @property {number} index The index plus 1 of the element in the <code>styles</code>
+	 *  array to be used to style the cluster icon.
+	 * @property {string} title The tooltip to display when the mouse moves over the cluster icon.
+	 *  If this value is <code>undefined</code> or <code>""</code>, <code>title</code> is set to the
+	 *  value of the <code>title</code> property passed to the MarkerClusterer.
+	 */
+	/**
+	 * A cluster icon.
+	 *
 	 * @constructor
 	 * @extends google.maps.OverlayView
+	 * @param {Cluster} cluster The cluster with which the icon is to be associated.
+	 * @param {Array} [styles] An array of {@link ClusterIconStyle} defining the cluster icons
+	 *  to use for various cluster sizes.
+	 * @private
+	 */
+	function ClusterIcon(cluster, styles) {
+	  cluster.getMarkerClusterer().extend(ClusterIcon, google.maps.OverlayView);
+	
+	  this.cluster_ = cluster;
+	  this.className_ = cluster.getMarkerClusterer().getClusterClass();
+	  this.styles_ = styles;
+	  this.center_ = null;
+	  this.div_ = null;
+	  this.sums_ = null;
+	  this.visible_ = false;
+	
+	  this.setMap(cluster.getMap()); // Note: this causes onAdd to be called
+	}
+	
+	
+	/**
+	 * Adds the icon to the DOM.
+	 */
+	ClusterIcon.prototype.onAdd = function () {
+	  var cClusterIcon = this;
+	  var cMouseDownInCluster;
+	  var cDraggingMapByCluster;
+	
+	  this.div_ = document.createElement("div");
+	  this.div_.className = this.className_;
+	  if (this.visible_) {
+	    this.show();
+	  }
+	
+	  this.getPanes().overlayMouseTarget.appendChild(this.div_);
+	
+	  // Fix for Issue 157
+	  this.boundsChangedListener_ = google.maps.event.addListener(this.getMap(), "bounds_changed", function () {
+	    cDraggingMapByCluster = cMouseDownInCluster;
+	  });
+	
+	  google.maps.event.addDomListener(this.div_, "mousedown", function () {
+	    cMouseDownInCluster = true;
+	    cDraggingMapByCluster = false;
+	  });
+	
+	  google.maps.event.addDomListener(this.div_, "click", function (e) {
+	    cMouseDownInCluster = false;
+	    if (!cDraggingMapByCluster) {
+	      var theBounds;
+	      var mz;
+	      var mc = cClusterIcon.cluster_.getMarkerClusterer();
+	      /**
+	       * This event is fired when a cluster marker is clicked.
+	       * @name MarkerClusterer#click
+	       * @param {Cluster} c The cluster that was clicked.
+	       * @event
+	       */
+	      google.maps.event.trigger(mc, "click", cClusterIcon.cluster_);
+	      google.maps.event.trigger(mc, "clusterclick", cClusterIcon.cluster_); // deprecated name
+	
+	      // The default click handler follows. Disable it by setting
+	      // the zoomOnClick property to false.
+	      if (mc.getZoomOnClick()) {
+	        // Zoom into the cluster.
+	        mz = mc.getMaxZoom();
+	        theBounds = cClusterIcon.cluster_.getBounds();
+	        mc.getMap().fitBounds(theBounds);
+	        // There is a fix for Issue 170 here:
+	        setTimeout(function () {
+	          mc.getMap().fitBounds(theBounds);
+	          // Don't zoom beyond the max zoom level
+	          if (mz !== null && (mc.getMap().getZoom() > mz)) {
+	            mc.getMap().setZoom(mz + 1);
+	          }
+	        }, 100);
+	      }
+	
+	      // Prevent event propagation to the map:
+	      e.cancelBubble = true;
+	      if (e.stopPropagation) {
+	        e.stopPropagation();
+	      }
+	    }
+	  });
+	
+	  google.maps.event.addDomListener(this.div_, "mouseover", function () {
+	    var mc = cClusterIcon.cluster_.getMarkerClusterer();
+	    /**
+	     * This event is fired when the mouse moves over a cluster marker.
+	     * @name MarkerClusterer#mouseover
+	     * @param {Cluster} c The cluster that the mouse moved over.
+	     * @event
+	     */
+	    google.maps.event.trigger(mc, "mouseover", cClusterIcon.cluster_);
+	  });
+	
+	  google.maps.event.addDomListener(this.div_, "mouseout", function () {
+	    var mc = cClusterIcon.cluster_.getMarkerClusterer();
+	    /**
+	     * This event is fired when the mouse moves out of a cluster marker.
+	     * @name MarkerClusterer#mouseout
+	     * @param {Cluster} c The cluster that the mouse moved out of.
+	     * @event
+	     */
+	    google.maps.event.trigger(mc, "mouseout", cClusterIcon.cluster_);
+	  });
+	};
+	
+	
+	/**
+	 * Removes the icon from the DOM.
+	 */
+	ClusterIcon.prototype.onRemove = function () {
+	  if (this.div_ && this.div_.parentNode) {
+	    this.hide();
+	    google.maps.event.removeListener(this.boundsChangedListener_);
+	    google.maps.event.clearInstanceListeners(this.div_);
+	    this.div_.parentNode.removeChild(this.div_);
+	    this.div_ = null;
+	  }
+	};
+	
+	
+	/**
+	 * Draws the icon.
+	 */
+	ClusterIcon.prototype.draw = function () {
+	  if (this.visible_) {
+	    var pos = this.getPosFromLatLng_(this.center_);
+	    this.div_.style.top = pos.y + "px";
+	    this.div_.style.left = pos.x + "px";
+	  }
+	};
+	
+	
+	/**
+	 * Hides the icon.
+	 */
+	ClusterIcon.prototype.hide = function () {
+	  if (this.div_) {
+	    this.div_.style.display = "none";
+	  }
+	  this.visible_ = false;
+	};
+	
+	
+	/**
+	 * Positions and shows the icon.
+	 */
+	ClusterIcon.prototype.show = function () {
+	  if (this.div_) {
+	    var img = "";
+	    // NOTE: values must be specified in px units
+	    var bp = this.backgroundPosition_.split(" ");
+	    var spriteH = parseInt(bp[0].replace(/^\s+|\s+$/g, ""), 10);
+	    var spriteV = parseInt(bp[1].replace(/^\s+|\s+$/g, ""), 10);
+	    var pos = this.getPosFromLatLng_(this.center_);
+	    this.div_.style.cssText = this.createCss(pos);
+	    img = "<img src='" + this.url_ + "' style='position: absolute; top: " + spriteV + "px; left: " + spriteH + "px; ";
+	    if (!this.cluster_.getMarkerClusterer().enableRetinaIcons_) {
+	      img += "clip: rect(" + (-1 * spriteV) + "px, " + ((-1 * spriteH) + this.width_) + "px, " +
+	          ((-1 * spriteV) + this.height_) + "px, " + (-1 * spriteH) + "px);";
+	    }
+	    img += "'>";
+	    this.div_.innerHTML = img + "<div style='" +
+	        "position: absolute;" +
+	        "top: " + this.anchorText_[0] + "px;" +
+	        "left: " + this.anchorText_[1] + "px;" +
+	        "color: " + this.textColor_ + ";" +
+	        "font-size: " + this.textSize_ + "px;" +
+	        "font-family: " + this.fontFamily_ + ";" +
+	        "font-weight: " + this.fontWeight_ + ";" +
+	        "font-style: " + this.fontStyle_ + ";" +
+	        "text-decoration: " + this.textDecoration_ + ";" +
+	        "text-align: center;" +
+	        "width: " + this.width_ + "px;" +
+	        "line-height:" + this.height_ + "px;" +
+	        "'>" + this.sums_.text + "</div>";
+	    if (typeof this.sums_.title === "undefined" || this.sums_.title === "") {
+	      this.div_.title = this.cluster_.getMarkerClusterer().getTitle();
+	    } else {
+	      this.div_.title = this.sums_.title;
+	    }
+	    this.div_.style.display = "";
+	  }
+	  this.visible_ = true;
+	};
+	
+	
+	/**
+	 * Sets the icon styles to the appropriate element in the styles array.
+	 *
+	 * @param {ClusterIconInfo} sums The icon label text and styles index.
+	 */
+	ClusterIcon.prototype.useStyle = function (sums) {
+	  this.sums_ = sums;
+	  var index = Math.max(0, sums.index - 1);
+	  index = Math.min(this.styles_.length - 1, index);
+	  var style = this.styles_[index];
+	  this.url_ = style.url;
+	  this.height_ = style.height;
+	  this.width_ = style.width;
+	  this.anchorText_ = style.anchorText || [0, 0];
+	  this.anchorIcon_ = style.anchorIcon || [parseInt(this.height_ / 2, 10), parseInt(this.width_ / 2, 10)];
+	  this.textColor_ = style.textColor || "black";
+	  this.textSize_ = style.textSize || 11;
+	  this.textDecoration_ = style.textDecoration || "none";
+	  this.fontWeight_ = style.fontWeight || "bold";
+	  this.fontStyle_ = style.fontStyle || "normal";
+	  this.fontFamily_ = style.fontFamily || "Arial,sans-serif";
+	  this.backgroundPosition_ = style.backgroundPosition || "0 0";
+	};
+	
+	
+	/**
+	 * Sets the position at which to center the icon.
+	 *
+	 * @param {google.maps.LatLng} center The latlng to set as the center.
+	 */
+	ClusterIcon.prototype.setCenter = function (center) {
+	  this.center_ = center;
+	};
+	
+	
+	/**
+	 * Creates the cssText style parameter based on the position of the icon.
+	 *
+	 * @param {google.maps.Point} pos The position of the icon.
+	 * @return {string} The CSS style text.
+	 */
+	ClusterIcon.prototype.createCss = function (pos) {
+	  var style = [];
+	  style.push("cursor: pointer;");
+	  style.push("position: absolute; top: " + pos.y + "px; left: " + pos.x + "px;");
+	  style.push("width: " + this.width_ + "px; height: " + this.height_ + "px;");
+	  return style.join("");
+	};
+	
+	
+	/**
+	 * Returns the position at which to place the DIV depending on the latlng.
+	 *
+	 * @param {google.maps.LatLng} latlng The position in latlng.
+	 * @return {google.maps.Point} The position in pixels.
+	 */
+	ClusterIcon.prototype.getPosFromLatLng_ = function (latlng) {
+	  var pos = this.getProjection().fromLatLngToDivPixel(latlng);
+	  pos.x -= this.anchorIcon_[1];
+	  pos.y -= this.anchorIcon_[0];
+	  pos.x = parseInt(pos.x, 10);
+	  pos.y = parseInt(pos.y, 10);
+	  return pos;
+	};
+	
+	
+	/**
+	 * Creates a single cluster that manages a group of proximate markers.
+	 *  Used internally, do not call this constructor directly.
+	 * @constructor
+	 * @param {MarkerClusterer} mc The <code>MarkerClusterer</code> object with which this
+	 *  cluster is associated.
+	 */
+	function Cluster(mc) {
+	  this.markerClusterer_ = mc;
+	  this.map_ = mc.getMap();
+	  this.gridSize_ = mc.getGridSize();
+	  this.minClusterSize_ = mc.getMinimumClusterSize();
+	  this.averageCenter_ = mc.getAverageCenter();
+	  this.markers_ = [];
+	  this.center_ = null;
+	  this.bounds_ = null;
+	  this.clusterIcon_ = new ClusterIcon(this, mc.getStyles());
+	}
+	
+	
+	/**
+	 * Returns the number of markers managed by the cluster. You can call this from
+	 * a <code>click</code>, <code>mouseover</code>, or <code>mouseout</code> event handler
+	 * for the <code>MarkerClusterer</code> object.
+	 *
+	 * @return {number} The number of markers in the cluster.
+	 */
+	Cluster.prototype.getSize = function () {
+	  return this.markers_.length;
+	};
+	
+	
+	/**
+	 * Returns the array of markers managed by the cluster. You can call this from
+	 * a <code>click</code>, <code>mouseover</code>, or <code>mouseout</code> event handler
+	 * for the <code>MarkerClusterer</code> object.
+	 *
+	 * @return {Array} The array of markers in the cluster.
+	 */
+	Cluster.prototype.getMarkers = function () {
+	  return this.markers_;
+	};
+	
+	
+	/**
+	 * Returns the center of the cluster. You can call this from
+	 * a <code>click</code>, <code>mouseover</code>, or <code>mouseout</code> event handler
+	 * for the <code>MarkerClusterer</code> object.
+	 *
+	 * @return {google.maps.LatLng} The center of the cluster.
+	 */
+	Cluster.prototype.getCenter = function () {
+	  return this.center_;
+	};
+	
+	
+	/**
+	 * Returns the map with which the cluster is associated.
+	 *
+	 * @return {google.maps.Map} The map.
+	 * @ignore
+	 */
+	Cluster.prototype.getMap = function () {
+	  return this.map_;
+	};
+	
+	
+	/**
+	 * Returns the <code>MarkerClusterer</code> object with which the cluster is associated.
+	 *
+	 * @return {MarkerClusterer} The associated marker clusterer.
+	 * @ignore
+	 */
+	Cluster.prototype.getMarkerClusterer = function () {
+	  return this.markerClusterer_;
+	};
+	
+	
+	/**
+	 * Returns the bounds of the cluster.
+	 *
+	 * @return {google.maps.LatLngBounds} the cluster bounds.
+	 * @ignore
+	 */
+	Cluster.prototype.getBounds = function () {
+	  var i;
+	  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
+	  var markers = this.getMarkers();
+	  for (i = 0; i < markers.length; i++) {
+	    bounds.extend(markers[i].getPosition());
+	  }
+	  return bounds;
+	};
+	
+	
+	/**
+	 * Removes the cluster from the map.
+	 *
+	 * @ignore
+	 */
+	Cluster.prototype.remove = function () {
+	  this.clusterIcon_.setMap(null);
+	  this.markers_ = [];
+	  delete this.markers_;
+	};
+	
+	
+	/**
+	 * Adds a marker to the cluster.
+	 *
+	 * @param {google.maps.Marker} marker The marker to be added.
+	 * @return {boolean} True if the marker was added.
+	 * @ignore
+	 */
+	Cluster.prototype.addMarker = function (marker) {
+	  var i;
+	  var mCount;
+	  var mz;
+	
+	  if (this.isMarkerAlreadyAdded_(marker)) {
+	    return false;
+	  }
+	
+	  if (!this.center_) {
+	    this.center_ = marker.getPosition();
+	    this.calculateBounds_();
+	  } else {
+	    if (this.averageCenter_) {
+	      var l = this.markers_.length + 1;
+	      var lat = (this.center_.lat() * (l - 1) + marker.getPosition().lat()) / l;
+	      var lng = (this.center_.lng() * (l - 1) + marker.getPosition().lng()) / l;
+	      this.center_ = new google.maps.LatLng(lat, lng);
+	      this.calculateBounds_();
+	    }
+	  }
+	
+	  marker.isAdded = true;
+	  this.markers_.push(marker);
+	
+	  mCount = this.markers_.length;
+	  mz = this.markerClusterer_.getMaxZoom();
+	  if (mz !== null && this.map_.getZoom() > mz) {
+	    // Zoomed in past max zoom, so show the marker.
+	    if (marker.getMap() !== this.map_) {
+	      marker.setMap(this.map_);
+	    }
+	  } else if (mCount < this.minClusterSize_) {
+	    // Min cluster size not reached so show the marker.
+	    if (marker.getMap() !== this.map_) {
+	      marker.setMap(this.map_);
+	    }
+	  } else if (mCount === this.minClusterSize_) {
+	    // Hide the markers that were showing.
+	    for (i = 0; i < mCount; i++) {
+	      this.markers_[i].setMap(null);
+	    }
+	  } else {
+	    marker.setMap(null);
+	  }
+	
+	  this.updateIcon_();
+	  return true;
+	};
+	
+	
+	/**
+	 * Determines if a marker lies within the cluster's bounds.
+	 *
+	 * @param {google.maps.Marker} marker The marker to check.
+	 * @return {boolean} True if the marker lies in the bounds.
+	 * @ignore
+	 */
+	Cluster.prototype.isMarkerInClusterBounds = function (marker) {
+	  return this.bounds_.contains(marker.getPosition());
+	};
+	
+	
+	/**
+	 * Calculates the extended bounds of the cluster with the grid.
+	 */
+	Cluster.prototype.calculateBounds_ = function () {
+	  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
+	  this.bounds_ = this.markerClusterer_.getExtendedBounds(bounds);
+	};
+	
+	
+	/**
+	 * Updates the cluster icon.
+	 */
+	Cluster.prototype.updateIcon_ = function () {
+	  var mCount = this.markers_.length;
+	  var mz = this.markerClusterer_.getMaxZoom();
+	
+	  if (mz !== null && this.map_.getZoom() > mz) {
+	    this.clusterIcon_.hide();
+	    return;
+	  }
+	
+	  if (mCount < this.minClusterSize_) {
+	    // Min cluster size not yet reached.
+	    this.clusterIcon_.hide();
+	    return;
+	  }
+	
+	  var numStyles = this.markerClusterer_.getStyles().length;
+	  var sums = this.markerClusterer_.getCalculator()(this.markers_, numStyles);
+	  this.clusterIcon_.setCenter(this.center_);
+	  this.clusterIcon_.useStyle(sums);
+	  this.clusterIcon_.show();
+	};
+	
+	
+	/**
+	 * Determines if a marker has already been added to the cluster.
+	 *
+	 * @param {google.maps.Marker} marker The marker to check.
+	 * @return {boolean} True if the marker has already been added.
+	 */
+	Cluster.prototype.isMarkerAlreadyAdded_ = function (marker) {
+	  var i;
+	  if (this.markers_.indexOf) {
+	    return this.markers_.indexOf(marker) !== -1;
+	  } else {
+	    for (i = 0; i < this.markers_.length; i++) {
+	      if (marker === this.markers_[i]) {
+	        return true;
+	      }
+	    }
+	  }
+	  return false;
+	};
+	
+	
+	/**
+	 * @name MarkerClustererOptions
+	 * @class This class represents the optional parameter passed to
+	 *  the {@link MarkerClusterer} constructor.
+	 * @property {number} [gridSize=60] The grid size of a cluster in pixels. The grid is a square.
+	 * @property {number} [maxZoom=null] The maximum zoom level at which clustering is enabled or
+	 *  <code>null</code> if clustering is to be enabled at all zoom levels.
+	 * @property {boolean} [zoomOnClick=true] Whether to zoom the map when a cluster marker is
+	 *  clicked. You may want to set this to <code>false</code> if you have installed a handler
+	 *  for the <code>click</code> event and it deals with zooming on its own.
+	 * @property {boolean} [averageCenter=false] Whether the position of a cluster marker should be
+	 *  the average position of all markers in the cluster. If set to <code>false</code>, the
+	 *  cluster marker is positioned at the location of the first marker added to the cluster.
+	 * @property {number} [minimumClusterSize=2] The minimum number of markers needed in a cluster
+	 *  before the markers are hidden and a cluster marker appears.
+	 * @property {boolean} [ignoreHidden=false] Whether to ignore hidden markers in clusters. You
+	 *  may want to set this to <code>true</code> to ensure that hidden markers are not included
+	 *  in the marker count that appears on a cluster marker (this count is the value of the
+	 *  <code>text</code> property of the result returned by the default <code>calculator</code>).
+	 *  If set to <code>true</code> and you change the visibility of a marker being clustered, be
+	 *  sure to also call <code>MarkerClusterer.repaint()</code>.
+	 * @property {string} [title=""] The tooltip to display when the mouse moves over a cluster
+	 *  marker. (Alternatively, you can use a custom <code>calculator</code> function to specify a
+	 *  different tooltip for each cluster marker.)
+	 * @property {function} [calculator=MarkerClusterer.CALCULATOR] The function used to determine
+	 *  the text to be displayed on a cluster marker and the index indicating which style to use
+	 *  for the cluster marker. The input parameters for the function are (1) the array of markers
+	 *  represented by a cluster marker and (2) the number of cluster icon styles. It returns a
+	 *  {@link ClusterIconInfo} object. The default <code>calculator</code> returns a
+	 *  <code>text</code> property which is the number of markers in the cluster and an
+	 *  <code>index</code> property which is one higher than the lowest integer such that
+	 *  <code>10^i</code> exceeds the number of markers in the cluster, or the size of the styles
+	 *  array, whichever is less. The <code>styles</code> array element used has an index of
+	 *  <code>index</code> minus 1. For example, the default <code>calculator</code> returns a
+	 *  <code>text</code> value of <code>"125"</code> and an <code>index</code> of <code>3</code>
+	 *  for a cluster icon representing 125 markers so the element used in the <code>styles</code>
+	 *  array is <code>2</code>. A <code>calculator</code> may also return a <code>title</code>
+	 *  property that contains the text of the tooltip to be used for the cluster marker. If
+	 *   <code>title</code> is not defined, the tooltip is set to the value of the <code>title</code>
+	 *   property for the MarkerClusterer.
+	 * @property {string} [clusterClass="cluster"] The name of the CSS class defining general styles
+	 *  for the cluster markers. Use this class to define CSS styles that are not set up by the code
+	 *  that processes the <code>styles</code> array.
+	 * @property {Array} [styles] An array of {@link ClusterIconStyle} elements defining the styles
+	 *  of the cluster markers to be used. The element to be used to style a given cluster marker
+	 *  is determined by the function defined by the <code>calculator</code> property.
+	 *  The default is an array of {@link ClusterIconStyle} elements whose properties are derived
+	 *  from the values for <code>imagePath</code>, <code>imageExtension</code>, and
+	 *  <code>imageSizes</code>.
+	 * @property {boolean} [enableRetinaIcons=false] Whether to allow the use of cluster icons that
+	 * have sizes that are some multiple (typically double) of their actual display size. Icons such
+	 * as these look better when viewed on high-resolution monitors such as Apple's Retina displays.
+	 * Note: if this property is <code>true</code>, sprites cannot be used as cluster icons.
+	 * @property {number} [batchSize=MarkerClusterer.BATCH_SIZE] Set this property to the
+	 *  number of markers to be processed in a single batch when using a browser other than
+	 *  Internet Explorer (for Internet Explorer, use the batchSizeIE property instead).
+	 * @property {number} [batchSizeIE=MarkerClusterer.BATCH_SIZE_IE] When Internet Explorer is
+	 *  being used, markers are processed in several batches with a small delay inserted between
+	 *  each batch in an attempt to avoid Javascript timeout errors. Set this property to the
+	 *  number of markers to be processed in a single batch; select as high a number as you can
+	 *  without causing a timeout error in the browser. This number might need to be as low as 100
+	 *  if 15,000 markers are being managed, for example.
+	 * @property {string} [imagePath=MarkerClusterer.IMAGE_PATH]
+	 *  The full URL of the root name of the group of image files to use for cluster icons.
+	 *  The complete file name is of the form <code>imagePath</code>n.<code>imageExtension</code>
+	 *  where n is the image file number (1, 2, etc.).
+	 * @property {string} [imageExtension=MarkerClusterer.IMAGE_EXTENSION]
+	 *  The extension name for the cluster icon image files (e.g., <code>"png"</code> or
+	 *  <code>"jpg"</code>).
+	 * @property {Array} [imageSizes=MarkerClusterer.IMAGE_SIZES]
+	 *  An array of numbers containing the widths of the group of
+	 *  <code>imagePath</code>n.<code>imageExtension</code> image files.
+	 *  (The images are assumed to be square.)
+	 */
+	/**
+	 * Creates a MarkerClusterer object with the options specified in {@link MarkerClustererOptions}.
+	 * @constructor
+	 * @extends google.maps.OverlayView
+	 * @param {google.maps.Map} map The Google map to attach to.
+	 * @param {Array.<google.maps.Marker>} [opt_markers] The markers to be added to the cluster.
+	 * @param {MarkerClustererOptions} [opt_options] The optional parameters.
 	 */
 	function MarkerClusterer(map, opt_markers, opt_options) {
 	  // MarkerClusterer implements google.maps.OverlayView interface. We use the
@@ -29119,344 +30285,535 @@
 	  // look for it at the last possible moment. If it doesn't exist now then
 	  // there is no point going ahead :)
 	  this.extend(MarkerClusterer, google.maps.OverlayView);
-	  this.map_ = map;
 	
-	  /**
-	   * @type {Array.<google.maps.Marker>}
-	   * @private
-	   */
+	  opt_markers = opt_markers || [];
+	  opt_options = opt_options || {};
+	
 	  this.markers_ = [];
-	
-	  /**
-	   *  @type {Array.<Cluster>}
-	   */
 	  this.clusters_ = [];
-	
-	  this.sizes = [53, 56, 66, 78, 90];
-	
-	  /**
-	   * @private
-	   */
-	  this.styles_ = [];
-	
-	  /**
-	   * @type {boolean}
-	   * @private
-	   */
+	  this.listeners_ = [];
+	  this.activeMap_ = null;
 	  this.ready_ = false;
 	
-	  var options = opt_options || {};
-	
-	  /**
-	   * @type {number}
-	   * @private
-	   */
-	  this.gridSize_ = options['gridSize'] || 60;
-	
-	  /**
-	   * @private
-	   */
-	  this.minClusterSize_ = options['minimumClusterSize'] || 2;
-	
-	
-	  /**
-	   * @type {?number}
-	   * @private
-	   */
-	  this.maxZoom_ = options['maxZoom'] || null;
-	
-	  this.styles_ = options['styles'] || [];
-	
-	  /**
-	   * @type {string}
-	   * @private
-	   */
-	  this.imagePath_ = options['imagePath'] ||
-	      this.MARKER_CLUSTER_IMAGE_PATH_;
-	
-	  /**
-	   * @type {string}
-	   * @private
-	   */
-	  this.imageExtension_ = options['imageExtension'] ||
-	      this.MARKER_CLUSTER_IMAGE_EXTENSION_;
-	
-	  /**
-	   * @type {boolean}
-	   * @private
-	   */
+	  this.gridSize_ = opt_options.gridSize || 60;
+	  this.minClusterSize_ = opt_options.minimumClusterSize || 2;
+	  this.maxZoom_ = opt_options.maxZoom || null;
+	  this.styles_ = opt_options.styles || [];
+	  this.title_ = opt_options.title || "";
 	  this.zoomOnClick_ = true;
-	
-	  if (options['zoomOnClick'] != undefined) {
-	    this.zoomOnClick_ = options['zoomOnClick'];
+	  if (opt_options.zoomOnClick !== undefined) {
+	    this.zoomOnClick_ = opt_options.zoomOnClick;
 	  }
-	
-	  /**
-	   * @type {boolean}
-	   * @private
-	   */
 	  this.averageCenter_ = false;
+	  if (opt_options.averageCenter !== undefined) {
+	    this.averageCenter_ = opt_options.averageCenter;
+	  }
+	  this.ignoreHidden_ = false;
+	  if (opt_options.ignoreHidden !== undefined) {
+	    this.ignoreHidden_ = opt_options.ignoreHidden;
+	  }
+	  this.enableRetinaIcons_ = false;
+	  if (opt_options.enableRetinaIcons !== undefined) {
+	    this.enableRetinaIcons_ = opt_options.enableRetinaIcons;
+	  }
+	  this.imagePath_ = opt_options.imagePath || MarkerClusterer.IMAGE_PATH;
+	  this.imageExtension_ = opt_options.imageExtension || MarkerClusterer.IMAGE_EXTENSION;
+	  this.imageSizes_ = opt_options.imageSizes || MarkerClusterer.IMAGE_SIZES;
+	  this.calculator_ = opt_options.calculator || MarkerClusterer.CALCULATOR;
+	  this.batchSize_ = opt_options.batchSize || MarkerClusterer.BATCH_SIZE;
+	  this.batchSizeIE_ = opt_options.batchSizeIE || MarkerClusterer.BATCH_SIZE_IE;
+	  this.clusterClass_ = opt_options.clusterClass || "cluster";
 	
-	  if (options['averageCenter'] != undefined) {
-	    this.averageCenter_ = options['averageCenter'];
+	  if (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) {
+	    // Try to avoid IE timeout when processing a huge number of markers:
+	    this.batchSize_ = this.batchSizeIE_;
 	  }
 	
 	  this.setupStyles_();
 	
-	  this.setMap(map);
-	
-	  /**
-	   * @type {number}
-	   * @private
-	   */
-	  this.prevZoom_ = this.map_.getZoom();
-	
-	  // Add the map event listeners
-	  var that = this;
-	  google.maps.event.addListener(this.map_, 'zoom_changed', function() {
-	    var zoom = that.map_.getZoom();
-	
-	    if (that.prevZoom_ != zoom) {
-	      that.prevZoom_ = zoom;
-	      that.resetViewport();
-	    }
-	  });
-	
-	  google.maps.event.addListener(this.map_, 'idle', function() {
-	    that.redraw();
-	  });
-	
-	  // Finally, add the markers
-	  if (opt_markers && opt_markers.length) {
-	    this.addMarkers(opt_markers, false);
-	  }
+	  this.addMarkers(opt_markers, true);
+	  this.setMap(map); // Note: this causes onAdd to be called
 	}
 	
 	
 	/**
-	 * The marker cluster image path.
-	 *
-	 * @type {string}
-	 * @private
-	 */
-	MarkerClusterer.prototype.MARKER_CLUSTER_IMAGE_PATH_ =
-	    'http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/' +
-	    'images/m';
-	
-	
-	/**
-	 * The marker cluster image path.
-	 *
-	 * @type {string}
-	 * @private
-	 */
-	MarkerClusterer.prototype.MARKER_CLUSTER_IMAGE_EXTENSION_ = 'png';
-	
-	
-	/**
-	 * Extends a objects prototype by anothers.
-	 *
-	 * @param {Object} obj1 The object to be extended.
-	 * @param {Object} obj2 The object to extend with.
-	 * @return {Object} The new extended object.
+	 * Implementation of the onAdd interface method.
 	 * @ignore
 	 */
-	MarkerClusterer.prototype.extend = function(obj1, obj2) {
-	  return (function(object) {
-	    for (var property in object.prototype) {
-	      this.prototype[property] = object.prototype[property];
+	MarkerClusterer.prototype.onAdd = function () {
+	  var cMarkerClusterer = this;
+	
+	  this.activeMap_ = this.getMap();
+	  this.ready_ = true;
+	
+	  this.repaint();
+	
+	  // Add the map event listeners
+	  this.listeners_ = [
+	    google.maps.event.addListener(this.getMap(), "zoom_changed", function () {
+	      cMarkerClusterer.resetViewport_(false);
+	      // Workaround for this Google bug: when map is at level 0 and "-" of
+	      // zoom slider is clicked, a "zoom_changed" event is fired even though
+	      // the map doesn't zoom out any further. In this situation, no "idle"
+	      // event is triggered so the cluster markers that have been removed
+	      // do not get redrawn. Same goes for a zoom in at maxZoom.
+	      if (this.getZoom() === (this.get("minZoom") || 0) || this.getZoom() === this.get("maxZoom")) {
+	        google.maps.event.trigger(this, "idle");
+	      }
+	    }),
+	    google.maps.event.addListener(this.getMap(), "idle", function () {
+	      cMarkerClusterer.redraw_();
+	    })
+	  ];
+	};
+	
+	
+	/**
+	 * Implementation of the onRemove interface method.
+	 * Removes map event listeners and all cluster icons from the DOM.
+	 * All managed markers are also put back on the map.
+	 * @ignore
+	 */
+	MarkerClusterer.prototype.onRemove = function () {
+	  var i;
+	
+	  // Put all the managed markers back on the map:
+	  for (i = 0; i < this.markers_.length; i++) {
+	    if (this.markers_[i].getMap() !== this.activeMap_) {
+	      this.markers_[i].setMap(this.activeMap_);
 	    }
-	    return this;
-	  }).apply(obj1, [obj2]);
+	  }
+	
+	  // Remove all clusters:
+	  for (i = 0; i < this.clusters_.length; i++) {
+	    this.clusters_[i].remove();
+	  }
+	  this.clusters_ = [];
+	
+	  // Remove map event listeners:
+	  for (i = 0; i < this.listeners_.length; i++) {
+	    google.maps.event.removeListener(this.listeners_[i]);
+	  }
+	  this.listeners_ = [];
+	
+	  this.activeMap_ = null;
+	  this.ready_ = false;
 	};
 	
 	
 	/**
-	 * Implementaion of the interface method.
+	 * Implementation of the draw interface method.
 	 * @ignore
 	 */
-	MarkerClusterer.prototype.onAdd = function() {
-	  this.setReady_(true);
-	};
+	MarkerClusterer.prototype.draw = function () {};
 	
-	/**
-	 * Implementaion of the interface method.
-	 * @ignore
-	 */
-	MarkerClusterer.prototype.draw = function() {};
 	
 	/**
 	 * Sets up the styles object.
-	 *
-	 * @private
 	 */
-	MarkerClusterer.prototype.setupStyles_ = function() {
-	  if (this.styles_.length) {
+	MarkerClusterer.prototype.setupStyles_ = function () {
+	  var i, size;
+	  if (this.styles_.length > 0) {
 	    return;
 	  }
 	
-	  for (var i = 0, size; size = this.sizes[i]; i++) {
+	  for (i = 0; i < this.imageSizes_.length; i++) {
+	    size = this.imageSizes_[i];
 	    this.styles_.push({
-	      url: this.imagePath_ + (i + 1) + '.' + this.imageExtension_,
+	      url: this.imagePath_ + (i + 1) + "." + this.imageExtension_,
 	      height: size,
 	      width: size
 	    });
 	  }
 	};
 	
+	
 	/**
-	 *  Fit the map to the bounds of the markers in the clusterer.
+	 *  Fits the map to the bounds of the markers managed by the clusterer.
 	 */
-	MarkerClusterer.prototype.fitMapToMarkers = function() {
+	MarkerClusterer.prototype.fitMapToMarkers = function () {
+	  var i;
 	  var markers = this.getMarkers();
 	  var bounds = new google.maps.LatLngBounds();
-	  for (var i = 0, marker; marker = markers[i]; i++) {
-	    bounds.extend(marker.getPosition());
+	  for (i = 0; i < markers.length; i++) {
+	    bounds.extend(markers[i].getPosition());
 	  }
 	
-	  this.map_.fitBounds(bounds);
+	  this.getMap().fitBounds(bounds);
 	};
 	
 	
 	/**
-	 *  Sets the styles.
+	 * Returns the value of the <code>gridSize</code> property.
 	 *
-	 *  @param {Object} styles The style to set.
+	 * @return {number} The grid size.
 	 */
-	MarkerClusterer.prototype.setStyles = function(styles) {
-	  this.styles_ = styles;
+	MarkerClusterer.prototype.getGridSize = function () {
+	  return this.gridSize_;
 	};
 	
 	
 	/**
-	 *  Gets the styles.
+	 * Sets the value of the <code>gridSize</code> property.
 	 *
-	 *  @return {Object} The styles object.
+	 * @param {number} gridSize The grid size.
 	 */
-	MarkerClusterer.prototype.getStyles = function() {
-	  return this.styles_;
+	MarkerClusterer.prototype.setGridSize = function (gridSize) {
+	  this.gridSize_ = gridSize;
 	};
 	
 	
 	/**
-	 * Whether zoom on click is set.
+	 * Returns the value of the <code>minimumClusterSize</code> property.
 	 *
-	 * @return {boolean} True if zoomOnClick_ is set.
+	 * @return {number} The minimum cluster size.
 	 */
-	MarkerClusterer.prototype.isZoomOnClick = function() {
-	  return this.zoomOnClick_;
+	MarkerClusterer.prototype.getMinimumClusterSize = function () {
+	  return this.minClusterSize_;
 	};
 	
 	/**
-	 * Whether average center is set.
+	 * Sets the value of the <code>minimumClusterSize</code> property.
 	 *
-	 * @return {boolean} True if averageCenter_ is set.
+	 * @param {number} minimumClusterSize The minimum cluster size.
 	 */
-	MarkerClusterer.prototype.isAverageCenter = function() {
-	  return this.averageCenter_;
-	};
-	
-	
-	/**
-	 *  Returns the array of markers in the clusterer.
-	 *
-	 *  @return {Array.<google.maps.Marker>} The markers.
-	 */
-	MarkerClusterer.prototype.getMarkers = function() {
-	  return this.markers_;
+	MarkerClusterer.prototype.setMinimumClusterSize = function (minimumClusterSize) {
+	  this.minClusterSize_ = minimumClusterSize;
 	};
 	
 	
 	/**
-	 *  Returns the number of markers in the clusterer
+	 *  Returns the value of the <code>maxZoom</code> property.
 	 *
-	 *  @return {Number} The number of markers.
+	 *  @return {number} The maximum zoom level.
 	 */
-	MarkerClusterer.prototype.getTotalMarkers = function() {
-	  return this.markers_.length;
-	};
-	
-	
-	/**
-	 *  Sets the max zoom for the clusterer.
-	 *
-	 *  @param {number} maxZoom The max zoom level.
-	 */
-	MarkerClusterer.prototype.setMaxZoom = function(maxZoom) {
-	  this.maxZoom_ = maxZoom;
-	};
-	
-	
-	/**
-	 *  Gets the max zoom for the clusterer.
-	 *
-	 *  @return {number} The max zoom level.
-	 */
-	MarkerClusterer.prototype.getMaxZoom = function() {
+	MarkerClusterer.prototype.getMaxZoom = function () {
 	  return this.maxZoom_;
 	};
 	
 	
 	/**
-	 *  The function for calculating the cluster icon image.
+	 *  Sets the value of the <code>maxZoom</code> property.
 	 *
-	 *  @param {Array.<google.maps.Marker>} markers The markers in the clusterer.
-	 *  @param {number} numStyles The number of styles available.
-	 *  @return {Object} A object properties: 'text' (string) and 'index' (number).
-	 *  @private
+	 *  @param {number} maxZoom The maximum zoom level.
 	 */
-	MarkerClusterer.prototype.calculator_ = function(markers, numStyles) {
-	  var index = 0;
-	  var count = markers.length;
-	  var dv = count;
-	  while (dv !== 0) {
-	    dv = parseInt(dv / 10, 10);
-	    index++;
-	  }
-	
-	  index = Math.min(index, numStyles);
-	  return {
-	    text: count,
-	    index: index
-	  };
+	MarkerClusterer.prototype.setMaxZoom = function (maxZoom) {
+	  this.maxZoom_ = maxZoom;
 	};
 	
 	
 	/**
-	 * Set the calculator function.
+	 *  Returns the value of the <code>styles</code> property.
 	 *
-	 * @param {function(Array, number)} calculator The function to set as the
-	 *     calculator. The function should return a object properties:
-	 *     'text' (string) and 'index' (number).
-	 *
+	 *  @return {Array} The array of styles defining the cluster markers to be used.
 	 */
-	MarkerClusterer.prototype.setCalculator = function(calculator) {
-	  this.calculator_ = calculator;
+	MarkerClusterer.prototype.getStyles = function () {
+	  return this.styles_;
 	};
 	
 	
 	/**
-	 * Get the calculator function.
+	 *  Sets the value of the <code>styles</code> property.
 	 *
-	 * @return {function(Array, number)} the calculator function.
+	 *  @param {Array.<ClusterIconStyle>} styles The array of styles to use.
 	 */
-	MarkerClusterer.prototype.getCalculator = function() {
+	MarkerClusterer.prototype.setStyles = function (styles) {
+	  this.styles_ = styles;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>title</code> property.
+	 *
+	 * @return {string} The content of the title text.
+	 */
+	MarkerClusterer.prototype.getTitle = function () {
+	  return this.title_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>title</code> property.
+	 *
+	 *  @param {string} title The value of the title property.
+	 */
+	MarkerClusterer.prototype.setTitle = function (title) {
+	  this.title_ = title;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>zoomOnClick</code> property.
+	 *
+	 * @return {boolean} True if zoomOnClick property is set.
+	 */
+	MarkerClusterer.prototype.getZoomOnClick = function () {
+	  return this.zoomOnClick_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>zoomOnClick</code> property.
+	 *
+	 *  @param {boolean} zoomOnClick The value of the zoomOnClick property.
+	 */
+	MarkerClusterer.prototype.setZoomOnClick = function (zoomOnClick) {
+	  this.zoomOnClick_ = zoomOnClick;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>averageCenter</code> property.
+	 *
+	 * @return {boolean} True if averageCenter property is set.
+	 */
+	MarkerClusterer.prototype.getAverageCenter = function () {
+	  return this.averageCenter_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>averageCenter</code> property.
+	 *
+	 *  @param {boolean} averageCenter The value of the averageCenter property.
+	 */
+	MarkerClusterer.prototype.setAverageCenter = function (averageCenter) {
+	  this.averageCenter_ = averageCenter;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>ignoreHidden</code> property.
+	 *
+	 * @return {boolean} True if ignoreHidden property is set.
+	 */
+	MarkerClusterer.prototype.getIgnoreHidden = function () {
+	  return this.ignoreHidden_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>ignoreHidden</code> property.
+	 *
+	 *  @param {boolean} ignoreHidden The value of the ignoreHidden property.
+	 */
+	MarkerClusterer.prototype.setIgnoreHidden = function (ignoreHidden) {
+	  this.ignoreHidden_ = ignoreHidden;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>enableRetinaIcons</code> property.
+	 *
+	 * @return {boolean} True if enableRetinaIcons property is set.
+	 */
+	MarkerClusterer.prototype.getEnableRetinaIcons = function () {
+	  return this.enableRetinaIcons_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>enableRetinaIcons</code> property.
+	 *
+	 *  @param {boolean} enableRetinaIcons The value of the enableRetinaIcons property.
+	 */
+	MarkerClusterer.prototype.setEnableRetinaIcons = function (enableRetinaIcons) {
+	  this.enableRetinaIcons_ = enableRetinaIcons;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>imageExtension</code> property.
+	 *
+	 * @return {string} The value of the imageExtension property.
+	 */
+	MarkerClusterer.prototype.getImageExtension = function () {
+	  return this.imageExtension_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>imageExtension</code> property.
+	 *
+	 *  @param {string} imageExtension The value of the imageExtension property.
+	 */
+	MarkerClusterer.prototype.setImageExtension = function (imageExtension) {
+	  this.imageExtension_ = imageExtension;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>imagePath</code> property.
+	 *
+	 * @return {string} The value of the imagePath property.
+	 */
+	MarkerClusterer.prototype.getImagePath = function () {
+	  return this.imagePath_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>imagePath</code> property.
+	 *
+	 *  @param {string} imagePath The value of the imagePath property.
+	 */
+	MarkerClusterer.prototype.setImagePath = function (imagePath) {
+	  this.imagePath_ = imagePath;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>imageSizes</code> property.
+	 *
+	 * @return {Array} The value of the imageSizes property.
+	 */
+	MarkerClusterer.prototype.getImageSizes = function () {
+	  return this.imageSizes_;
+	};
+	
+	
+	/**
+	 *  Sets the value of the <code>imageSizes</code> property.
+	 *
+	 *  @param {Array} imageSizes The value of the imageSizes property.
+	 */
+	MarkerClusterer.prototype.setImageSizes = function (imageSizes) {
+	  this.imageSizes_ = imageSizes;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>calculator</code> property.
+	 *
+	 * @return {function} the value of the calculator property.
+	 */
+	MarkerClusterer.prototype.getCalculator = function () {
 	  return this.calculator_;
 	};
 	
 	
 	/**
-	 * Add an array of markers to the clusterer.
+	 * Sets the value of the <code>calculator</code> property.
+	 *
+	 * @param {function(Array.<google.maps.Marker>, number)} calculator The value
+	 *  of the calculator property.
+	 */
+	MarkerClusterer.prototype.setCalculator = function (calculator) {
+	  this.calculator_ = calculator;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>batchSizeIE</code> property.
+	 *
+	 * @return {number} the value of the batchSizeIE property.
+	 */
+	MarkerClusterer.prototype.getBatchSizeIE = function () {
+	  return this.batchSizeIE_;
+	};
+	
+	
+	/**
+	 * Sets the value of the <code>batchSizeIE</code> property.
+	 *
+	 *  @param {number} batchSizeIE The value of the batchSizeIE property.
+	 */
+	MarkerClusterer.prototype.setBatchSizeIE = function (batchSizeIE) {
+	  this.batchSizeIE_ = batchSizeIE;
+	};
+	
+	
+	/**
+	 * Returns the value of the <code>clusterClass</code> property.
+	 *
+	 * @return {string} the value of the clusterClass property.
+	 */
+	MarkerClusterer.prototype.getClusterClass = function () {
+	  return this.clusterClass_;
+	};
+	
+	
+	/**
+	 * Sets the value of the <code>clusterClass</code> property.
+	 *
+	 *  @param {string} clusterClass The value of the clusterClass property.
+	 */
+	MarkerClusterer.prototype.setClusterClass = function (clusterClass) {
+	  this.clusterClass_ = clusterClass;
+	};
+	
+	
+	/**
+	 *  Returns the array of markers managed by the clusterer.
+	 *
+	 *  @return {Array} The array of markers managed by the clusterer.
+	 */
+	MarkerClusterer.prototype.getMarkers = function () {
+	  return this.markers_;
+	};
+	
+	
+	/**
+	 *  Returns the number of markers managed by the clusterer.
+	 *
+	 *  @return {number} The number of markers.
+	 */
+	MarkerClusterer.prototype.getTotalMarkers = function () {
+	  return this.markers_.length;
+	};
+	
+	
+	/**
+	 * Returns the current array of clusters formed by the clusterer.
+	 *
+	 * @return {Array} The array of clusters formed by the clusterer.
+	 */
+	MarkerClusterer.prototype.getClusters = function () {
+	  return this.clusters_;
+	};
+	
+	
+	/**
+	 * Returns the number of clusters formed by the clusterer.
+	 *
+	 * @return {number} The number of clusters formed by the clusterer.
+	 */
+	MarkerClusterer.prototype.getTotalClusters = function () {
+	  return this.clusters_.length;
+	};
+	
+	
+	/**
+	 * Adds a marker to the clusterer. The clusters are redrawn unless
+	 *  <code>opt_nodraw</code> is set to <code>true</code>.
+	 *
+	 * @param {google.maps.Marker} marker The marker to add.
+	 * @param {boolean} [opt_nodraw] Set to <code>true</code> to prevent redrawing.
+	 */
+	MarkerClusterer.prototype.addMarker = function (marker, opt_nodraw) {
+	  this.pushMarkerTo_(marker);
+	  if (!opt_nodraw) {
+	    this.redraw_();
+	  }
+	};
+	
+	
+	/**
+	 * Adds an array of markers to the clusterer. The clusters are redrawn unless
+	 *  <code>opt_nodraw</code> is set to <code>true</code>.
 	 *
 	 * @param {Array.<google.maps.Marker>} markers The markers to add.
-	 * @param {boolean=} opt_nodraw Whether to redraw the clusters.
+	 * @param {boolean} [opt_nodraw] Set to <code>true</code> to prevent redrawing.
 	 */
-	MarkerClusterer.prototype.addMarkers = function(markers, opt_nodraw) {
-	  for (var i = 0, marker; marker = markers[i]; i++) {
-	    this.pushMarkerTo_(marker);
-	  }
+	MarkerClusterer.prototype.addMarkers = function (markers, opt_nodraw) {
+	  var key;
+	  for (key in markers) {
+	    if (markers.hasOwnProperty(key)) {
+	      this.pushMarkerTo_(markers[key]);
+	    }
+	  }  
 	  if (!opt_nodraw) {
-	    this.redraw();
+	    this.redraw_();
 	  }
 	};
 	
@@ -29465,202 +30822,139 @@
 	 * Pushes a marker to the clusterer.
 	 *
 	 * @param {google.maps.Marker} marker The marker to add.
-	 * @private
 	 */
-	MarkerClusterer.prototype.pushMarkerTo_ = function(marker) {
-	  marker.isAdded = false;
-	  if (marker['draggable']) {
-	    // If the marker is draggable add a listener so we update the clusters on
-	    // the drag end.
-	    var that = this;
-	    google.maps.event.addListener(marker, 'dragend', function() {
-	      marker.isAdded = false;
-	      that.repaint();
+	MarkerClusterer.prototype.pushMarkerTo_ = function (marker) {
+	  // If the marker is draggable add a listener so we can update the clusters on the dragend:
+	  if (marker.getDraggable()) {
+	    var cMarkerClusterer = this;
+	    google.maps.event.addListener(marker, "dragend", function () {
+	      if (cMarkerClusterer.ready_) {
+	        this.isAdded = false;
+	        cMarkerClusterer.repaint();
+	      }
 	    });
 	  }
+	  marker.isAdded = false;
 	  this.markers_.push(marker);
 	};
 	
 	
 	/**
-	 * Adds a marker to the clusterer and redraws if needed.
+	 * Removes a marker from the cluster.  The clusters are redrawn unless
+	 *  <code>opt_nodraw</code> is set to <code>true</code>. Returns <code>true</code> if the
+	 *  marker was removed from the clusterer.
 	 *
-	 * @param {google.maps.Marker} marker The marker to add.
-	 * @param {boolean=} opt_nodraw Whether to redraw the clusters.
+	 * @param {google.maps.Marker} marker The marker to remove.
+	 * @param {boolean} [opt_nodraw] Set to <code>true</code> to prevent redrawing.
+	 * @return {boolean} True if the marker was removed from the clusterer.
 	 */
-	MarkerClusterer.prototype.addMarker = function(marker, opt_nodraw) {
-	  this.pushMarkerTo_(marker);
-	  if (!opt_nodraw) {
-	    this.redraw();
+	MarkerClusterer.prototype.removeMarker = function (marker, opt_nodraw) {
+	  var removed = this.removeMarker_(marker);
+	
+	  if (!opt_nodraw && removed) {
+	    this.repaint();
 	  }
+	
+	  return removed;
 	};
 	
 	
 	/**
-	 * Removes a marker and returns true if removed, false if not
+	 * Removes an array of markers from the cluster. The clusters are redrawn unless
+	 *  <code>opt_nodraw</code> is set to <code>true</code>. Returns <code>true</code> if markers
+	 *  were removed from the clusterer.
+	 *
+	 * @param {Array.<google.maps.Marker>} markers The markers to remove.
+	 * @param {boolean} [opt_nodraw] Set to <code>true</code> to prevent redrawing.
+	 * @return {boolean} True if markers were removed from the clusterer.
+	 */
+	MarkerClusterer.prototype.removeMarkers = function (markers, opt_nodraw) {
+	  var i, r;
+	  var removed = false;
+	
+	  for (i = 0; i < markers.length; i++) {
+	    r = this.removeMarker_(markers[i]);
+	    removed = removed || r;
+	  }
+	
+	  if (!opt_nodraw && removed) {
+	    this.repaint();
+	  }
+	
+	  return removed;
+	};
+	
+	
+	/**
+	 * Removes a marker and returns true if removed, false if not.
 	 *
 	 * @param {google.maps.Marker} marker The marker to remove
 	 * @return {boolean} Whether the marker was removed or not
-	 * @private
 	 */
-	MarkerClusterer.prototype.removeMarker_ = function(marker) {
+	MarkerClusterer.prototype.removeMarker_ = function (marker) {
+	  var i;
 	  var index = -1;
 	  if (this.markers_.indexOf) {
 	    index = this.markers_.indexOf(marker);
 	  } else {
-	    for (var i = 0, m; m = this.markers_[i]; i++) {
-	      if (m == marker) {
+	    for (i = 0; i < this.markers_.length; i++) {
+	      if (marker === this.markers_[i]) {
 	        index = i;
 	        break;
 	      }
 	    }
 	  }
 	
-	  if (index == -1) {
-	    // Marker is not in our list of markers.
+	  if (index === -1) {
+	    // Marker is not in our list of markers, so do nothing:
 	    return false;
 	  }
 	
 	  marker.setMap(null);
-	
-	  this.markers_.splice(index, 1);
-	
+	  this.markers_.splice(index, 1); // Remove the marker from the list of managed markers
 	  return true;
 	};
 	
 	
 	/**
-	 * Remove a marker from the cluster.
-	 *
-	 * @param {google.maps.Marker} marker The marker to remove.
-	 * @param {boolean=} opt_nodraw Optional boolean to force no redraw.
-	 * @return {boolean} True if the marker was removed.
+	 * Removes all clusters and markers from the map and also removes all markers
+	 *  managed by the clusterer.
 	 */
-	MarkerClusterer.prototype.removeMarker = function(marker, opt_nodraw) {
-	  var removed = this.removeMarker_(marker);
-	
-	  if (!opt_nodraw && removed) {
-	    this.resetViewport();
-	    this.redraw();
-	    return true;
-	  } else {
-	   return false;
-	  }
+	MarkerClusterer.prototype.clearMarkers = function () {
+	  this.resetViewport_(true);
+	  this.markers_ = [];
 	};
 	
 	
 	/**
-	 * Removes an array of markers from the cluster.
-	 *
-	 * @param {Array.<google.maps.Marker>} markers The markers to remove.
-	 * @param {boolean=} opt_nodraw Optional boolean to force no redraw.
+	 * Recalculates and redraws all the marker clusters from scratch.
+	 *  Call this after changing any properties.
 	 */
-	MarkerClusterer.prototype.removeMarkers = function(markers, opt_nodraw) {
-	  var removed = false;
+	MarkerClusterer.prototype.repaint = function () {
+	  var oldClusters = this.clusters_.slice();
+	  this.clusters_ = [];
+	  this.resetViewport_(false);
+	  this.redraw_();
 	
-	  for (var i = 0, marker; marker = markers[i]; i++) {
-	    var r = this.removeMarker_(marker);
-	    removed = removed || r;
-	  }
-	
-	  if (!opt_nodraw && removed) {
-	    this.resetViewport();
-	    this.redraw();
-	    return true;
-	  }
+	  // Remove the old clusters.
+	  // Do it in a timeout to prevent blinking effect.
+	  setTimeout(function () {
+	    var i;
+	    for (i = 0; i < oldClusters.length; i++) {
+	      oldClusters[i].remove();
+	    }
+	  }, 0);
 	};
 	
 	
 	/**
-	 * Sets the clusterer's ready state.
-	 *
-	 * @param {boolean} ready The state.
-	 * @private
-	 */
-	MarkerClusterer.prototype.setReady_ = function(ready) {
-	  if (!this.ready_) {
-	    this.ready_ = ready;
-	    this.createClusters_();
-	  }
-	};
-	
-	
-	/**
-	 * Returns the number of clusters in the clusterer.
-	 *
-	 * @return {number} The number of clusters.
-	 */
-	MarkerClusterer.prototype.getTotalClusters = function() {
-	  return this.clusters_.length;
-	};
-	
-	
-	/**
-	 * Returns the google map that the clusterer is associated with.
-	 *
-	 * @return {google.maps.Map} The map.
-	 */
-	MarkerClusterer.prototype.getMap = function() {
-	  return this.map_;
-	};
-	
-	
-	/**
-	 * Sets the google map that the clusterer is associated with.
-	 *
-	 * @param {google.maps.Map} map The map.
-	 */
-	MarkerClusterer.prototype.setMap = function(map) {
-	  this.map_ = map;
-	};
-	
-	
-	/**
-	 * Returns the size of the grid.
-	 *
-	 * @return {number} The grid size.
-	 */
-	MarkerClusterer.prototype.getGridSize = function() {
-	  return this.gridSize_;
-	};
-	
-	
-	/**
-	 * Sets the size of the grid.
-	 *
-	 * @param {number} size The grid size.
-	 */
-	MarkerClusterer.prototype.setGridSize = function(size) {
-	  this.gridSize_ = size;
-	};
-	
-	
-	/**
-	 * Returns the min cluster size.
-	 *
-	 * @return {number} The grid size.
-	 */
-	MarkerClusterer.prototype.getMinClusterSize = function() {
-	  return this.minClusterSize_;
-	};
-	
-	/**
-	 * Sets the min cluster size.
-	 *
-	 * @param {number} size The grid size.
-	 */
-	MarkerClusterer.prototype.setMinClusterSize = function(size) {
-	  this.minClusterSize_ = size;
-	};
-	
-	
-	/**
-	 * Extends a bounds object by the grid size.
+	 * Returns the current bounds extended by the grid size.
 	 *
 	 * @param {google.maps.LatLngBounds} bounds The bounds to extend.
 	 * @return {google.maps.LatLngBounds} The extended bounds.
+	 * @ignore
 	 */
-	MarkerClusterer.prototype.getExtendedBounds = function(bounds) {
+	MarkerClusterer.prototype.getExtendedBounds = function (bounds) {
 	  var projection = this.getProjection();
 	
 	  // Turn the bounds into latlng.
@@ -29691,91 +30985,48 @@
 	
 	
 	/**
-	 * Determins if a marker is contained in a bounds.
+	 * Redraws all the clusters.
+	 */
+	MarkerClusterer.prototype.redraw_ = function () {
+	  this.createClusters_(0);
+	};
+	
+	
+	/**
+	 * Removes all clusters from the map. The markers are also removed from the map
+	 *  if <code>opt_hide</code> is set to <code>true</code>.
 	 *
-	 * @param {google.maps.Marker} marker The marker to check.
-	 * @param {google.maps.LatLngBounds} bounds The bounds to check against.
-	 * @return {boolean} True if the marker is in the bounds.
-	 * @private
+	 * @param {boolean} [opt_hide] Set to <code>true</code> to also remove the markers
+	 *  from the map.
 	 */
-	MarkerClusterer.prototype.isMarkerInBounds_ = function(marker, bounds) {
-	  return bounds.contains(marker.getPosition());
-	};
-	
-	
-	/**
-	 * Clears all clusters and markers from the clusterer.
-	 */
-	MarkerClusterer.prototype.clearMarkers = function() {
-	  this.resetViewport(true);
-	
-	  // Set the markers a empty array.
-	  this.markers_ = [];
-	};
-	
-	
-	/**
-	 * Clears all existing clusters and recreates them.
-	 * @param {boolean} opt_hide To also hide the marker.
-	 */
-	MarkerClusterer.prototype.resetViewport = function(opt_hide) {
+	MarkerClusterer.prototype.resetViewport_ = function (opt_hide) {
+	  var i, marker;
 	  // Remove all the clusters
-	  for (var i = 0, cluster; cluster = this.clusters_[i]; i++) {
-	    cluster.remove();
+	  for (i = 0; i < this.clusters_.length; i++) {
+	    this.clusters_[i].remove();
 	  }
+	  this.clusters_ = [];
 	
-	  // Reset the markers to not be added and to be invisible.
-	  for (var i = 0, marker; marker = this.markers_[i]; i++) {
+	  // Reset the markers to not be added and to be removed from the map.
+	  for (i = 0; i < this.markers_.length; i++) {
+	    marker = this.markers_[i];
 	    marker.isAdded = false;
 	    if (opt_hide) {
 	      marker.setMap(null);
 	    }
 	  }
-	
-	  this.clusters_ = [];
-	};
-	
-	/**
-	 *
-	 */
-	MarkerClusterer.prototype.repaint = function() {
-	  var oldClusters = this.clusters_.slice();
-	  this.clusters_.length = 0;
-	  this.resetViewport();
-	  this.redraw();
-	
-	  // Remove the old clusters.
-	  // Do it in a timeout so the other clusters have been drawn first.
-	  window.setTimeout(function() {
-	    for (var i = 0, cluster; cluster = oldClusters[i]; i++) {
-	      cluster.remove();
-	    }
-	  }, 0);
-	};
-	
-	
-	/**
-	 * Redraws the clusters.
-	 */
-	MarkerClusterer.prototype.redraw = function() {
-	  this.createClusters_();
 	};
 	
 	
 	/**
 	 * Calculates the distance between two latlng locations in km.
-	 * @see http://www.movable-type.co.uk/scripts/latlong.html
 	 *
 	 * @param {google.maps.LatLng} p1 The first lat lng point.
 	 * @param {google.maps.LatLng} p2 The second lat lng point.
 	 * @return {number} The distance between the two points in km.
-	 * @private
+	 * @see http://www.movable-type.co.uk/scripts/latlong.html
 	*/
-	MarkerClusterer.prototype.distanceBetweenPoints_ = function(p1, p2) {
-	  if (!p1 || !p2) {
-	    return 0;
-	  }
-	
+	MarkerClusterer.prototype.distanceBetweenPoints_ = function (p1, p2) {
 	  var R = 6371; // Radius of the Earth in km
 	  var dLat = (p2.lat() - p1.lat()) * Math.PI / 180;
 	  var dLon = (p2.lng() - p1.lng()) * Math.PI / 180;
@@ -29789,19 +31040,31 @@
 	
 	
 	/**
-	 * Add a marker to a cluster, or creates a new cluster.
+	 * Determines if a marker is contained in a bounds.
+	 *
+	 * @param {google.maps.Marker} marker The marker to check.
+	 * @param {google.maps.LatLngBounds} bounds The bounds to check against.
+	 * @return {boolean} True if the marker is in the bounds.
+	 */
+	MarkerClusterer.prototype.isMarkerInBounds_ = function (marker, bounds) {
+	  return bounds.contains(marker.getPosition());
+	};
+	
+	
+	/**
+	 * Adds a marker to a cluster, or creates a new cluster.
 	 *
 	 * @param {google.maps.Marker} marker The marker to add.
-	 * @private
 	 */
-	MarkerClusterer.prototype.addToClosestCluster_ = function(marker) {
+	MarkerClusterer.prototype.addToClosestCluster_ = function (marker) {
+	  var i, d, cluster, center;
 	  var distance = 40000; // Some large number
 	  var clusterToAddTo = null;
-	  var pos = marker.getPosition();
-	  for (var i = 0, cluster; cluster = this.clusters_[i]; i++) {
-	    var center = cluster.getCenter();
+	  for (i = 0; i < this.clusters_.length; i++) {
+	    cluster = this.clusters_[i];
+	    center = cluster.getCenter();
 	    if (center) {
-	      var d = this.distanceBetweenPoints_(center, marker.getPosition());
+	      d = this.distanceBetweenPoints_(center, marker.getPosition());
 	      if (d < distance) {
 	        distance = d;
 	        clusterToAddTo = cluster;
@@ -29812,7 +31075,7 @@
 	  if (clusterToAddTo && clusterToAddTo.isMarkerInClusterBounds(marker)) {
 	    clusterToAddTo.addMarker(marker);
 	  } else {
-	    var cluster = new Cluster(this);
+	    cluster = new Cluster(this);
 	    cluster.addMarker(marker);
 	    this.clusters_.push(cluster);
 	  }
@@ -29820,538 +31083,173 @@
 	
 	
 	/**
-	 * Creates the clusters.
+	 * Creates the clusters. This is done in batches to avoid timeout errors
+	 *  in some browsers when there is a huge number of markers.
 	 *
-	 * @private
+	 * @param {number} iFirst The index of the first marker in the batch of
+	 *  markers to be added to clusters.
 	 */
-	MarkerClusterer.prototype.createClusters_ = function() {
+	MarkerClusterer.prototype.createClusters_ = function (iFirst) {
+	  var i, marker;
+	  var mapBounds;
+	  var cMarkerClusterer = this;
 	  if (!this.ready_) {
 	    return;
 	  }
 	
-	  // Get our current map view bounds.
-	  // Create a new bounds object so we don't affect the map.
-	  var mapBounds = new google.maps.LatLngBounds(this.map_.getBounds().getSouthWest(),
-	      this.map_.getBounds().getNorthEast());
-	  var bounds = this.getExtendedBounds(mapBounds);
+	  // Cancel previous batch processing if we're working on the first batch:
+	  if (iFirst === 0) {
+	    /**
+	     * This event is fired when the <code>MarkerClusterer</code> begins
+	     *  clustering markers.
+	     * @name MarkerClusterer#clusteringbegin
+	     * @param {MarkerClusterer} mc The MarkerClusterer whose markers are being clustered.
+	     * @event
+	     */
+	    google.maps.event.trigger(this, "clusteringbegin", this);
 	
-	  for (var i = 0, marker; marker = this.markers_[i]; i++) {
-	    if (!marker.isAdded && this.isMarkerInBounds_(marker, bounds)) {
-	      this.addToClosestCluster_(marker);
+	    if (typeof this.timerRefStatic !== "undefined") {
+	      clearTimeout(this.timerRefStatic);
+	      delete this.timerRefStatic;
 	    }
 	  }
-	};
 	
-	
-	/**
-	 * A cluster that contains markers.
-	 *
-	 * @param {MarkerClusterer} markerClusterer The markerclusterer that this
-	 *     cluster is associated with.
-	 * @constructor
-	 * @ignore
-	 */
-	function Cluster(markerClusterer) {
-	  this.markerClusterer_ = markerClusterer;
-	  this.map_ = markerClusterer.getMap();
-	  this.gridSize_ = markerClusterer.getGridSize();
-	  this.minClusterSize_ = markerClusterer.getMinClusterSize();
-	  this.averageCenter_ = markerClusterer.isAverageCenter();
-	  this.center_ = null;
-	  this.markers_ = [];
-	  this.bounds_ = null;
-	  this.clusterIcon_ = new ClusterIcon(this, markerClusterer.getStyles(),
-	      markerClusterer.getGridSize());
-	}
-	
-	/**
-	 * Determins if a marker is already added to the cluster.
-	 *
-	 * @param {google.maps.Marker} marker The marker to check.
-	 * @return {boolean} True if the marker is already added.
-	 */
-	Cluster.prototype.isMarkerAlreadyAdded = function(marker) {
-	  if (this.markers_.indexOf) {
-	    return this.markers_.indexOf(marker) != -1;
+	  // Get our current map view bounds.
+	  // Create a new bounds object so we don't affect the map.
+	  //
+	  // See Comments 9 & 11 on Issue 3651 relating to this workaround for a Google Maps bug:
+	  if (this.getMap().getZoom() > 3) {
+	    mapBounds = new google.maps.LatLngBounds(this.getMap().getBounds().getSouthWest(),
+	      this.getMap().getBounds().getNorthEast());
 	  } else {
-	    for (var i = 0, m; m = this.markers_[i]; i++) {
-	      if (m == marker) {
-	        return true;
+	    mapBounds = new google.maps.LatLngBounds(new google.maps.LatLng(85.02070771743472, -178.48388434375), new google.maps.LatLng(-85.08136444384544, 178.00048865625));
+	  }
+	  var bounds = this.getExtendedBounds(mapBounds);
+	
+	  var iLast = Math.min(iFirst + this.batchSize_, this.markers_.length);
+	
+	  for (i = iFirst; i < iLast; i++) {
+	    marker = this.markers_[i];
+	    if (!marker.isAdded && this.isMarkerInBounds_(marker, bounds)) {
+	      if (!this.ignoreHidden_ || (this.ignoreHidden_ && marker.getVisible())) {
+	        this.addToClosestCluster_(marker);
 	      }
 	    }
 	  }
-	  return false;
-	};
 	
-	
-	/**
-	 * Add a marker the cluster.
-	 *
-	 * @param {google.maps.Marker} marker The marker to add.
-	 * @return {boolean} True if the marker was added.
-	 */
-	Cluster.prototype.addMarker = function(marker) {
-	  if (this.isMarkerAlreadyAdded(marker)) {
-	    return false;
-	  }
-	
-	  if (!this.center_) {
-	    this.center_ = marker.getPosition();
-	    this.calculateBounds_();
+	  if (iLast < this.markers_.length) {
+	    this.timerRefStatic = setTimeout(function () {
+	      cMarkerClusterer.createClusters_(iLast);
+	    }, 0);
 	  } else {
-	    if (this.averageCenter_) {
-	      var l = this.markers_.length + 1;
-	      var lat = (this.center_.lat() * (l-1) + marker.getPosition().lat()) / l;
-	      var lng = (this.center_.lng() * (l-1) + marker.getPosition().lng()) / l;
-	      this.center_ = new google.maps.LatLng(lat, lng);
-	      this.calculateBounds_();
-	    }
+	    delete this.timerRefStatic;
+	
+	    /**
+	     * This event is fired when the <code>MarkerClusterer</code> stops
+	     *  clustering markers.
+	     * @name MarkerClusterer#clusteringend
+	     * @param {MarkerClusterer} mc The MarkerClusterer whose markers are being clustered.
+	     * @event
+	     */
+	    google.maps.event.trigger(this, "clusteringend", this);
 	  }
-	
-	  marker.isAdded = true;
-	  this.markers_.push(marker);
-	
-	  var len = this.markers_.length;
-	  if (len < this.minClusterSize_ && marker.getMap() != this.map_) {
-	    // Min cluster size not reached so show the marker.
-	    marker.setMap(this.map_);
-	  }
-	
-	  if (len == this.minClusterSize_) {
-	    // Hide the markers that were showing.
-	    for (var i = 0; i < len; i++) {
-	      this.markers_[i].setMap(null);
-	    }
-	  }
-	
-	  if (len >= this.minClusterSize_) {
-	    marker.setMap(null);
-	  }
-	
-	  this.updateIcon();
-	  return true;
 	};
 	
 	
 	/**
-	 * Returns the marker clusterer that the cluster is associated with.
+	 * Extends an object's prototype by another's.
 	 *
-	 * @return {MarkerClusterer} The associated marker clusterer.
-	 */
-	Cluster.prototype.getMarkerClusterer = function() {
-	  return this.markerClusterer_;
-	};
-	
-	
-	/**
-	 * Returns the bounds of the cluster.
-	 *
-	 * @return {google.maps.LatLngBounds} the cluster bounds.
-	 */
-	Cluster.prototype.getBounds = function() {
-	  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
-	  var markers = this.getMarkers();
-	  for (var i = 0, marker; marker = markers[i]; i++) {
-	    bounds.extend(marker.getPosition());
-	  }
-	  return bounds;
-	};
-	
-	
-	/**
-	 * Removes the cluster
-	 */
-	Cluster.prototype.remove = function() {
-	  this.clusterIcon_.remove();
-	  this.markers_.length = 0;
-	  delete this.markers_;
-	};
-	
-	
-	/**
-	 * Returns the center of the cluster.
-	 *
-	 * @return {number} The cluster center.
-	 */
-	Cluster.prototype.getSize = function() {
-	  return this.markers_.length;
-	};
-	
-	
-	/**
-	 * Returns the center of the cluster.
-	 *
-	 * @return {Array.<google.maps.Marker>} The cluster center.
-	 */
-	Cluster.prototype.getMarkers = function() {
-	  return this.markers_;
-	};
-	
-	
-	/**
-	 * Returns the center of the cluster.
-	 *
-	 * @return {google.maps.LatLng} The cluster center.
-	 */
-	Cluster.prototype.getCenter = function() {
-	  return this.center_;
-	};
-	
-	
-	/**
-	 * Calculated the extended bounds of the cluster with the grid.
-	 *
-	 * @private
-	 */
-	Cluster.prototype.calculateBounds_ = function() {
-	  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
-	  this.bounds_ = this.markerClusterer_.getExtendedBounds(bounds);
-	};
-	
-	
-	/**
-	 * Determines if a marker lies in the clusters bounds.
-	 *
-	 * @param {google.maps.Marker} marker The marker to check.
-	 * @return {boolean} True if the marker lies in the bounds.
-	 */
-	Cluster.prototype.isMarkerInClusterBounds = function(marker) {
-	  return this.bounds_.contains(marker.getPosition());
-	};
-	
-	
-	/**
-	 * Returns the map that the cluster is associated with.
-	 *
-	 * @return {google.maps.Map} The map.
-	 */
-	Cluster.prototype.getMap = function() {
-	  return this.map_;
-	};
-	
-	
-	/**
-	 * Updates the cluster icon
-	 */
-	Cluster.prototype.updateIcon = function() {
-	  var zoom = this.map_.getZoom();
-	  var mz = this.markerClusterer_.getMaxZoom();
-	
-	  if (mz && zoom > mz) {
-	    // The zoom is greater than our max zoom so show all the markers in cluster.
-	    for (var i = 0, marker; marker = this.markers_[i]; i++) {
-	      marker.setMap(this.map_);
-	    }
-	    return;
-	  }
-	
-	  if (this.markers_.length < this.minClusterSize_) {
-	    // Min cluster size not yet reached.
-	    this.clusterIcon_.hide();
-	    return;
-	  }
-	
-	  var numStyles = this.markerClusterer_.getStyles().length;
-	  var sums = this.markerClusterer_.getCalculator()(this.markers_, numStyles);
-	  this.clusterIcon_.setCenter(this.center_);
-	  this.clusterIcon_.setSums(sums);
-	  this.clusterIcon_.show();
-	};
-	
-	
-	/**
-	 * A cluster icon
-	 *
-	 * @param {Cluster} cluster The cluster to be associated with.
-	 * @param {Object} styles An object that has style properties:
-	 *     'url': (string) The image url.
-	 *     'height': (number) The image height.
-	 *     'width': (number) The image width.
-	 *     'anchor': (Array) The anchor position of the label text.
-	 *     'textColor': (string) The text color.
-	 *     'textSize': (number) The text size.
-	 *     'backgroundPosition: (string) The background postition x, y.
-	 * @param {number=} opt_padding Optional padding to apply to the cluster icon.
-	 * @constructor
-	 * @extends google.maps.OverlayView
+	 * @param {Object} obj1 The object to be extended.
+	 * @param {Object} obj2 The object to extend with.
+	 * @return {Object} The new extended object.
 	 * @ignore
 	 */
-	function ClusterIcon(cluster, styles, opt_padding) {
-	  cluster.getMarkerClusterer().extend(ClusterIcon, google.maps.OverlayView);
-	
-	  this.styles_ = styles;
-	  this.padding_ = opt_padding || 0;
-	  this.cluster_ = cluster;
-	  this.center_ = null;
-	  this.map_ = cluster.getMap();
-	  this.div_ = null;
-	  this.sums_ = null;
-	  this.visible_ = false;
-	
-	  this.setMap(this.map_);
-	}
-	
-	
-	/**
-	 * Triggers the clusterclick event and zoom's if the option is set.
-	 */
-	ClusterIcon.prototype.triggerClusterClick = function() {
-	  var markerClusterer = this.cluster_.getMarkerClusterer();
-	
-	  // Trigger the clusterclick event.
-	  google.maps.event.trigger(markerClusterer, 'clusterclick', this.cluster_);
-	
-	  if (markerClusterer.isZoomOnClick()) {
-	    // Zoom into the cluster.
-	    this.map_.fitBounds(this.cluster_.getBounds());
-	  }
-	};
-	
-	
-	/**
-	 * Adding the cluster icon to the dom.
-	 * @ignore
-	 */
-	ClusterIcon.prototype.onAdd = function() {
-	  this.div_ = document.createElement('DIV');
-	  if (this.visible_) {
-	    var pos = this.getPosFromLatLng_(this.center_);
-	    this.div_.style.cssText = this.createCss(pos);
-	    this.div_.innerHTML = this.sums_.text;
-	  }
-	
-	  var panes = this.getPanes();
-	  panes.overlayMouseTarget.appendChild(this.div_);
-	
-	  var that = this;
-	  google.maps.event.addDomListener(this.div_, 'click', function() {
-	    that.triggerClusterClick();
-	  });
-	};
-	
-	
-	/**
-	 * Returns the position to place the div dending on the latlng.
-	 *
-	 * @param {google.maps.LatLng} latlng The position in latlng.
-	 * @return {google.maps.Point} The position in pixels.
-	 * @private
-	 */
-	ClusterIcon.prototype.getPosFromLatLng_ = function(latlng) {
-	  var pos = this.getProjection().fromLatLngToDivPixel(latlng);
-	
-	  if (typeof this.iconAnchor_ === 'object' && this.iconAnchor_.length === 2) {
-	    pos.x -= this.iconAnchor_[0];
-	    pos.y -= this.iconAnchor_[1];
-	  } else {
-	    pos.x -= parseInt(this.width_ / 2, 10);
-	    pos.y -= parseInt(this.height_ / 2, 10);
-	  }
-	  return pos;
-	};
-	
-	
-	/**
-	 * Draw the icon.
-	 * @ignore
-	 */
-	ClusterIcon.prototype.draw = function() {
-	  if (this.visible_) {
-	    var pos = this.getPosFromLatLng_(this.center_);
-	    this.div_.style.top = pos.y + 'px';
-	    this.div_.style.left = pos.x + 'px';
-	  }
-	};
-	
-	
-	/**
-	 * Hide the icon.
-	 */
-	ClusterIcon.prototype.hide = function() {
-	  if (this.div_) {
-	    this.div_.style.display = 'none';
-	  }
-	  this.visible_ = false;
-	};
-	
-	
-	/**
-	 * Position and show the icon.
-	 */
-	ClusterIcon.prototype.show = function() {
-	  if (this.div_) {
-	    var pos = this.getPosFromLatLng_(this.center_);
-	    this.div_.style.cssText = this.createCss(pos);
-	    this.div_.style.display = '';
-	  }
-	  this.visible_ = true;
-	};
-	
-	
-	/**
-	 * Remove the icon from the map
-	 */
-	ClusterIcon.prototype.remove = function() {
-	  this.setMap(null);
-	};
-	
-	
-	/**
-	 * Implementation of the onRemove interface.
-	 * @ignore
-	 */
-	ClusterIcon.prototype.onRemove = function() {
-	  if (this.div_ && this.div_.parentNode) {
-	    this.hide();
-	    this.div_.parentNode.removeChild(this.div_);
-	    this.div_ = null;
-	  }
-	};
-	
-	
-	/**
-	 * Set the sums of the icon.
-	 *
-	 * @param {Object} sums The sums containing:
-	 *   'text': (string) The text to display in the icon.
-	 *   'index': (number) The style index of the icon.
-	 */
-	ClusterIcon.prototype.setSums = function(sums) {
-	  this.sums_ = sums;
-	  this.text_ = sums.text;
-	  this.index_ = sums.index;
-	  if (this.div_) {
-	    this.div_.innerHTML = sums.text;
-	  }
-	
-	  this.useStyle();
-	};
-	
-	
-	/**
-	 * Sets the icon to the the styles.
-	 */
-	ClusterIcon.prototype.useStyle = function() {
-	  var index = Math.max(0, this.sums_.index - 1);
-	  index = Math.min(this.styles_.length - 1, index);
-	  var style = this.styles_[index];
-	  this.url_ = style['url'];
-	  this.height_ = style['height'];
-	  this.width_ = style['width'];
-	  this.textColor_ = style['textColor'];
-	  this.anchor_ = style['anchor'];
-	  this.textSize_ = style['textSize'];
-	  this.backgroundPosition_ = style['backgroundPosition'];
-	  this.iconAnchor_ = style['iconAnchor'];
-	};
-	
-	
-	/**
-	 * Sets the center of the icon.
-	 *
-	 * @param {google.maps.LatLng} center The latlng to set as the center.
-	 */
-	ClusterIcon.prototype.setCenter = function(center) {
-	  this.center_ = center;
-	};
-	
-	
-	/**
-	 * Create the css text based on the position of the icon.
-	 *
-	 * @param {google.maps.Point} pos The position.
-	 * @return {string} The css style text.
-	 */
-	ClusterIcon.prototype.createCss = function(pos) {
-	  var style = [];
-	  style.push('background-image:url(' + this.url_ + ');');
-	  var backgroundPosition = this.backgroundPosition_ ? this.backgroundPosition_ : '0 0';
-	  style.push('background-position:' + backgroundPosition + ';');
-	
-	  if (typeof this.anchor_ === 'object') {
-	    if (typeof this.anchor_[0] === 'number' && this.anchor_[0] > 0 &&
-	        this.anchor_[0] < this.height_) {
-	      style.push('height:' + (this.height_ - this.anchor_[0]) +
-	          'px; padding-top:' + this.anchor_[0] + 'px;');
-	    } else if (typeof this.anchor_[0] === 'number' && this.anchor_[0] < 0 &&
-	        -this.anchor_[0] < this.height_) {
-	      style.push('height:' + this.height_ + 'px; line-height:' + (this.height_ + this.anchor_[0]) +
-	          'px;');
-	    } else {
-	      style.push('height:' + this.height_ + 'px; line-height:' + this.height_ +
-	          'px;');
+	MarkerClusterer.prototype.extend = function (obj1, obj2) {
+	  return (function (object) {
+	    var property;
+	    for (property in object.prototype) {
+	      this.prototype[property] = object.prototype[property];
 	    }
-	    if (typeof this.anchor_[1] === 'number' && this.anchor_[1] > 0 &&
-	        this.anchor_[1] < this.width_) {
-	      style.push('width:' + (this.width_ - this.anchor_[1]) +
-	          'px; padding-left:' + this.anchor_[1] + 'px;');
-	    } else {
-	      style.push('width:' + this.width_ + 'px; text-align:center;');
-	    }
-	  } else {
-	    style.push('height:' + this.height_ + 'px; line-height:' +
-	        this.height_ + 'px; width:' + this.width_ + 'px; text-align:center;');
-	  }
-	
-	  var txtColor = this.textColor_ ? this.textColor_ : 'black';
-	  var txtSize = this.textSize_ ? this.textSize_ : 11;
-	
-	  style.push('cursor:pointer; top:' + pos.y + 'px; left:' +
-	      pos.x + 'px; color:' + txtColor + '; position:absolute; font-size:' +
-	      txtSize + 'px; font-family:Arial,sans-serif; font-weight:bold');
-	  return style.join('');
+	    return this;
+	  }).apply(obj1, [obj2]);
 	};
 	
 	
-	// Export Symbols for Closure
-	// If you are not going to compile with closure then you can remove the
-	// code below.
-	window['MarkerClusterer'] = MarkerClusterer;
-	MarkerClusterer.prototype['addMarker'] = MarkerClusterer.prototype.addMarker;
-	MarkerClusterer.prototype['addMarkers'] = MarkerClusterer.prototype.addMarkers;
-	MarkerClusterer.prototype['clearMarkers'] =
-	    MarkerClusterer.prototype.clearMarkers;
-	MarkerClusterer.prototype['fitMapToMarkers'] =
-	    MarkerClusterer.prototype.fitMapToMarkers;
-	MarkerClusterer.prototype['getCalculator'] =
-	    MarkerClusterer.prototype.getCalculator;
-	MarkerClusterer.prototype['getGridSize'] =
-	    MarkerClusterer.prototype.getGridSize;
-	MarkerClusterer.prototype['getExtendedBounds'] =
-	    MarkerClusterer.prototype.getExtendedBounds;
-	MarkerClusterer.prototype['getMap'] = MarkerClusterer.prototype.getMap;
-	MarkerClusterer.prototype['getMarkers'] = MarkerClusterer.prototype.getMarkers;
-	MarkerClusterer.prototype['getMaxZoom'] = MarkerClusterer.prototype.getMaxZoom;
-	MarkerClusterer.prototype['getStyles'] = MarkerClusterer.prototype.getStyles;
-	MarkerClusterer.prototype['getTotalClusters'] =
-	    MarkerClusterer.prototype.getTotalClusters;
-	MarkerClusterer.prototype['getTotalMarkers'] =
-	    MarkerClusterer.prototype.getTotalMarkers;
-	MarkerClusterer.prototype['redraw'] = MarkerClusterer.prototype.redraw;
-	MarkerClusterer.prototype['removeMarker'] =
-	    MarkerClusterer.prototype.removeMarker;
-	MarkerClusterer.prototype['removeMarkers'] =
-	    MarkerClusterer.prototype.removeMarkers;
-	MarkerClusterer.prototype['resetViewport'] =
-	    MarkerClusterer.prototype.resetViewport;
-	MarkerClusterer.prototype['repaint'] =
-	    MarkerClusterer.prototype.repaint;
-	MarkerClusterer.prototype['setCalculator'] =
-	    MarkerClusterer.prototype.setCalculator;
-	MarkerClusterer.prototype['setGridSize'] =
-	    MarkerClusterer.prototype.setGridSize;
-	MarkerClusterer.prototype['setMaxZoom'] =
-	    MarkerClusterer.prototype.setMaxZoom;
-	MarkerClusterer.prototype['onAdd'] = MarkerClusterer.prototype.onAdd;
-	MarkerClusterer.prototype['draw'] = MarkerClusterer.prototype.draw;
+	/**
+	 * The default function for determining the label text and style
+	 * for a cluster icon.
+	 *
+	 * @param {Array.<google.maps.Marker>} markers The array of markers represented by the cluster.
+	 * @param {number} numStyles The number of marker styles available.
+	 * @return {ClusterIconInfo} The information resource for the cluster.
+	 * @constant
+	 * @ignore
+	 */
+	MarkerClusterer.CALCULATOR = function (markers, numStyles) {
+	  var index = 0;
+	  var title = "";
+	  var count = markers.length.toString();
 	
-	Cluster.prototype['getCenter'] = Cluster.prototype.getCenter;
-	Cluster.prototype['getSize'] = Cluster.prototype.getSize;
-	Cluster.prototype['getMarkers'] = Cluster.prototype.getMarkers;
+	  var dv = count;
+	  while (dv !== 0) {
+	    dv = parseInt(dv / 10, 10);
+	    index++;
+	  }
 	
-	ClusterIcon.prototype['onAdd'] = ClusterIcon.prototype.onAdd;
-	ClusterIcon.prototype['draw'] = ClusterIcon.prototype.draw;
-	ClusterIcon.prototype['onRemove'] = ClusterIcon.prototype.onRemove;
+	  index = Math.min(index, numStyles);
+	  return {
+	    text: count,
+	    index: index,
+	    title: title
+	  };
+	};
+	
+	
+	/**
+	 * The number of markers to process in one batch.
+	 *
+	 * @type {number}
+	 * @constant
+	 */
+	MarkerClusterer.BATCH_SIZE = 2000;
+	
+	
+	/**
+	 * The number of markers to process in one batch (IE only).
+	 *
+	 * @type {number}
+	 * @constant
+	 */
+	MarkerClusterer.BATCH_SIZE_IE = 500;
+	
+	
+	/**
+	 * The default root name for the marker cluster images.
+	 *
+	 * @type {string}
+	 * @constant
+	 */
+	MarkerClusterer.IMAGE_PATH = "https://raw.githubusercontent.com/googlemaps/v3-utility-library/master/markerclustererplus/images/m";
+	
+	
+	/**
+	 * The default extension name for the marker cluster images.
+	 *
+	 * @type {string}
+	 * @constant
+	 */
+	MarkerClusterer.IMAGE_EXTENSION = "png";
+	
+	
+	/**
+	 * The default array of sizes for the marker cluster images.
+	 *
+	 * @type {Array.<number>}
+	 * @constant
+	 */
+	MarkerClusterer.IMAGE_SIZES = [53, 56, 66, 78, 90];
+	
+	module.exports = MarkerClusterer
 
 
 /***/ },
@@ -32313,7 +33211,7 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\infoWindow.vue"
+	__vue_options__.__file = "/home/daniel/vue-google-maps/dist/components/infoWindow.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
@@ -32324,9 +33222,9 @@
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-433e6db8", __vue_options__)
+	    hotAPI.createRecord("data-v-2a01954a", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-433e6db8", __vue_options__)
+	    hotAPI.reload("data-v-2a01954a", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] infoWindow.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -32466,19 +33364,20 @@
 /* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;
-	  return _vm._h('div', [_vm._h('div', {
+	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;
+	  return _h('div', [_h('div', {
 	    ref: "flyaway"
-	  }, [_vm._t("default", [_vm._h('div', {
+	  }, [_vm._t("default", [_h('div', {
 	    domProps: {
 	      "innerHTML": _vm._s(_vm.content)
 	    }
 	  })])])])
 	},staticRenderFns: []}
+	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-433e6db8", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-2a01954a", module.exports)
 	  }
 	}
 
@@ -32505,7 +33404,7 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\placeInput.vue"
+	__vue_options__.__file = "/home/daniel/vue-google-maps/dist/components/placeInput.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
@@ -32516,9 +33415,9 @@
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-6b27a806", __vue_options__)
+	    hotAPI.createRecord("data-v-9da158e2", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-6b27a806", __vue_options__)
+	    hotAPI.reload("data-v-9da158e2", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] placeInput.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -32622,7 +33521,7 @@
 	      (0, _assert2.default)(typeof google.maps.places.Autocomplete === 'function', "google.maps.places.Autocomplete is undefined. Did you add 'places' to libraries when loading Google Maps?");
 	
 	      _this.autoCompleter = new google.maps.places.Autocomplete(_this.$refs.input, options);
-	      (0, _propsBinder2.default)(_this, _this.autoCompleter, _lodash2.default.omit(props, ['placeholder', 'place', 'selectFirstOnEnter']));
+	      (0, _propsBinder2.default)(_this, _this.autoCompleter, _lodash2.default.omit(props, ['placeholder', 'place', 'selectFirstOnEnter', 'defaultPlace']));
 	
 	      _this.autoCompleter.addListener('place_changed', function () {
 	        _this.$emit('place_changed', _this.autoCompleter.getPlace());
@@ -32676,12 +33575,12 @@
 /* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;
-	  return _vm._h('label', [_vm._h('span', {
+	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;
+	  return _h('label', [_h('span', {
 	    domProps: {
 	      "textContent": _vm._s(_vm.label)
 	    }
-	  }), " ", _vm._h('input', {
+	  }), " ", _h('input', {
 	    ref: "input",
 	    class: _vm.className,
 	    attrs: {
@@ -32690,10 +33589,11 @@
 	    }
 	  })])
 	},staticRenderFns: []}
+	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-6b27a806", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-9da158e2", module.exports)
 	  }
 	}
 
