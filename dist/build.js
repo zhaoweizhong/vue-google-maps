@@ -8524,7 +8524,7 @@
 	
 	
 	// module
-	exports.push([module.id, "\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n", "", {"version":3,"sources":["/./src/app.vue?49334966"],"names":[],"mappings":";AAsNA;EACA,YAAA;EACA,aAAA;EACA,gBAAA;EACA,OAAA;EACA,QAAA;EACA,cAAA;EACA,oBAAA;CACA;AAEA;EACA,cAAA;CACA;AACA;EACA,mBAAA;EACA,gBAAA;CACA;AAEA;EACA,WAAA;EACA,cAAA;EACA,eAAA;CACA","file":"app.vue","sourcesContent":["/* vim: set softtabstop=2 shiftwidth=2 expandtab : */\n<template>\n<div class=\"app-panel\">\n<div class=\"settings-panel\">\n  <h1>Map information</h1>\n  Map center latitude:\n    <input type=\"number\" v-model=\"reportedCenter.lat\" number\n      @change=\"updateMapCenter\" />\n  <br>\n  Map center longitude:\n    <input type=\"number\" v-model=\"reportedCenter.lng\" number\n      @change=\"updateMapCenter\">\n  <br>\n  Map bounds: {{mapBounds | json}}\n  <br>\n  Map zoom: <input type=\"number\" v-model=\"zoom\" number>\n  <br>\n  Dragged {{drag}} times\n  <br>\n  Left clicked {{mapClickedCount}} times\n  <br>\n  Map type: <select id=\"\" name=\"\" v-model=\"mapType\">\n    <option value=\"roadmap\">roadmap</option>\n    <option value=\"hybrid\">hybrid</option>\n    <option value=\"satellite\">satellite</option>\n    <option value=\"terrain\">terrain</option>\n  </select>\n  <br>\n  Map style: <select id=\"\" name=\"\" v-model=\"mapStyle\">\n    <option value=\"red\">red</option>\n    <option value=\"green\">green</option>\n    <option value=\"normal\">normal</option>\n  </select>\n  <br>\n  Enable scrollwheel zooming on the map: <input type=\"checkbox\" v-model=\"scrollwheel\">\n  <br>\n  <button @click=\"addMarker\"> Add a new Marker</button> (or right click on the map :) )\n  <h1>Clusters</h1>\n  enabled: <input type=\"checkbox\" v-model=\"clustering\" number>\n  </br>\n  Grid size: <input type=\"number\" v-model=\"gridSize\" number>\n  <br>\n  <h1>Polyline</h1>\n  Editable: <input type=\"checkbox\" number v-model=\"pleditable\">\n  <button @click=\"resetPlPath\">Reset path</button>\n  <br>\n  Visible: <input type=\"checkbox\" number v-model=\"plvisible\">\n  <br>\n  <h1>Polygon</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"pgvisible\"> <br>\n  <button @click=\"pgPath = opgPath\">Reset Polygon to pentagon</button><br>\n  <button @click=\"pgPath = originalPlPath\">Reset Polygon to a simple polygon</button><br>\n  Path: {{pgPath | json}}\n  <br>\n  <h1>Circle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayCircle\"><br>\n  {{circleBounds | json}}\n  <br>\n  <h1>Rectangle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayRectangle\"><br>\n  {{rectangleBounds | json}}\n  <br>\n  <h1>PlaceInput</h1>\n  <gmap-place-input\n    label=\"Add a marker at this place\"\n    :select-first-on-enter=\"true\"\n    @place_changed=\"updatePlace($event)\"\n  ></gmap-place-input>\n  <br>\n  <h1> Standalone infoWindow </h1>\n  modal 1 : <input type=\"checkbox\" number v-model=\"ifw\"><br>\n  modal 2: <input type=\"checkbox\" number v-model=\"ifw2\"> <input type=\"text\" v-model=\"ifw2text\">\n  <h1>Markers</h1>\n  Display only markers with even ID (to test filters) <input type=\"checkbox\" number v-model=\"markersEven\"><br>\n  <table>\n    <tr>\n      <th>lat</th>\n      <th>lng</th>\n      <th>opacity</th>\n      <th>enabled</th>\n      <th>draggable</th>\n      <th>clicked</th>\n      <th>right clicked</th>\n      <th>Drag-ended</th>\n      <th>Open info window</th>\n      <th>infoWIndow text</th>\n      <th>Delete me</th>\n    </tr>\n    <tr v-for=\"m in markers\">\n      <td>\n        <input type=\"number\" v-model=\"m.position.lat\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.position.lng\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.opacity\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.enabled\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.draggable\" number>\n      </td>\n      <td>{{m.clicked}}</td>\n      <td>{{m.rightClicked}}</td>\n      <td>{{m.dragended}}</td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.ifw\" number>\n      </td>\n      <td>\n        <input type=\"text\" v-model=\"m.ifw2text\">\n      </td>\n      <td><button @click=\"markers.splice(markers.indexOf(m), 1)\">Delete me </button></td>\n    </tr>\n  </table>\n</div>\n<div class=\"map-panel\">\n  <gmap-map\n    :center=\"center\"\n    :zoom=\"zoom\"\n    :map-type-id=\"mapType\"\n    :options=\"{styles: mapStyles, scrollwheel: scrollwheel}\"\n    @rightclick=\"mapRclicked\"\n    @drag=\"drag++\"\n    @click=\"mapClickedCount++\"\n\n    @zoom_changed=\"update('zoom', $event)\"\n    @center_changed=\"update('reportedCenter', $event)\"\n    @maptypeid_changed=\"update('mapType', $event)\"\n    @bounds_changed=\"update('bounds', $event)\"\n    >\n    <gmap-cluster\n    :grid-size=\"gridSize\"\n    v-if=\"clustering\"\n    >\n      <gmap-marker\n        v-if=\"m.enabled\"\n        :position=\"m.position\"\n        :opacity=\"m.opacity\"\n        :draggable=\"m.draggable\"\n        @click=\"m.clicked++\"\n        @rightclick=\"m.rightClicked++\"\n        @dragend=\"m.dragended++\"\n\n        @position_changed=\"updateChild(m, 'position', $event)\"\n\n        v-for=\"m in activeMarkers\"\n      >\n        <gmap-info-window\n        :opened=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </gmap-cluster>\n    <div v-if=\"!clustering\">\n      <gmap-marker\n      v-if=\"m.enabled\"\n      :position=\"m.position\"\n      :opacity=\"m.opacity\"\n      :draggable=\"m.draggable\"\n      @click=\"m.clicked++\"\n      @rightclick=\"m.rightClicked++\"\n      @dragend=\"m.dragended++\"\n      @position_changed=\"updateChild(m, 'position', $event)\"\n      v-for=\"m in activeMarkers\"\n      >\n        <gmap-info-window\n        :opened=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </div>\n\n    <gmap-info-window\n    :position=\"reportedCenter\"\n    :opened=\"ifw\"\n    >\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    <br/>\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    <b>{{mapClickedCount}}</b>\n    </gmap-info-window>\n\n    <gmap-info-window\n    :position=\"reportedCenter\"\n    :opened=\"ifw2\"\n    :content=\"ifw2text\"\n    ></gmap-info-window>\n\n    <gmap-polyline v-if=\"plvisible\" :path=\"plPath\" :editable=\"pleditable\" :draggable=\"true\" :options=\"{geodesic:true, strokeColor:'#FF0000'}\"\n      @path_changed=\"updatePolylinePath($event)\">\n    </gmap-polyline>\n    <gmap-polygon v-if=\"pgvisible\" :paths=\"pgPath\" :editable=\"true\"\n      :options=\"{geodesic:true, strokeColor:'#FF0000', fillColor:'#000000'}\"\n      @paths_changed=\"updatePolygonPaths($event)\">\n    </gmap-polygon>\n    <gmap-circle v-if=\"displayCircle\" :bounds=\"circleBounds\"\n      :center=\"reportedCenter\" :radius=\"100000\"\n      :options=\"{editable: true}\"\n\n      @radius_changed=\"updateCircle('radius', $event)\"\n      @bounds_changed=\"updateCircle('bounds', $event)\"\n\n      ></gmap-circle>\n    <gmap-rectangle v-if=\"displayRectangle\" :bounds=\"rectangleBounds\"\n    :options=\"{editable: true}\"\n    @bounds_changed=\"updateRectangle('bounds', $event)\"></gmap-rectangle>\n  </gmap-map>\n</div>\n</div>\n</template>\n\n<style>\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\n\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n</style>\n\n<script>\n\nexport default {\n  data: function data() {\n    return {\n      center: { lat: 48.8538302, lng: 2.2982161 },\n      reportedCenter: { lat: 48.8538302, lng: 2.2982161 },\n      mapBounds: {},\n      clustering: true,\n      zoom: 7,\n      gridSize: 50,\n      mapType: 'terrain',\n      markers: [],\n      markersEven: false,\n      drag: 0,\n      mapClickedCount: 0,\n      ifw: true,\n      ifw2: false,\n      ifw2text: 'You can also use the content prop to set your modal',\n      mapStyle: 'green',\n      circleBounds: {},\n      displayCircle: false,\n      displayRectangle: false,\n      rectangleBounds: {\n        north: 33.685,\n        south: 50.671,\n        east: -70.234,\n        west: -116.251\n      },\n      originalPlPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      plPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      pleditable: true,\n      plvisible: false,\n      pgvisible: false,\n      pgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n      opgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n        scrollwheel: true\n    };\n  },\n\n  computed: {\n    activeMarkers() {\n      if (this.markersEven) {\n        return this.markers.filter(\n          (v, k) => k % 2 == 0\n        )\n      } else {\n        return this.markers\n      }\n    },\n    mapStyles () {\n      switch(this.mapStyle) {\n        case 'normal':\n          return [];\n          break;\n        case 'red':\n          return [\n              {\n                stylers: [\n                  {hue: '#890000'},\n                  {visibility: 'simplified'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                elementType: 'labels',\n                stylers: [{visibility: 'off'}]\n              },\n              {\n                featureType: 'water',\n                stylers: [{color: '#890000'}]\n              }\n            ]\n          break;\n        default:\n          return [\n              {\n                stylers: [\n                  {hue: '#899999'},\n                  {visibility: 'on'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                featureType: 'road',\n                stylers: [\n                  {visibility: 'off'}\n                ]\n              },\n              {\n                featureType: 'transit.line',\n                stylers: [\n                  {color: '#FF0000'}\n                ]\n              },\n              {\n                featureType: 'poi',\n                elementType: 'labels.icon',\n                stylers: [\n                  {visibility: 'on'},\n                  {weight: 10}\n                ]\n              },\n              {\n                featureType: 'water',\n                stylers: [\n                  { color: '#8900FF' },\n                  { weight:  9999900000},\n                ]\n              }\n            ];\n      }\n    }\n  },\n\n  methods: {\n    updateMapCenter(which, value) {\n      this.center = _.clone(this.reportedCenter)\n    },\n    mapClicked (mouseArgs) {\n      console.log('map clicked', mouseArgs);\n    },\n    mapRclicked (mouseArgs) {\n      const createdMarker = this.addMarker();\n      createdMarker.position.lat = mouseArgs.latLng.lat();\n      createdMarker.position.lng = mouseArgs.latLng.lng();\n    },\n    addMarker: function addMarker() {\n      this.markers.push({\n        position: { lat: 48.8538302, lng: 2.2982161 },\n        opacity: 1,\n        draggable: true,\n        enabled: true,\n        clicked: 0,\n        rightClicked: 0,\n        dragended: 0,\n        ifw: true,\n        ifw2text: \"This text is bad please change me :( \"\n      });\n      return this.markers[this.markers.length - 1];\n    },\n    resetPlPath () {\n      this.plPath = this.originalPlPath;\n    },\n\n    update(field, event) {\n      if (field === 'reportedCenter') {\n        // N.B. It is dangerous to update this.center\n        // Because the center reported by Google Maps is not exactly\n        // the same as the center you pass it.\n        // Instead we update this.center only when the input field is changed.\n\n        console.log('CENTER REPORTED', event);\n        this.reportedCenter = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n\n        // If you wish to test the problem out for yourself, uncomment the following\n        // and see how your browser begins to hang:\n        // this.center = _.clone(this.reportedCenter)\n      } else if (field === 'bounds') {\n        this.mapBounds = event;\n      } else {\n        this.$set(this, field, event)\n      }\n    },\n\n    updateChild(object, field, event) {\n      if (field === 'position') {\n        object.position = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n      }\n    },\n\n    updatePolygonPaths(paths) {\n      // TODO\n    },\n\n    updatePolylinePath(paths) {\n      // TODO:\n    },\n\n    updateCircle(prop, value) {\n      if (prop === 'radius') {\n        this.radius = value;\n      } else if (prop === 'bounds') {\n        this.circleBounds = value;\n      }\n    },\n\n    updateRectangle(prop, value) {\n      if (prop === 'bounds') {\n        this.rectangleBounds = value;\n      }\n    },\n\n    updatePlace(place) {\n      if (place && place.geometry && place.geometry.location) {\n        var marker = this.addMarker();\n        marker.position.lat = place.geometry.location.lat();\n        marker.position.lng = place.geometry.location.lng();\n      }\n    }\n\n  },\n};\n</script>\n"],"sourceRoot":"webpack://"}]);
+	exports.push([module.id, "\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n", "", {"version":3,"sources":["/./src/app.vue?75b96558"],"names":[],"mappings":";AAqNA;EACA,YAAA;EACA,aAAA;EACA,gBAAA;EACA,OAAA;EACA,QAAA;EACA,cAAA;EACA,oBAAA;CACA;AAEA;EACA,cAAA;CACA;AACA;EACA,mBAAA;EACA,gBAAA;CACA;AAEA;EACA,WAAA;EACA,cAAA;EACA,eAAA;CACA","file":"app.vue","sourcesContent":["/* vim: set softtabstop=2 shiftwidth=2 expandtab : */\n<template>\n<div class=\"app-panel\">\n<div class=\"settings-panel\">\n  <h1>Map information</h1>\n  Map center latitude:\n    <input type=\"number\" v-model=\"reportedCenter.lat\" number\n      @change=\"updateMapCenter\" />\n  <br>\n  Map center longitude:\n    <input type=\"number\" v-model=\"reportedCenter.lng\" number\n      @change=\"updateMapCenter\">\n  <br>\n  Map bounds: {{mapBounds | json}}\n  <br>\n  Map zoom: <input type=\"number\" v-model=\"zoom\" number>\n  <br>\n  Dragged {{drag}} times\n  <br>\n  Left clicked {{mapClickedCount}} times\n  <br>\n  Map type: <select id=\"\" name=\"\" v-model=\"mapType\">\n    <option value=\"roadmap\">roadmap</option>\n    <option value=\"hybrid\">hybrid</option>\n    <option value=\"satellite\">satellite</option>\n    <option value=\"terrain\">terrain</option>\n  </select>\n  <br>\n  Map style: <select id=\"\" name=\"\" v-model=\"mapStyle\">\n    <option value=\"red\">red</option>\n    <option value=\"green\">green</option>\n    <option value=\"normal\">normal</option>\n  </select>\n  <br>\n  Enable scrollwheel zooming on the map: <input type=\"checkbox\" v-model=\"scrollwheel\">\n  <br>\n  <button @click=\"addMarker\"> Add a new Marker</button> (or right click on the map :) )\n  <h1>Clusters</h1>\n  enabled: <input type=\"checkbox\" v-model=\"clustering\" number>\n  </br>\n  Grid size: <input type=\"number\" v-model=\"gridSize\" number>\n  <br>\n  <h1>Polyline</h1>\n  Editable: <input type=\"checkbox\" number v-model=\"pleditable\">\n  <button @click=\"resetPlPath\">Reset path</button>\n  <br>\n  Visible: <input type=\"checkbox\" number v-model=\"plvisible\">\n  <br>\n  <h1>Polygon</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"pgvisible\"> <br>\n  <button @click=\"pgPath = opgPath\">Reset Polygon to pentagon</button><br>\n  <button @click=\"pgPath = originalPlPath\">Reset Polygon to a simple polygon</button><br>\n  Path: {{pgPath | json}}\n  <br>\n  <h1>Circle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayCircle\"><br>\n  {{circleBounds | json}}\n  <br>\n  <h1>Rectangle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayRectangle\"><br>\n  {{rectangleBounds | json}}\n  <br>\n  <h1>PlaceInput</h1>\n  <gmap-place-input\n    label=\"Add a marker at this place\"\n    :select-first-on-enter=\"true\"\n    @place_changed=\"updatePlace($event)\"\n  ></gmap-place-input>\n  <br>\n  <h1> Standalone infoWindow </h1>\n  modal 1 : <input type=\"checkbox\" number v-model=\"ifw\"><br>\n  modal 2: <input type=\"checkbox\" number v-model=\"ifw2\"> <input type=\"text\" v-model=\"ifw2text\">\n  <h1>Markers</h1>\n  Display only markers with even ID (to test filters) <input type=\"checkbox\" number v-model=\"markersEven\"><br>\n  <table>\n    <tr>\n      <th>lat</th>\n      <th>lng</th>\n      <th>opacity</th>\n      <th>enabled</th>\n      <th>draggable</th>\n      <th>clicked</th>\n      <th>right clicked</th>\n      <th>Drag-ended</th>\n      <th>Open info window</th>\n      <th>infoWIndow text</th>\n      <th>Delete me</th>\n    </tr>\n    <tr v-for=\"m in markers\">\n      <td>\n        <input type=\"number\" v-model=\"m.position.lat\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.position.lng\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.opacity\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.enabled\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.draggable\" number>\n      </td>\n      <td>{{m.clicked}}</td>\n      <td>{{m.rightClicked}}</td>\n      <td>{{m.dragended}}</td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.ifw\" number>\n      </td>\n      <td>\n        <input type=\"text\" v-model=\"m.ifw2text\">\n      </td>\n      <td><button @click=\"markers.splice(markers.indexOf(m), 1)\">Delete me </button></td>\n    </tr>\n  </table>\n</div>\n<gmap-map\n    :center=\"center\"\n    :zoom=\"zoom\"\n    :map-type-id=\"mapType\"\n    :options=\"{styles: mapStyles, scrollwheel: scrollwheel}\"\n    @rightclick=\"mapRclicked\"\n    @drag=\"drag++\"\n    @click=\"mapClickedCount++\"\n    class=\"map-panel\"\n\n    @zoom_changed=\"update('zoom', $event)\"\n    @center_changed=\"update('reportedCenter', $event)\"\n    @maptypeid_changed=\"update('mapType', $event)\"\n    @bounds_changed=\"update('bounds', $event)\"\n    >\n    <gmap-cluster\n    :grid-size=\"gridSize\"\n    v-if=\"clustering\"\n    >\n      <gmap-marker\n        v-if=\"m.enabled\"\n        :position=\"m.position\"\n        :opacity=\"m.opacity\"\n        :draggable=\"m.draggable\"\n        @click=\"m.clicked++\"\n        @rightclick=\"m.rightClicked++\"\n        @dragend=\"m.dragended++\"\n\n        @position_changed=\"updateChild(m, 'position', $event)\"\n\n        v-for=\"m in activeMarkers\"\n      >\n        <gmap-info-window\n        :opened=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </gmap-cluster>\n    <div v-if=\"!clustering\">\n      <gmap-marker\n      v-if=\"m.enabled\"\n      :position=\"m.position\"\n      :opacity=\"m.opacity\"\n      :draggable=\"m.draggable\"\n      @click=\"m.clicked++\"\n      @rightclick=\"m.rightClicked++\"\n      @dragend=\"m.dragended++\"\n      @position_changed=\"updateChild(m, 'position', $event)\"\n      v-for=\"m in activeMarkers\"\n      >\n        <gmap-info-window\n        :opened=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </div>\n\n    <gmap-info-window\n    :position=\"reportedCenter\"\n    :opened=\"ifw\"\n    >\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    <br/>\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    <b>{{mapClickedCount}}</b>\n    </gmap-info-window>\n\n    <gmap-info-window\n    :position=\"reportedCenter\"\n    :opened=\"ifw2\"\n    :content=\"ifw2text\"\n    ></gmap-info-window>\n\n    <gmap-polyline v-if=\"plvisible\" :path=\"plPath\" :editable=\"pleditable\" :draggable=\"true\" :options=\"{geodesic:true, strokeColor:'#FF0000'}\"\n      @path_changed=\"updatePolylinePath($event)\">\n    </gmap-polyline>\n    <gmap-polygon v-if=\"pgvisible\" :paths=\"pgPath\" :editable=\"true\"\n      :options=\"{geodesic:true, strokeColor:'#FF0000', fillColor:'#000000'}\"\n      @paths_changed=\"updatePolygonPaths($event)\">\n    </gmap-polygon>\n    <gmap-circle v-if=\"displayCircle\" :bounds=\"circleBounds\"\n      :center=\"reportedCenter\" :radius=\"100000\"\n      :options=\"{editable: true}\"\n\n      @radius_changed=\"updateCircle('radius', $event)\"\n      @bounds_changed=\"updateCircle('bounds', $event)\"\n\n      ></gmap-circle>\n    <gmap-rectangle v-if=\"displayRectangle\" :bounds=\"rectangleBounds\"\n    :options=\"{editable: true}\"\n    @bounds_changed=\"updateRectangle('bounds', $event)\"></gmap-rectangle>\n</gmap-map>\n</div>\n</template>\n\n<style>\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\n\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n</style>\n\n<script>\n\nexport default {\n  data: function data() {\n    return {\n      center: { lat: 48.8538302, lng: 2.2982161 },\n      reportedCenter: { lat: 48.8538302, lng: 2.2982161 },\n      mapBounds: {},\n      clustering: true,\n      zoom: 7,\n      gridSize: 50,\n      mapType: 'terrain',\n      markers: [],\n      markersEven: false,\n      drag: 0,\n      mapClickedCount: 0,\n      ifw: true,\n      ifw2: false,\n      ifw2text: 'You can also use the content prop to set your modal',\n      mapStyle: 'green',\n      circleBounds: {},\n      displayCircle: false,\n      displayRectangle: false,\n      rectangleBounds: {\n        north: 33.685,\n        south: 50.671,\n        east: -70.234,\n        west: -116.251\n      },\n      originalPlPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      plPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      pleditable: true,\n      plvisible: false,\n      pgvisible: false,\n      pgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n      opgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n        scrollwheel: true\n    };\n  },\n\n  computed: {\n    activeMarkers() {\n      if (this.markersEven) {\n        return this.markers.filter(\n          (v, k) => k % 2 == 0\n        )\n      } else {\n        return this.markers\n      }\n    },\n    mapStyles () {\n      switch(this.mapStyle) {\n        case 'normal':\n          return [];\n          break;\n        case 'red':\n          return [\n              {\n                stylers: [\n                  {hue: '#890000'},\n                  {visibility: 'simplified'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                elementType: 'labels',\n                stylers: [{visibility: 'off'}]\n              },\n              {\n                featureType: 'water',\n                stylers: [{color: '#890000'}]\n              }\n            ]\n          break;\n        default:\n          return [\n              {\n                stylers: [\n                  {hue: '#899999'},\n                  {visibility: 'on'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                featureType: 'road',\n                stylers: [\n                  {visibility: 'off'}\n                ]\n              },\n              {\n                featureType: 'transit.line',\n                stylers: [\n                  {color: '#FF0000'}\n                ]\n              },\n              {\n                featureType: 'poi',\n                elementType: 'labels.icon',\n                stylers: [\n                  {visibility: 'on'},\n                  {weight: 10}\n                ]\n              },\n              {\n                featureType: 'water',\n                stylers: [\n                  { color: '#8900FF' },\n                  { weight:  9999900000},\n                ]\n              }\n            ];\n      }\n    }\n  },\n\n  methods: {\n    updateMapCenter(which, value) {\n      this.center = _.clone(this.reportedCenter)\n    },\n    mapClicked (mouseArgs) {\n      console.log('map clicked', mouseArgs);\n    },\n    mapRclicked (mouseArgs) {\n      const createdMarker = this.addMarker();\n      createdMarker.position.lat = mouseArgs.latLng.lat();\n      createdMarker.position.lng = mouseArgs.latLng.lng();\n    },\n    addMarker: function addMarker() {\n      this.markers.push({\n        position: { lat: 48.8538302, lng: 2.2982161 },\n        opacity: 1,\n        draggable: true,\n        enabled: true,\n        clicked: 0,\n        rightClicked: 0,\n        dragended: 0,\n        ifw: true,\n        ifw2text: \"This text is bad please change me :( \"\n      });\n      return this.markers[this.markers.length - 1];\n    },\n    resetPlPath () {\n      this.plPath = this.originalPlPath;\n    },\n\n    update(field, event) {\n      if (field === 'reportedCenter') {\n        // N.B. It is dangerous to update this.center\n        // Because the center reported by Google Maps is not exactly\n        // the same as the center you pass it.\n        // Instead we update this.center only when the input field is changed.\n\n        console.log('CENTER REPORTED', event);\n        this.reportedCenter = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n\n        // If you wish to test the problem out for yourself, uncomment the following\n        // and see how your browser begins to hang:\n        // this.center = _.clone(this.reportedCenter)\n      } else if (field === 'bounds') {\n        this.mapBounds = event;\n      } else {\n        this.$set(this, field, event)\n      }\n    },\n\n    updateChild(object, field, event) {\n      if (field === 'position') {\n        object.position = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n      }\n    },\n\n    updatePolygonPaths(paths) {\n      // TODO\n    },\n\n    updatePolylinePath(paths) {\n      // TODO:\n    },\n\n    updateCircle(prop, value) {\n      if (prop === 'radius') {\n        this.radius = value;\n      } else if (prop === 'bounds') {\n        this.circleBounds = value;\n      }\n    },\n\n    updateRectangle(prop, value) {\n      if (prop === 'bounds') {\n        this.rectangleBounds = value;\n      }\n    },\n\n    updatePlace(place) {\n      if (place && place.geometry && place.geometry.location) {\n        var marker = this.addMarker();\n        marker.position.lat = place.geometry.location.lat();\n        marker.position.lng = place.geometry.location.lng();\n      }\n    }\n\n  },\n};\n</script>\n"],"sourceRoot":"webpack://"}]);
 	
 	// exports
 
@@ -8816,7 +8816,6 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	//
 	//
 	//
 	//
@@ -9963,9 +9962,8 @@
 	        }
 	      }
 	    }, [_vm._v("Delete me ")])])])
-	  })], true)]), _vm._v(" "), _vm._c('div', {
-	    staticClass: "map-panel"
-	  }, [_vm._c('gmap-map', {
+	  })], true)]), _vm._v(" "), _vm._c('gmap-map', {
+	    staticClass: "map-panel",
 	    attrs: {
 	      "center": _vm.center,
 	      "zoom": _vm.zoom,
@@ -10124,7 +10122,7 @@
 	        _vm.updateRectangle('bounds', $event)
 	      }
 	    }
-	  }) : _vm._e()])])])
+	  }) : _vm._e()])])
 	},staticRenderFns: [function (){var _vm=this;
 	  return _vm._c('tr', [_vm._c('th', [_vm._v("lat")]), _vm._v(" "), _vm._c('th', [_vm._v("lng")]), _vm._v(" "), _vm._c('th', [_vm._v("opacity")]), _vm._v(" "), _vm._c('th', [_vm._v("enabled")]), _vm._v(" "), _vm._c('th', [_vm._v("draggable")]), _vm._v(" "), _vm._c('th', [_vm._v("clicked")]), _vm._v(" "), _vm._c('th', [_vm._v("right clicked")]), _vm._v(" "), _vm._c('th', [_vm._v("Drag-ended")]), _vm._v(" "), _vm._c('th', [_vm._v("Open info window")]), _vm._v(" "), _vm._c('th', [_vm._v("infoWIndow text")]), _vm._v(" "), _vm._c('th', [_vm._v("Delete me")])])
 	}]}
@@ -10144,7 +10142,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.Autocomplete = exports.MapElementMixin = exports.PlaceInput = exports.Map = exports.InfoWindow = exports.Rectangle = exports.Circle = exports.Polygon = exports.Polyline = exports.Cluster = exports.Marker = exports.loaded = exports.load = undefined;
+	exports.MountableMixin = exports.Autocomplete = exports.MapElementMixin = exports.PlaceInput = exports.Map = exports.InfoWindow = exports.Rectangle = exports.Circle = exports.Polygon = exports.Polyline = exports.Cluster = exports.Marker = exports.loaded = exports.load = undefined;
 	exports.install = install;
 	
 	var _manager = __webpack_require__(13);
@@ -10153,23 +10151,23 @@
 	
 	var _marker2 = _interopRequireDefault(_marker);
 	
-	var _cluster = __webpack_require__(94);
+	var _cluster = __webpack_require__(96);
 	
 	var _cluster2 = _interopRequireDefault(_cluster);
 	
-	var _polyline = __webpack_require__(101);
+	var _polyline = __webpack_require__(103);
 	
 	var _polyline2 = _interopRequireDefault(_polyline);
 	
-	var _polygon = __webpack_require__(109);
+	var _polygon = __webpack_require__(111);
 	
 	var _polygon2 = _interopRequireDefault(_polygon);
 	
-	var _circle = __webpack_require__(110);
+	var _circle = __webpack_require__(112);
 	
 	var _circle2 = _interopRequireDefault(_circle);
 	
-	var _rectangle = __webpack_require__(111);
+	var _rectangle = __webpack_require__(113);
 	
 	var _rectangle2 = _interopRequireDefault(_rectangle);
 	
@@ -10177,7 +10175,7 @@
 	
 	var _lodash2 = _interopRequireDefault(_lodash);
 	
-	var _infoWindow = __webpack_require__(112);
+	var _infoWindow = __webpack_require__(114);
 	
 	var _infoWindow2 = _interopRequireDefault(_infoWindow);
 	
@@ -10185,17 +10183,25 @@
 	
 	var _map2 = _interopRequireDefault(_map);
 	
-	var _placeInput = __webpack_require__(115);
+	var _streetViewPanorama = __webpack_require__(117);
+	
+	var _streetViewPanorama2 = _interopRequireDefault(_streetViewPanorama);
+	
+	var _placeInput = __webpack_require__(122);
 	
 	var _placeInput2 = _interopRequireDefault(_placeInput);
 	
-	var _autocomplete = __webpack_require__(119);
+	var _autocomplete = __webpack_require__(126);
 	
 	var _autocomplete2 = _interopRequireDefault(_autocomplete);
 	
 	var _mapElementMixin = __webpack_require__(87);
 	
 	var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
+	
+	var _mountableMixin = __webpack_require__(93);
+	
+	var _mountableMixin2 = _interopRequireDefault(_mountableMixin);
 	
 	var _deferredReady = __webpack_require__(88);
 	
@@ -10220,12 +10226,21 @@
 	exports.PlaceInput = _placeInput2.default;
 	exports.MapElementMixin = _mapElementMixin2.default;
 	exports.Autocomplete = _autocomplete2.default;
+	exports.MountableMixin = _mountableMixin2.default;
 	function install(Vue, options) {
 	  options = _lodash2.default.defaults(options, {
 	    installComponents: true
 	  });
 	
 	  Vue.use(_deferredReady.DeferredReady);
+	
+	  var defaultResizeBus = new Vue();
+	  Vue.$gmapDefaultResizeBus = defaultResizeBus;
+	  Vue.mixin({
+	    created: function created() {
+	      this.$gmapDefaultResizeBus = defaultResizeBus;
+	    }
+	  });
 	
 	  if (options.load) {
 	    (0, _manager.load)(options.load);
@@ -10242,6 +10257,7 @@
 	    Vue.component('GmapRectangle', _rectangle2.default);
 	    Vue.component('GmapAutocomplete', _autocomplete2.default);
 	    Vue.component('GmapPlaceInput', _placeInput2.default);
+	    Vue.component('GmapStreetViewPanorama', _streetViewPanorama2.default);
 	  }
 	}
 
@@ -11989,11 +12005,11 @@
 	
 	var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 	
-	var _cluster = __webpack_require__(94);
+	var _cluster = __webpack_require__(96);
 	
 	var _cluster2 = _interopRequireDefault(_cluster);
 	
-	var _assert = __webpack_require__(96);
+	var _assert = __webpack_require__(98);
 	
 	var _assert2 = _interopRequireDefault(_assert);
 	
@@ -29181,7 +29197,8 @@
 	
 	  _lodash2.default.forEach(props, function (_ref, attribute) {
 	    var twoWay = _ref.twoWay,
-	        type = _ref.type;
+	        type = _ref.type,
+	        trackProperties = _ref.trackProperties;
 	
 	    var setMethodName = 'set' + capitalizeFirstLetter(attribute);
 	    var getMethodName = 'get' + capitalizeFirstLetter(attribute);
@@ -29192,17 +29209,42 @@
 	    // although this may really be the user's responsibility
 	    var timesSet = 0;
 	
-	    vueElement.$watch(attribute, function () {
-	      var attributeValue = vueElement[attribute];
+	    if (type !== Object || !trackProperties) {
+	      // Track the object deeply
+	      vueElement.$watch(attribute, function () {
+	        var attributeValue = vueElement[attribute];
 	
-	      timesSet++;
-	      googleMapsElement[setMethodName](attributeValue);
-	      if (afterModelChanged) {
-	        afterModelChanged(attribute, attributeValue);
-	      }
-	    }, {
-	      deep: type === Object
-	    });
+	        timesSet++;
+	        googleMapsElement[setMethodName](attributeValue);
+	        if (afterModelChanged) {
+	          afterModelChanged(attribute, attributeValue);
+	        }
+	      }, {
+	        deep: type === Object
+	      });
+	    } else if (type === Object && trackProperties) {
+	      (function () {
+	        // The indicator variable that is updated whenever any of the properties have changed
+	        // This ensures that the event handler will only be fired once
+	        var attributeTrackerName = '_' + attribute + '_changeTracker';
+	        var attributeTrackerRoot = '$data._changeIndicators';
+	
+	        vueElement.$set(vueElement.$data._changeIndicators, attributeTrackerName, 0);
+	
+	        vueElement.$watch(attributeTrackerRoot + '.' + attributeTrackerName, function () {
+	          googleMapsElement[setMethodName](vueElement[attribute]);
+	          if (afterModelChanged) {
+	            afterModelChanged(attribute, attributeValue);
+	          }
+	        });
+	
+	        trackProperties.forEach(function (propName) {
+	          vueElement.$watch(attribute + '.' + propName, function () {
+	            vueElement.$set(attributeTrackerRoot, attributeTrackerName, vueElement.$get(attributeTrackerRoot, attributeTrackerName) + 1);
+	          });
+	        });
+	      })();
+	    }
 	
 	    if (twoWay) {
 	      googleMapsElement.addListener(eventName, function (ev) {
@@ -29282,6 +29324,11 @@
 	
 	  mixins: [_deferredReady.DeferredReadyMixin],
 	
+	  data: function data() {
+	    return {
+	      _changeIndicators: {} // For propsBinder trackProperties
+	    };
+	  },
 	  created: function created() {
 	    var _this = this;
 	
@@ -29457,7 +29504,7 @@
 	__vue_exports__ = __webpack_require__(92)
 	
 	/* template */
-	var __vue_template__ = __webpack_require__(93)
+	var __vue_template__ = __webpack_require__(95)
 	__vue_options__ = __vue_exports__ = __vue_exports__ || {}
 	if (
 	  typeof __vue_exports__.default === "object" ||
@@ -29525,7 +29572,7 @@
 	
 	
 	// module
-	exports.push([module.id, "\n.vue-map-container {\n  width: 100%;\n  height:100%;\n}\n.vue-map-container .vue-map {\n  width: 100%;\n  height:100%;\n}\n", "", {"version":3,"sources":["/../dist/components/map.vue?c2f8fada"],"names":[],"mappings":";AAWA;EACA,YAAA;EACA,YAAA;CACA;AAEA;EACA,YAAA;EACA,YAAA;CACA","file":"map.vue","sourcesContent":["<template>\n  <div class=\"vue-map-container\">\n    <div ref=\"vue-map\" class=\"vue-map\"></div>\n    <slot></slot>\n  </div>\n</template>\n\n<script src=\"./mapImpl.js\">\n</script>\n\n<style lang=\"css\">\n.vue-map-container {\n  width: 100%;\n  height:100%;\n}\n\n.vue-map-container .vue-map {\n  width: 100%;\n  height:100%;\n}\n</style>\n"],"sourceRoot":"webpack://"}]);
+	exports.push([module.id, "\n.vue-map-container {\n  position: relative;\n}\n.vue-map-container .vue-map {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n.vue-map-hidden {\n  display: none;\n}\n", "", {"version":3,"sources":["/../dist/components/map.vue?e1f76d12"],"names":[],"mappings":";AAcA;EACA,mBAAA;CACA;AAEA;EACA,QAAA,CAAA,SAAA,CAAA,OAAA,CAAA,UAAA;EACA,mBAAA;CACA;AACA;EACA,cAAA;CACA","file":"map.vue","sourcesContent":["<template>\n  <div class=\"vue-map-container\">\n    <div ref=\"vue-map\" class=\"vue-map\"></div>\n    <div class=\"vue-map-hidden\">\n      <slot></slot>\n    </div>\n    <slot name=\"visible\"></slot>\n  </div>\n</template>\n\n<script src=\"./mapImpl.js\">\n</script>\n\n<style lang=\"css\">\n.vue-map-container {\n  position: relative;\n}\n\n.vue-map-container .vue-map {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n.vue-map-hidden {\n  display: none;\n}\n</style>\n"],"sourceRoot":"webpack://"}]);
 	
 	// exports
 
@@ -29563,6 +29610,14 @@
 	var _getPropsValuesMixin = __webpack_require__(86);
 	
 	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
+	
+	var _mountableMixin = __webpack_require__(93);
+	
+	var _mountableMixin2 = _interopRequireDefault(_mountableMixin);
+	
+	var _latlngChangedHandler = __webpack_require__(94);
+	
+	var _latlngChangedHandler2 = _interopRequireDefault(_latlngChangedHandler);
 	
 	function _interopRequireDefault(obj) {
 	  return obj && obj.__esModule ? obj : { default: obj };
@@ -29629,6 +29684,13 @@
 	    var oldCenter = this.$mapObject.getCenter();
 	    google.maps.event.trigger(this.$mapObject, 'resize');
 	    this.$mapObject.setCenter(oldCenter);
+	  },
+	
+	  /// Override mountableMixin::_resizeCallback
+	  /// because resizePreserveCenter is usually the
+	  /// expected behaviour
+	  _resizeCallback: function _resizeCallback() {
+	    this.resizePreserveCenter();
 	  }
 	};
 	
@@ -29636,7 +29698,7 @@
 	var methods = _lodash2.default.assign({}, customMethods, linkedMethods);
 	
 	exports.default = {
-	  mixins: [_getPropsValuesMixin2.default, _deferredReady.DeferredReadyMixin],
+	  mixins: [_getPropsValuesMixin2.default, _deferredReady.DeferredReadyMixin, _mountableMixin2.default],
 	  props: props,
 	  replace: false, // necessary for css styles
 	
@@ -29651,23 +29713,11 @@
 	  watch: {
 	    center: {
 	      deep: true,
-	      handler: function handler(val, oldVal) {
-	        // Observed bug with Vue 2.1.6 under certain circumstances:
-	        // If you pass an object constant into :center, the deep watch
-	        // is still triggered
-	        function isChanged(prop) {
-	          var oldProp = typeof oldVal[prop] === 'number' ? oldVal[prop] : typeof oldVal[prop] === 'function' ? oldVal[prop].apply(oldVal) : oldVal[prop]; // don't know how to handle
-	          var newProp = typeof val[prop] === 'number' ? val[prop] : typeof val[prop] === 'function' ? val[prop].apply(val) : val[prop]; // don't know how to handle
-	          return oldProp !== newProp;
-	        }
-	
+	      handler: (0, _latlngChangedHandler2.default)(function (val, oldVal) {
 	        if (this.$mapObject) {
-	          // Check if the value has really changed
-	          if (isChanged('lat') || isChanged('lng')) {
-	            this.$mapObject.setCenter(val);
-	          }
+	          this.$mapObject.setCenter(val);
 	        }
-	      }
+	      })
 	    },
 	    zoom: function zoom(_zoom) {
 	      if (this.$mapObject) {
@@ -29719,6 +29769,102 @@
 
 /***/ },
 /* 93 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	/*
+	Mixin for objects that are mounted by Google Maps
+	Javascript API.
+	
+	These are objects that are sensitive to element resize
+	operations so it exposes a property which accepts a bus
+	
+	*/
+	
+	exports.default = {
+	  props: ['resizeBus'],
+	
+	  data: function data() {
+	    return {
+	      // For propsBinder trackProperties
+	      _changeIndicators: {},
+	      _actualResizeBus: null
+	    };
+	  },
+	  created: function created() {
+	    if (typeof this.resizeBus === 'undefined') {
+	      this.$data._actualResizeBus = this.$gmapDefaultResizeBus;
+	    } else {
+	      this.$data._actualResizeBus = this.resizeBus;
+	    }
+	  },
+	
+	  methods: {
+	    _resizeCallback: function _resizeCallback() {
+	      this.resize();
+	    },
+	    _delayedResizeCallback: function _delayedResizeCallback() {
+	      var _this = this;
+	
+	      this.$nextTick(function () {
+	        return _this._resizeCallback();
+	      });
+	    }
+	  },
+	
+	  watch: {
+	    resizeBus: function resizeBus(newVal, oldVal) {
+	      this.$data._actualResizeBus = newVal;
+	    },
+	    '$data._actualResizeBus': function $data_actualResizeBus(newVal, oldVal) {
+	      if (oldVal) {
+	        oldVal.$off('resize', this._delayedResizeCallback);
+	      }
+	      if (newVal) {
+	        newVal.$on('resize', this._delayedResizeCallback);
+	      }
+	    }
+	  },
+	
+	  destroyed: function destroyed() {
+	    this.$data._actualResizeBus.$off('resize', this._delayedResizeCallback);
+	  }
+	};
+
+/***/ },
+/* 94 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = handler;
+	// Observed bug with Vue 2.1.6 under certain circumstances:
+	// If you pass an object constant into :center, the deep watch
+	// is still triggered
+	function isChanged(prop, val, oldVal) {
+	  var oldProp = typeof oldVal[prop] === 'number' ? oldVal[prop] : typeof oldVal[prop] === 'function' ? oldVal[prop].apply(oldVal) : oldVal[prop]; // don't know how to handle
+	  var newProp = typeof val[prop] === 'number' ? val[prop] : typeof val[prop] === 'function' ? val[prop].apply(val) : val[prop]; // don't know how to handle
+	  return oldProp !== newProp;
+	}
+	
+	function handler(action) {
+	  return function (val, oldVal) {
+	    // Check if the value has really changed
+	    if (isChanged('lat', val, oldVal) || isChanged('lng', val, oldVal)) {
+	      action.apply(this, [val, oldVal]);
+	    }
+	  };
+	}
+
+/***/ },
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports={render:function (){var _vm=this;
@@ -29727,7 +29873,9 @@
 	  }, [_vm._c('div', {
 	    ref: "vue-map",
 	    staticClass: "vue-map"
-	  }), _vm._v(" "), _vm._t("default")], true)
+	  }), _vm._v(" "), _vm._c('div', {
+	    staticClass: "vue-map-hidden"
+	  }, [_vm._t("default")], true), _vm._v(" "), _vm._t("visible")], true)
 	},staticRenderFns: []}
 	if (false) {
 	  module.hot.accept()
@@ -29737,7 +29885,7 @@
 	}
 
 /***/ },
-/* 94 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29762,7 +29910,7 @@
 	
 	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 	
-	var _markerClustererPlus = __webpack_require__(95);
+	var _markerClustererPlus = __webpack_require__(97);
 	
 	var _markerClustererPlus2 = _interopRequireDefault(_markerClustererPlus);
 	
@@ -29830,7 +29978,7 @@
 	};
 
 /***/ },
-/* 95 */
+/* 97 */
 /***/ function(module, exports) {
 
 	/**
@@ -31470,7 +31618,7 @@
 
 
 /***/ },
-/* 96 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -31541,7 +31689,7 @@
 	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	
-	var util = __webpack_require__(97);
+	var util = __webpack_require__(99);
 	var hasOwn = Object.prototype.hasOwnProperty;
 	var pSlice = Array.prototype.slice;
 	var functionsHaveNames = (function () {
@@ -31967,7 +32115,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 97 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -32495,7 +32643,7 @@
 	}
 	exports.isPrimitive = isPrimitive;
 	
-	exports.isBuffer = __webpack_require__(99);
+	exports.isBuffer = __webpack_require__(101);
 	
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -32539,7 +32687,7 @@
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(100);
+	exports.inherits = __webpack_require__(102);
 	
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -32557,10 +32705,10 @@
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(98)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(100)))
 
 /***/ },
-/* 98 */
+/* 100 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -32746,7 +32894,7 @@
 
 
 /***/ },
-/* 99 */
+/* 101 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -32757,7 +32905,7 @@
 	}
 
 /***/ },
-/* 100 */
+/* 102 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -32786,7 +32934,7 @@
 
 
 /***/ },
-/* 101 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32795,7 +32943,7 @@
 	  value: true
 	});
 	
-	var _slicedToArray2 = __webpack_require__(102);
+	var _slicedToArray2 = __webpack_require__(104);
 	
 	var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
 	
@@ -32911,18 +33059,18 @@
 	};
 
 /***/ },
-/* 102 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
 	exports.__esModule = true;
 	
-	var _isIterable2 = __webpack_require__(103);
+	var _isIterable2 = __webpack_require__(105);
 	
 	var _isIterable3 = _interopRequireDefault(_isIterable2);
 	
-	var _getIterator2 = __webpack_require__(106);
+	var _getIterator2 = __webpack_require__(108);
 	
 	var _getIterator3 = _interopRequireDefault(_getIterator2);
 	
@@ -32967,21 +33115,21 @@
 	}();
 
 /***/ },
-/* 103 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(104), __esModule: true };
+	module.exports = { "default": __webpack_require__(106), __esModule: true };
 
 /***/ },
-/* 104 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(58);
 	__webpack_require__(52);
-	module.exports = __webpack_require__(105);
+	module.exports = __webpack_require__(107);
 
 /***/ },
-/* 105 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var classof   = __webpack_require__(63)
@@ -32995,21 +33143,21 @@
 	};
 
 /***/ },
-/* 106 */
+/* 108 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(107), __esModule: true };
+	module.exports = { "default": __webpack_require__(109), __esModule: true };
 
 /***/ },
-/* 107 */
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(58);
 	__webpack_require__(52);
-	module.exports = __webpack_require__(108);
+	module.exports = __webpack_require__(110);
 
 /***/ },
-/* 108 */
+/* 110 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var anObject = __webpack_require__(46)
@@ -33021,7 +33169,7 @@
 	};
 
 /***/ },
-/* 109 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33030,11 +33178,11 @@
 	  value: true
 	});
 	
-	var _getIterator2 = __webpack_require__(106);
+	var _getIterator2 = __webpack_require__(108);
 	
 	var _getIterator3 = _interopRequireDefault(_getIterator2);
 	
-	var _slicedToArray2 = __webpack_require__(102);
+	var _slicedToArray2 = __webpack_require__(104);
 	
 	var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
 	
@@ -33219,7 +33367,7 @@
 	};
 
 /***/ },
-/* 110 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33323,7 +33471,7 @@
 	};
 
 /***/ },
-/* 111 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33406,17 +33554,17 @@
 	};
 
 /***/ },
-/* 112 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __vue_exports__, __vue_options__
 	var __vue_styles__ = {}
 	
 	/* script */
-	__vue_exports__ = __webpack_require__(113)
+	__vue_exports__ = __webpack_require__(115)
 	
 	/* template */
-	var __vue_template__ = __webpack_require__(114)
+	var __vue_template__ = __webpack_require__(116)
 	__vue_options__ = __vue_exports__ = __vue_exports__ || {}
 	if (
 	  typeof __vue_exports__.default === "object" ||
@@ -33450,7 +33598,7 @@
 
 
 /***/ },
-/* 113 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33578,7 +33726,7 @@
 	};
 
 /***/ },
-/* 114 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports={render:function (){var _vm=this;
@@ -33598,17 +33746,277 @@
 	}
 
 /***/ },
-/* 115 */
+/* 117 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __vue_exports__, __vue_options__
+	var __vue_styles__ = {}
+	
+	/* styles */
+	__webpack_require__(118)
+	
+	/* script */
+	__vue_exports__ = __webpack_require__(120)
+	
+	/* template */
+	var __vue_template__ = __webpack_require__(121)
+	__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+	if (
+	  typeof __vue_exports__.default === "object" ||
+	  typeof __vue_exports__.default === "function"
+	) {
+	if (Object.keys(__vue_exports__).some(function (key) { return key !== "default" && key !== "__esModule" })) {console.error("named exports are not supported in *.vue files.")}
+	__vue_options__ = __vue_exports__ = __vue_exports__.default
+	}
+	if (typeof __vue_options__ === "function") {
+	  __vue_options__ = __vue_options__.options
+	}
+	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\streetViewPanorama.vue"
+	__vue_options__.render = __vue_template__.render
+	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+	
+	/* hot reload */
+	if (false) {(function () {
+	  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
+	  hotAPI.install(require("vue"), false)
+	  if (!hotAPI.compatible) return
+	  module.hot.accept()
+	  if (!module.hot.data) {
+	    hotAPI.createRecord("data-v-321799d7", __vue_options__)
+	  } else {
+	    hotAPI.reload("data-v-321799d7", __vue_options__)
+	  }
+	})()}
+	if (__vue_options__.functional) {console.error("[vue-loader] streetViewPanorama.vue: functional components are not supported and should be defined in plain js files using render functions.")}
+	
+	module.exports = __vue_exports__
+
+
+/***/ },
+/* 118 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(119);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(9)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-321799d7!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./streetViewPanorama.vue", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-321799d7!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./streetViewPanorama.vue");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 119 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(8)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, "\n.vue-street-view-pano-container {\n  position: relative;\n}\n.vue-street-view-pano-container .vue-street-view-pano {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n", "", {"version":3,"sources":["/../dist/components/streetViewPanorama.vue?057993de"],"names":[],"mappings":";AAWA;EACA,mBAAA;CACA;AAEA;EACA,QAAA,CAAA,SAAA,CAAA,OAAA,CAAA,UAAA;EACA,mBAAA;CACA","file":"streetViewPanorama.vue","sourcesContent":["<template>\n  <div class=\"vue-street-view-pano-container\">\n    <div ref=\"vue-street-view-pano\" class=\"vue-street-view-pano\"></div>\n    <slot></slot>\n  </div>\n</template>\n\n<script src=\"./streetViewPanoramaImpl.js\">\n</script>\n\n<style lang=\"css\">\n.vue-street-view-pano-container {\n  position: relative;\n}\n\n.vue-street-view-pano-container .vue-street-view-pano {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n</style>\n"],"sourceRoot":"webpack://"}]);
+	
+	// exports
+
+
+/***/ },
+/* 120 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _promise = __webpack_require__(50);
+	
+	var _promise2 = _interopRequireDefault(_promise);
+	
+	var _lodash = __webpack_require__(82);
+	
+	var _lodash2 = _interopRequireDefault(_lodash);
+	
+	var _manager = __webpack_require__(13);
+	
+	var _deferredReady = __webpack_require__(88);
+	
+	var _eventsBinder = __webpack_require__(84);
+	
+	var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
+	
+	var _propsBinder = __webpack_require__(85);
+	
+	var _propsBinder2 = _interopRequireDefault(_propsBinder);
+	
+	var _getPropsValuesMixin = __webpack_require__(86);
+	
+	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
+	
+	var _mountableMixin = __webpack_require__(93);
+	
+	var _mountableMixin2 = _interopRequireDefault(_mountableMixin);
+	
+	var _latlngChangedHandler = __webpack_require__(94);
+	
+	var _latlngChangedHandler2 = _interopRequireDefault(_latlngChangedHandler);
+	
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
+	
+	var props = {
+	  zoom: {
+	    twoWay: true,
+	    type: Number
+	  },
+	  pov: {
+	    twoWay: true,
+	    type: Object,
+	    trackProperties: ['pitch', 'heading']
+	  },
+	  position: {
+	    twoWay: true,
+	    type: Object
+	  },
+	  pano: {
+	    twoWay: true,
+	    type: String
+	  },
+	  motionTracking: {
+	    twoWay: false,
+	    type: Boolean
+	  },
+	  visible: {
+	    twoWay: true,
+	    type: Boolean,
+	    default: true
+	  },
+	  options: {
+	    twoWay: false,
+	    type: Object,
+	    default: function _default() {
+	      return {};
+	    }
+	  }
+	};
+	
+	var events = ['closeclick', 'status_changed'];
+	
+	// Other convenience methods exposed by Vue Google Maps
+	var customMethods = {
+	  resize: function resize() {
+	    if (this.$panoObject) {
+	      google.maps.event.trigger(this.$panoObject, 'resize');
+	    }
+	  }
+	};
+	
+	// Methods is a combination of customMethods and linkedMethods
+	var methods = _lodash2.default.assign({}, customMethods);
+	
+	exports.default = {
+	  mixins: [_getPropsValuesMixin2.default, _deferredReady.DeferredReadyMixin, _mountableMixin2.default],
+	  props: props,
+	  replace: false, // necessary for css styles
+	  methods: methods,
+	
+	  created: function created() {
+	    var _this = this;
+	
+	    this.$panoCreated = new _promise2.default(function (resolve, reject) {
+	      _this.$panoCreatedDeferred = { resolve: resolve, reject: reject };
+	    });
+	  },
+	
+	  watch: {
+	    position: {
+	      deep: true,
+	      handler: (0, _latlngChangedHandler2.default)(function (val, oldVal) {
+	        if (undefined.$panoObject) {
+	          undefined.$panoObject.setCenter(val);
+	        }
+	      })
+	    },
+	    zoom: function zoom(_zoom) {
+	      if (this.$panoObject) {
+	        this.$panoObject.setZoom(_zoom);
+	      }
+	    }
+	  },
+	
+	  deferredReady: function deferredReady() {
+	    var _this2 = this;
+	
+	    return _manager.loaded.then(function () {
+	      // getting the DOM element where to create the map
+	      var element = _this2.$refs['vue-street-view-pano'];
+	
+	      // creating the map
+	      var options = _lodash2.default.defaults({}, _lodash2.default.omit(_this2.getPropsValues(), ['options']), _this2.options);
+	      console.log(options);
+	
+	      _this2.$panoObject = new google.maps.StreetViewPanorama(element, options);
+	
+	      // binding properties (two and one way)
+	      (0, _propsBinder2.default)(_this2, _this2.$panoObject, _lodash2.default.omit(props, ['position', 'zoom']));
+	
+	      //binding events
+	      (0, _eventsBinder2.default)(_this2, _this2.$panoObject, events);
+	
+	      _this2.$panoCreatedDeferred.resolve(_this2.$panoObject);
+	
+	      return _this2.$panoCreated;
+	    }).catch(function (error) {
+	      throw error;
+	    });
+	  }
+	};
+
+/***/ },
+/* 121 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports={render:function (){var _vm=this;
+	  return _vm._c('div', {
+	    staticClass: "vue-street-view-pano-container"
+	  }, [_vm._c('div', {
+	    ref: "vue-street-view-pano",
+	    staticClass: "vue-street-view-pano"
+	  }), _vm._v(" "), _vm._t("default")], true)
+	},staticRenderFns: []}
+	if (false) {
+	  module.hot.accept()
+	  if (module.hot.data) {
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-321799d7", module.exports)
+	  }
+	}
+
+/***/ },
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __vue_exports__, __vue_options__
 	var __vue_styles__ = {}
 	
 	/* script */
-	__vue_exports__ = __webpack_require__(116)
+	__vue_exports__ = __webpack_require__(123)
 	
 	/* template */
-	var __vue_template__ = __webpack_require__(118)
+	var __vue_template__ = __webpack_require__(125)
 	__vue_options__ = __vue_exports__ = __vue_exports__ || {}
 	if (
 	  typeof __vue_exports__.default === "object" ||
@@ -33642,7 +34050,7 @@
 
 
 /***/ },
-/* 116 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33663,7 +34071,7 @@
 	
 	var _propsBinder2 = _interopRequireDefault(_propsBinder);
 	
-	var _simulateArrowDown = __webpack_require__(117);
+	var _simulateArrowDown = __webpack_require__(124);
 	
 	var _simulateArrowDown2 = _interopRequireDefault(_simulateArrowDown);
 	
@@ -33673,7 +34081,7 @@
 	
 	var _manager = __webpack_require__(13);
 	
-	var _assert = __webpack_require__(96);
+	var _assert = __webpack_require__(98);
 	
 	var _assert2 = _interopRequireDefault(_assert);
 	
@@ -33757,7 +34165,7 @@
 	};
 
 /***/ },
-/* 117 */
+/* 124 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -33796,7 +34204,7 @@
 	};
 
 /***/ },
-/* 118 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports={render:function (){var _vm=this;
@@ -33821,17 +34229,17 @@
 	}
 
 /***/ },
-/* 119 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __vue_exports__, __vue_options__
 	var __vue_styles__ = {}
 	
 	/* script */
-	__vue_exports__ = __webpack_require__(120)
+	__vue_exports__ = __webpack_require__(127)
 	
 	/* template */
-	var __vue_template__ = __webpack_require__(121)
+	var __vue_template__ = __webpack_require__(128)
 	__vue_options__ = __vue_exports__ = __vue_exports__ || {}
 	if (
 	  typeof __vue_exports__.default === "object" ||
@@ -33865,7 +34273,7 @@
 
 
 /***/ },
-/* 120 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33886,7 +34294,7 @@
 	
 	var _propsBinder2 = _interopRequireDefault(_propsBinder);
 	
-	var _simulateArrowDown = __webpack_require__(117);
+	var _simulateArrowDown = __webpack_require__(124);
 	
 	var _simulateArrowDown2 = _interopRequireDefault(_simulateArrowDown);
 	
@@ -33896,7 +34304,7 @@
 	
 	var _manager = __webpack_require__(13);
 	
-	var _assert = __webpack_require__(96);
+	var _assert = __webpack_require__(98);
 	
 	var _assert2 = _interopRequireDefault(_assert);
 	
@@ -33962,7 +34370,7 @@
 	};
 
 /***/ },
-/* 121 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports={render:function (){var _vm=this;

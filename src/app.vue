@@ -115,8 +115,7 @@
     </tr>
   </table>
 </div>
-<div class="map-panel">
-  <gmap-map
+<gmap-map
     :center="center"
     :zoom="zoom"
     :map-type-id="mapType"
@@ -124,6 +123,7 @@
     @rightclick="mapRclicked"
     @drag="drag++"
     @click="mapClickedCount++"
+    class="map-panel"
 
     @zoom_changed="update('zoom', $event)"
     @center_changed="update('reportedCenter', $event)"
@@ -206,8 +206,7 @@
     <gmap-rectangle v-if="displayRectangle" :bounds="rectangleBounds"
     :options="{editable: true}"
     @bounds_changed="updateRectangle('bounds', $event)"></gmap-rectangle>
-  </gmap-map>
-</div>
+</gmap-map>
 </div>
 </template>
 
