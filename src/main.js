@@ -1,6 +1,6 @@
 import Vue from 'vue/dist/vue.js'
 import App from './app.vue'
-import * as VueGoogleMaps from 'vue2-google-maps'
+import * as VueGoogleMaps from '../../dist/main.js'
 
 Vue.use(VueGoogleMaps, {
   installComponents: true,

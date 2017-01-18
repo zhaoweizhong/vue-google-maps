@@ -58,9 +58,9 @@
 	
 	var _app2 = _interopRequireDefault(_app);
 	
-	var _vue2GoogleMaps = __webpack_require__(12);
+	var _main = __webpack_require__(12);
 	
-	var VueGoogleMaps = _interopRequireWildcard(_vue2GoogleMaps);
+	var VueGoogleMaps = _interopRequireWildcard(_main);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -114,8 +114,8 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*!
-	 * Vue.js v2.1.8
-	 * (c) 2014-2016 Evan You
+	 * Vue.js v2.1.10
+	 * (c) 2014-2017 Evan You
 	 * Released under the MIT License.
 	 */
 	(function (global, factory) {
@@ -142,8 +142,8 @@
 	 * If the conversion fails, return original string.
 	 */
 	function toNumber (val) {
-	  var n = parseFloat(val, 10);
-	  return (n || n === 0) ? n : val
+	  var n = parseFloat(val);
+	  return isNaN(n) ? val : n
 	}
 	
 	/**
@@ -208,7 +208,7 @@
 	}
 	
 	/**
-	 * Camelize a hyphen-delmited string.
+	 * Camelize a hyphen-delimited string.
 	 */
 	var camelizeRE = /-(\w)/g;
 	var camelize = cached(function (str) {
@@ -1618,6 +1618,1268 @@
 	
 	/*  */
 	
+	var VNode = function VNode (
+	  tag,
+	  data,
+	  children,
+	  text,
+	  elm,
+	  context,
+	  componentOptions
+	) {
+	  this.tag = tag;
+	  this.data = data;
+	  this.children = children;
+	  this.text = text;
+	  this.elm = elm;
+	  this.ns = undefined;
+	  this.context = context;
+	  this.functionalContext = undefined;
+	  this.key = data && data.key;
+	  this.componentOptions = componentOptions;
+	  this.componentInstance = undefined;
+	  this.parent = undefined;
+	  this.raw = false;
+	  this.isStatic = false;
+	  this.isRootInsert = true;
+	  this.isComment = false;
+	  this.isCloned = false;
+	  this.isOnce = false;
+	};
+	
+	var prototypeAccessors = { child: {} };
+	
+	// DEPRECATED: alias for componentInstance for backwards compat.
+	/* istanbul ignore next */
+	prototypeAccessors.child.get = function () {
+	  return this.componentInstance
+	};
+	
+	Object.defineProperties( VNode.prototype, prototypeAccessors );
+	
+	var createEmptyVNode = function () {
+	  var node = new VNode();
+	  node.text = '';
+	  node.isComment = true;
+	  return node
+	};
+	
+	function createTextVNode (val) {
+	  return new VNode(undefined, undefined, undefined, String(val))
+	}
+	
+	// optimized shallow clone
+	// used for static nodes and slot nodes because they may be reused across
+	// multiple renders, cloning them avoids errors when DOM manipulations rely
+	// on their elm reference.
+	function cloneVNode (vnode) {
+	  var cloned = new VNode(
+	    vnode.tag,
+	    vnode.data,
+	    vnode.children,
+	    vnode.text,
+	    vnode.elm,
+	    vnode.context,
+	    vnode.componentOptions
+	  );
+	  cloned.ns = vnode.ns;
+	  cloned.isStatic = vnode.isStatic;
+	  cloned.key = vnode.key;
+	  cloned.isCloned = true;
+	  return cloned
+	}
+	
+	function cloneVNodes (vnodes) {
+	  var res = new Array(vnodes.length);
+	  for (var i = 0; i < vnodes.length; i++) {
+	    res[i] = cloneVNode(vnodes[i]);
+	  }
+	  return res
+	}
+	
+	/*  */
+	
+	var hooks = { init: init, prepatch: prepatch, insert: insert, destroy: destroy$1 };
+	var hooksToMerge = Object.keys(hooks);
+	
+	function createComponent (
+	  Ctor,
+	  data,
+	  context,
+	  children,
+	  tag
+	) {
+	  if (!Ctor) {
+	    return
+	  }
+	
+	  var baseCtor = context.$options._base;
+	  if (isObject(Ctor)) {
+	    Ctor = baseCtor.extend(Ctor);
+	  }
+	
+	  if (typeof Ctor !== 'function') {
+	    {
+	      warn(("Invalid Component definition: " + (String(Ctor))), context);
+	    }
+	    return
+	  }
+	
+	  // async component
+	  if (!Ctor.cid) {
+	    if (Ctor.resolved) {
+	      Ctor = Ctor.resolved;
+	    } else {
+	      Ctor = resolveAsyncComponent(Ctor, baseCtor, function () {
+	        // it's ok to queue this on every render because
+	        // $forceUpdate is buffered by the scheduler.
+	        context.$forceUpdate();
+	      });
+	      if (!Ctor) {
+	        // return nothing if this is indeed an async component
+	        // wait for the callback to trigger parent update.
+	        return
+	      }
+	    }
+	  }
+	
+	  // resolve constructor options in case global mixins are applied after
+	  // component constructor creation
+	  resolveConstructorOptions(Ctor);
+	
+	  data = data || {};
+	
+	  // extract props
+	  var propsData = extractProps(data, Ctor);
+	
+	  // functional component
+	  if (Ctor.options.functional) {
+	    return createFunctionalComponent(Ctor, propsData, data, context, children)
+	  }
+	
+	  // extract listeners, since these needs to be treated as
+	  // child component listeners instead of DOM listeners
+	  var listeners = data.on;
+	  // replace with listeners with .native modifier
+	  data.on = data.nativeOn;
+	
+	  if (Ctor.options.abstract) {
+	    // abstract components do not keep anything
+	    // other than props & listeners
+	    data = {};
+	  }
+	
+	  // merge component management hooks onto the placeholder node
+	  mergeHooks(data);
+	
+	  // return a placeholder vnode
+	  var name = Ctor.options.name || tag;
+	  var vnode = new VNode(
+	    ("vue-component-" + (Ctor.cid) + (name ? ("-" + name) : '')),
+	    data, undefined, undefined, undefined, context,
+	    { Ctor: Ctor, propsData: propsData, listeners: listeners, tag: tag, children: children }
+	  );
+	  return vnode
+	}
+	
+	function createFunctionalComponent (
+	  Ctor,
+	  propsData,
+	  data,
+	  context,
+	  children
+	) {
+	  var props = {};
+	  var propOptions = Ctor.options.props;
+	  if (propOptions) {
+	    for (var key in propOptions) {
+	      props[key] = validateProp(key, propOptions, propsData);
+	    }
+	  }
+	  // ensure the createElement function in functional components
+	  // gets a unique context - this is necessary for correct named slot check
+	  var _context = Object.create(context);
+	  var h = function (a, b, c, d) { return createElement(_context, a, b, c, d, true); };
+	  var vnode = Ctor.options.render.call(null, h, {
+	    props: props,
+	    data: data,
+	    parent: context,
+	    children: children,
+	    slots: function () { return resolveSlots(children, context); }
+	  });
+	  if (vnode instanceof VNode) {
+	    vnode.functionalContext = context;
+	    if (data.slot) {
+	      (vnode.data || (vnode.data = {})).slot = data.slot;
+	    }
+	  }
+	  return vnode
+	}
+	
+	function createComponentInstanceForVnode (
+	  vnode, // we know it's MountedComponentVNode but flow doesn't
+	  parent, // activeInstance in lifecycle state
+	  parentElm,
+	  refElm
+	) {
+	  var vnodeComponentOptions = vnode.componentOptions;
+	  var options = {
+	    _isComponent: true,
+	    parent: parent,
+	    propsData: vnodeComponentOptions.propsData,
+	    _componentTag: vnodeComponentOptions.tag,
+	    _parentVnode: vnode,
+	    _parentListeners: vnodeComponentOptions.listeners,
+	    _renderChildren: vnodeComponentOptions.children,
+	    _parentElm: parentElm || null,
+	    _refElm: refElm || null
+	  };
+	  // check inline-template render functions
+	  var inlineTemplate = vnode.data.inlineTemplate;
+	  if (inlineTemplate) {
+	    options.render = inlineTemplate.render;
+	    options.staticRenderFns = inlineTemplate.staticRenderFns;
+	  }
+	  return new vnodeComponentOptions.Ctor(options)
+	}
+	
+	function init (
+	  vnode,
+	  hydrating,
+	  parentElm,
+	  refElm
+	) {
+	  if (!vnode.componentInstance || vnode.componentInstance._isDestroyed) {
+	    var child = vnode.componentInstance = createComponentInstanceForVnode(
+	      vnode,
+	      activeInstance,
+	      parentElm,
+	      refElm
+	    );
+	    child.$mount(hydrating ? vnode.elm : undefined, hydrating);
+	  } else if (vnode.data.keepAlive) {
+	    // kept-alive components, treat as a patch
+	    var mountedNode = vnode; // work around flow
+	    prepatch(mountedNode, mountedNode);
+	  }
+	}
+	
+	function prepatch (
+	  oldVnode,
+	  vnode
+	) {
+	  var options = vnode.componentOptions;
+	  var child = vnode.componentInstance = oldVnode.componentInstance;
+	  child._updateFromParent(
+	    options.propsData, // updated props
+	    options.listeners, // updated listeners
+	    vnode, // new parent vnode
+	    options.children // new children
+	  );
+	}
+	
+	function insert (vnode) {
+	  if (!vnode.componentInstance._isMounted) {
+	    vnode.componentInstance._isMounted = true;
+	    callHook(vnode.componentInstance, 'mounted');
+	  }
+	  if (vnode.data.keepAlive) {
+	    vnode.componentInstance._inactive = false;
+	    callHook(vnode.componentInstance, 'activated');
+	  }
+	}
+	
+	function destroy$1 (vnode) {
+	  if (!vnode.componentInstance._isDestroyed) {
+	    if (!vnode.data.keepAlive) {
+	      vnode.componentInstance.$destroy();
+	    } else {
+	      vnode.componentInstance._inactive = true;
+	      callHook(vnode.componentInstance, 'deactivated');
+	    }
+	  }
+	}
+	
+	function resolveAsyncComponent (
+	  factory,
+	  baseCtor,
+	  cb
+	) {
+	  if (factory.requested) {
+	    // pool callbacks
+	    factory.pendingCallbacks.push(cb);
+	  } else {
+	    factory.requested = true;
+	    var cbs = factory.pendingCallbacks = [cb];
+	    var sync = true;
+	
+	    var resolve = function (res) {
+	      if (isObject(res)) {
+	        res = baseCtor.extend(res);
+	      }
+	      // cache resolved
+	      factory.resolved = res;
+	      // invoke callbacks only if this is not a synchronous resolve
+	      // (async resolves are shimmed as synchronous during SSR)
+	      if (!sync) {
+	        for (var i = 0, l = cbs.length; i < l; i++) {
+	          cbs[i](res);
+	        }
+	      }
+	    };
+	
+	    var reject = function (reason) {
+	      "development" !== 'production' && warn(
+	        "Failed to resolve async component: " + (String(factory)) +
+	        (reason ? ("\nReason: " + reason) : '')
+	      );
+	    };
+	
+	    var res = factory(resolve, reject);
+	
+	    // handle promise
+	    if (res && typeof res.then === 'function' && !factory.resolved) {
+	      res.then(resolve, reject);
+	    }
+	
+	    sync = false;
+	    // return in case resolved synchronously
+	    return factory.resolved
+	  }
+	}
+	
+	function extractProps (data, Ctor) {
+	  // we are only extracting raw values here.
+	  // validation and default values are handled in the child
+	  // component itself.
+	  var propOptions = Ctor.options.props;
+	  if (!propOptions) {
+	    return
+	  }
+	  var res = {};
+	  var attrs = data.attrs;
+	  var props = data.props;
+	  var domProps = data.domProps;
+	  if (attrs || props || domProps) {
+	    for (var key in propOptions) {
+	      var altKey = hyphenate(key);
+	      checkProp(res, props, key, altKey, true) ||
+	      checkProp(res, attrs, key, altKey) ||
+	      checkProp(res, domProps, key, altKey);
+	    }
+	  }
+	  return res
+	}
+	
+	function checkProp (
+	  res,
+	  hash,
+	  key,
+	  altKey,
+	  preserve
+	) {
+	  if (hash) {
+	    if (hasOwn(hash, key)) {
+	      res[key] = hash[key];
+	      if (!preserve) {
+	        delete hash[key];
+	      }
+	      return true
+	    } else if (hasOwn(hash, altKey)) {
+	      res[key] = hash[altKey];
+	      if (!preserve) {
+	        delete hash[altKey];
+	      }
+	      return true
+	    }
+	  }
+	  return false
+	}
+	
+	function mergeHooks (data) {
+	  if (!data.hook) {
+	    data.hook = {};
+	  }
+	  for (var i = 0; i < hooksToMerge.length; i++) {
+	    var key = hooksToMerge[i];
+	    var fromParent = data.hook[key];
+	    var ours = hooks[key];
+	    data.hook[key] = fromParent ? mergeHook$1(ours, fromParent) : ours;
+	  }
+	}
+	
+	function mergeHook$1 (one, two) {
+	  return function (a, b, c, d) {
+	    one(a, b, c, d);
+	    two(a, b, c, d);
+	  }
+	}
+	
+	/*  */
+	
+	function mergeVNodeHook (def, hookKey, hook, key) {
+	  key = key + hookKey;
+	  var injectedHash = def.__injected || (def.__injected = {});
+	  if (!injectedHash[key]) {
+	    injectedHash[key] = true;
+	    var oldHook = def[hookKey];
+	    if (oldHook) {
+	      def[hookKey] = function () {
+	        oldHook.apply(this, arguments);
+	        hook.apply(this, arguments);
+	      };
+	    } else {
+	      def[hookKey] = hook;
+	    }
+	  }
+	}
+	
+	/*  */
+	
+	var normalizeEvent = cached(function (name) {
+	  var once = name.charAt(0) === '~'; // Prefixed last, checked first
+	  name = once ? name.slice(1) : name;
+	  var capture = name.charAt(0) === '!';
+	  name = capture ? name.slice(1) : name;
+	  return {
+	    name: name,
+	    once: once,
+	    capture: capture
+	  }
+	});
+	
+	function createEventHandle (fn) {
+	  var handle = {
+	    fn: fn,
+	    invoker: function () {
+	      var arguments$1 = arguments;
+	
+	      var fn = handle.fn;
+	      if (Array.isArray(fn)) {
+	        for (var i = 0; i < fn.length; i++) {
+	          fn[i].apply(null, arguments$1);
+	        }
+	      } else {
+	        fn.apply(null, arguments);
+	      }
+	    }
+	  };
+	  return handle
+	}
+	
+	function updateListeners (
+	  on,
+	  oldOn,
+	  add,
+	  remove$$1,
+	  vm
+	) {
+	  var name, cur, old, event;
+	  for (name in on) {
+	    cur = on[name];
+	    old = oldOn[name];
+	    event = normalizeEvent(name);
+	    if (!cur) {
+	      "development" !== 'production' && warn(
+	        "Invalid handler for event \"" + (event.name) + "\": got " + String(cur),
+	        vm
+	      );
+	    } else if (!old) {
+	      if (!cur.invoker) {
+	        cur = on[name] = createEventHandle(cur);
+	      }
+	      add(event.name, cur.invoker, event.once, event.capture);
+	    } else if (cur !== old) {
+	      old.fn = cur;
+	      on[name] = old;
+	    }
+	  }
+	  for (name in oldOn) {
+	    if (!on[name]) {
+	      event = normalizeEvent(name);
+	      remove$$1(event.name, oldOn[name].invoker, event.capture);
+	    }
+	  }
+	}
+	
+	/*  */
+	
+	// The template compiler attempts to minimize the need for normalization by
+	// statically analyzing the template at compile time.
+	//
+	// For plain HTML markup, normalization can be completely skipped because the
+	// generated render function is guaranteed to return Array<VNode>. There are
+	// two cases where extra normalization is needed:
+	
+	// 1. When the children contains components - because a functional component
+	// may return an Array instead of a single root. In this case, just a simple
+	// nomralization is needed - if any child is an Array, we flatten the whole
+	// thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
+	// because functional components already normalize their own children.
+	function simpleNormalizeChildren (children) {
+	  for (var i = 0; i < children.length; i++) {
+	    if (Array.isArray(children[i])) {
+	      return Array.prototype.concat.apply([], children)
+	    }
+	  }
+	  return children
+	}
+	
+	// 2. When the children contains constrcuts that always generated nested Arrays,
+	// e.g. <template>, <slot>, v-for, or when the children is provided by user
+	// with hand-written render functions / JSX. In such cases a full normalization
+	// is needed to cater to all possible types of children values.
+	function normalizeChildren (children) {
+	  return isPrimitive(children)
+	    ? [createTextVNode(children)]
+	    : Array.isArray(children)
+	      ? normalizeArrayChildren(children)
+	      : undefined
+	}
+	
+	function normalizeArrayChildren (children, nestedIndex) {
+	  var res = [];
+	  var i, c, last;
+	  for (i = 0; i < children.length; i++) {
+	    c = children[i];
+	    if (c == null || typeof c === 'boolean') { continue }
+	    last = res[res.length - 1];
+	    //  nested
+	    if (Array.isArray(c)) {
+	      res.push.apply(res, normalizeArrayChildren(c, ((nestedIndex || '') + "_" + i)));
+	    } else if (isPrimitive(c)) {
+	      if (last && last.text) {
+	        last.text += String(c);
+	      } else if (c !== '') {
+	        // convert primitive to vnode
+	        res.push(createTextVNode(c));
+	      }
+	    } else {
+	      if (c.text && last && last.text) {
+	        res[res.length - 1] = createTextVNode(last.text + c.text);
+	      } else {
+	        // default key for nested array children (likely generated by v-for)
+	        if (c.tag && c.key == null && nestedIndex != null) {
+	          c.key = "__vlist" + nestedIndex + "_" + i + "__";
+	        }
+	        res.push(c);
+	      }
+	    }
+	  }
+	  return res
+	}
+	
+	/*  */
+	
+	function getFirstComponentChild (children) {
+	  return children && children.filter(function (c) { return c && c.componentOptions; })[0]
+	}
+	
+	/*  */
+	
+	var SIMPLE_NORMALIZE = 1;
+	var ALWAYS_NORMALIZE = 2;
+	
+	// wrapper function for providing a more flexible interface
+	// without getting yelled at by flow
+	function createElement (
+	  context,
+	  tag,
+	  data,
+	  children,
+	  normalizationType,
+	  alwaysNormalize
+	) {
+	  if (Array.isArray(data) || isPrimitive(data)) {
+	    normalizationType = children;
+	    children = data;
+	    data = undefined;
+	  }
+	  if (alwaysNormalize) { normalizationType = ALWAYS_NORMALIZE; }
+	  return _createElement(context, tag, data, children, normalizationType)
+	}
+	
+	function _createElement (
+	  context,
+	  tag,
+	  data,
+	  children,
+	  normalizationType
+	) {
+	  if (data && data.__ob__) {
+	    "development" !== 'production' && warn(
+	      "Avoid using observed data object as vnode data: " + (JSON.stringify(data)) + "\n" +
+	      'Always create fresh vnode data objects in each render!',
+	      context
+	    );
+	    return createEmptyVNode()
+	  }
+	  if (!tag) {
+	    // in case of component :is set to falsy value
+	    return createEmptyVNode()
+	  }
+	  // support single function children as default scoped slot
+	  if (Array.isArray(children) &&
+	      typeof children[0] === 'function') {
+	    data = data || {};
+	    data.scopedSlots = { default: children[0] };
+	    children.length = 0;
+	  }
+	  if (normalizationType === ALWAYS_NORMALIZE) {
+	    children = normalizeChildren(children);
+	  } else if (normalizationType === SIMPLE_NORMALIZE) {
+	    children = simpleNormalizeChildren(children);
+	  }
+	  var vnode, ns;
+	  if (typeof tag === 'string') {
+	    var Ctor;
+	    ns = config.getTagNamespace(tag);
+	    if (config.isReservedTag(tag)) {
+	      // platform built-in elements
+	      vnode = new VNode(
+	        config.parsePlatformTagName(tag), data, children,
+	        undefined, undefined, context
+	      );
+	    } else if ((Ctor = resolveAsset(context.$options, 'components', tag))) {
+	      // component
+	      vnode = createComponent(Ctor, data, context, children, tag);
+	    } else {
+	      // unknown or unlisted namespaced elements
+	      // check at runtime because it may get assigned a namespace when its
+	      // parent normalizes children
+	      vnode = new VNode(
+	        tag, data, children,
+	        undefined, undefined, context
+	      );
+	    }
+	  } else {
+	    // direct component options / constructor
+	    vnode = createComponent(tag, data, context, children);
+	  }
+	  if (vnode) {
+	    if (ns) { applyNS(vnode, ns); }
+	    return vnode
+	  } else {
+	    return createEmptyVNode()
+	  }
+	}
+	
+	function applyNS (vnode, ns) {
+	  vnode.ns = ns;
+	  if (vnode.tag === 'foreignObject') {
+	    // use default namespace inside foreignObject
+	    return
+	  }
+	  if (vnode.children) {
+	    for (var i = 0, l = vnode.children.length; i < l; i++) {
+	      var child = vnode.children[i];
+	      if (child.tag && !child.ns) {
+	        applyNS(child, ns);
+	      }
+	    }
+	  }
+	}
+	
+	/*  */
+	
+	function initRender (vm) {
+	  vm.$vnode = null; // the placeholder node in parent tree
+	  vm._vnode = null; // the root of the child tree
+	  vm._staticTrees = null;
+	  var parentVnode = vm.$options._parentVnode;
+	  var renderContext = parentVnode && parentVnode.context;
+	  vm.$slots = resolveSlots(vm.$options._renderChildren, renderContext);
+	  vm.$scopedSlots = {};
+	  // bind the createElement fn to this instance
+	  // so that we get proper render context inside it.
+	  // args order: tag, data, children, normalizationType, alwaysNormalize
+	  // internal version is used by render functions compiled from templates
+	  vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
+	  // normalization is always applied for the public version, used in
+	  // user-written render functions.
+	  vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
+	}
+	
+	function renderMixin (Vue) {
+	  Vue.prototype.$nextTick = function (fn) {
+	    return nextTick(fn, this)
+	  };
+	
+	  Vue.prototype._render = function () {
+	    var vm = this;
+	    var ref = vm.$options;
+	    var render = ref.render;
+	    var staticRenderFns = ref.staticRenderFns;
+	    var _parentVnode = ref._parentVnode;
+	
+	    if (vm._isMounted) {
+	      // clone slot nodes on re-renders
+	      for (var key in vm.$slots) {
+	        vm.$slots[key] = cloneVNodes(vm.$slots[key]);
+	      }
+	    }
+	
+	    if (_parentVnode && _parentVnode.data.scopedSlots) {
+	      vm.$scopedSlots = _parentVnode.data.scopedSlots;
+	    }
+	
+	    if (staticRenderFns && !vm._staticTrees) {
+	      vm._staticTrees = [];
+	    }
+	    // set parent vnode. this allows render functions to have access
+	    // to the data on the placeholder node.
+	    vm.$vnode = _parentVnode;
+	    // render self
+	    var vnode;
+	    try {
+	      vnode = render.call(vm._renderProxy, vm.$createElement);
+	    } catch (e) {
+	      /* istanbul ignore else */
+	      if (config.errorHandler) {
+	        config.errorHandler.call(null, e, vm);
+	      } else {
+	        {
+	          warn(("Error when rendering " + (formatComponentName(vm)) + ":"));
+	        }
+	        throw e
+	      }
+	      // return previous vnode to prevent render error causing blank component
+	      vnode = vm._vnode;
+	    }
+	    // return empty vnode in case the render function errored out
+	    if (!(vnode instanceof VNode)) {
+	      if ("development" !== 'production' && Array.isArray(vnode)) {
+	        warn(
+	          'Multiple root nodes returned from render function. Render function ' +
+	          'should return a single root node.',
+	          vm
+	        );
+	      }
+	      vnode = createEmptyVNode();
+	    }
+	    // set parent
+	    vnode.parent = _parentVnode;
+	    return vnode
+	  };
+	
+	  // toString for mustaches
+	  Vue.prototype._s = _toString;
+	  // convert text to vnode
+	  Vue.prototype._v = createTextVNode;
+	  // number conversion
+	  Vue.prototype._n = toNumber;
+	  // empty vnode
+	  Vue.prototype._e = createEmptyVNode;
+	  // loose equal
+	  Vue.prototype._q = looseEqual;
+	  // loose indexOf
+	  Vue.prototype._i = looseIndexOf;
+	
+	  // render static tree by index
+	  Vue.prototype._m = function renderStatic (
+	    index,
+	    isInFor
+	  ) {
+	    var tree = this._staticTrees[index];
+	    // if has already-rendered static tree and not inside v-for,
+	    // we can reuse the same tree by doing a shallow clone.
+	    if (tree && !isInFor) {
+	      return Array.isArray(tree)
+	        ? cloneVNodes(tree)
+	        : cloneVNode(tree)
+	    }
+	    // otherwise, render a fresh tree.
+	    tree = this._staticTrees[index] = this.$options.staticRenderFns[index].call(this._renderProxy);
+	    markStatic(tree, ("__static__" + index), false);
+	    return tree
+	  };
+	
+	  // mark node as static (v-once)
+	  Vue.prototype._o = function markOnce (
+	    tree,
+	    index,
+	    key
+	  ) {
+	    markStatic(tree, ("__once__" + index + (key ? ("_" + key) : "")), true);
+	    return tree
+	  };
+	
+	  function markStatic (tree, key, isOnce) {
+	    if (Array.isArray(tree)) {
+	      for (var i = 0; i < tree.length; i++) {
+	        if (tree[i] && typeof tree[i] !== 'string') {
+	          markStaticNode(tree[i], (key + "_" + i), isOnce);
+	        }
+	      }
+	    } else {
+	      markStaticNode(tree, key, isOnce);
+	    }
+	  }
+	
+	  function markStaticNode (node, key, isOnce) {
+	    node.isStatic = true;
+	    node.key = key;
+	    node.isOnce = isOnce;
+	  }
+	
+	  // filter resolution helper
+	  Vue.prototype._f = function resolveFilter (id) {
+	    return resolveAsset(this.$options, 'filters', id, true) || identity
+	  };
+	
+	  // render v-for
+	  Vue.prototype._l = function renderList (
+	    val,
+	    render
+	  ) {
+	    var ret, i, l, keys, key;
+	    if (Array.isArray(val) || typeof val === 'string') {
+	      ret = new Array(val.length);
+	      for (i = 0, l = val.length; i < l; i++) {
+	        ret[i] = render(val[i], i);
+	      }
+	    } else if (typeof val === 'number') {
+	      ret = new Array(val);
+	      for (i = 0; i < val; i++) {
+	        ret[i] = render(i + 1, i);
+	      }
+	    } else if (isObject(val)) {
+	      keys = Object.keys(val);
+	      ret = new Array(keys.length);
+	      for (i = 0, l = keys.length; i < l; i++) {
+	        key = keys[i];
+	        ret[i] = render(val[key], key, i);
+	      }
+	    }
+	    return ret
+	  };
+	
+	  // renderSlot
+	  Vue.prototype._t = function (
+	    name,
+	    fallback,
+	    props,
+	    bindObject
+	  ) {
+	    var scopedSlotFn = this.$scopedSlots[name];
+	    if (scopedSlotFn) { // scoped slot
+	      props = props || {};
+	      if (bindObject) {
+	        extend(props, bindObject);
+	      }
+	      return scopedSlotFn(props) || fallback
+	    } else {
+	      var slotNodes = this.$slots[name];
+	      // warn duplicate slot usage
+	      if (slotNodes && "development" !== 'production') {
+	        slotNodes._rendered && warn(
+	          "Duplicate presence of slot \"" + name + "\" found in the same render tree " +
+	          "- this will likely cause render errors.",
+	          this
+	        );
+	        slotNodes._rendered = true;
+	      }
+	      return slotNodes || fallback
+	    }
+	  };
+	
+	  // apply v-bind object
+	  Vue.prototype._b = function bindProps (
+	    data,
+	    tag,
+	    value,
+	    asProp
+	  ) {
+	    if (value) {
+	      if (!isObject(value)) {
+	        "development" !== 'production' && warn(
+	          'v-bind without argument expects an Object or Array value',
+	          this
+	        );
+	      } else {
+	        if (Array.isArray(value)) {
+	          value = toObject(value);
+	        }
+	        for (var key in value) {
+	          if (key === 'class' || key === 'style') {
+	            data[key] = value[key];
+	          } else {
+	            var type = data.attrs && data.attrs.type;
+	            var hash = asProp || config.mustUseProp(tag, type, key)
+	              ? data.domProps || (data.domProps = {})
+	              : data.attrs || (data.attrs = {});
+	            hash[key] = value[key];
+	          }
+	        }
+	      }
+	    }
+	    return data
+	  };
+	
+	  // check v-on keyCodes
+	  Vue.prototype._k = function checkKeyCodes (
+	    eventKeyCode,
+	    key,
+	    builtInAlias
+	  ) {
+	    var keyCodes = config.keyCodes[key] || builtInAlias;
+	    if (Array.isArray(keyCodes)) {
+	      return keyCodes.indexOf(eventKeyCode) === -1
+	    } else {
+	      return keyCodes !== eventKeyCode
+	    }
+	  };
+	}
+	
+	function resolveSlots (
+	  children,
+	  context
+	) {
+	  var slots = {};
+	  if (!children) {
+	    return slots
+	  }
+	  var defaultSlot = [];
+	  var name, child;
+	  for (var i = 0, l = children.length; i < l; i++) {
+	    child = children[i];
+	    // named slots should only be respected if the vnode was rendered in the
+	    // same context.
+	    if ((child.context === context || child.functionalContext === context) &&
+	        child.data && (name = child.data.slot)) {
+	      var slot = (slots[name] || (slots[name] = []));
+	      if (child.tag === 'template') {
+	        slot.push.apply(slot, child.children);
+	      } else {
+	        slot.push(child);
+	      }
+	    } else {
+	      defaultSlot.push(child);
+	    }
+	  }
+	  // ignore single whitespace
+	  if (defaultSlot.length && !(
+	    defaultSlot.length === 1 &&
+	    (defaultSlot[0].text === ' ' || defaultSlot[0].isComment)
+	  )) {
+	    slots.default = defaultSlot;
+	  }
+	  return slots
+	}
+	
+	/*  */
+	
+	function initEvents (vm) {
+	  vm._events = Object.create(null);
+	  vm._hasHookEvent = false;
+	  // init parent attached events
+	  var listeners = vm.$options._parentListeners;
+	  if (listeners) {
+	    updateComponentListeners(vm, listeners);
+	  }
+	}
+	
+	var target;
+	
+	function add$1 (event, fn, once) {
+	  if (once) {
+	    target.$once(event, fn);
+	  } else {
+	    target.$on(event, fn);
+	  }
+	}
+	
+	function remove$2 (event, fn) {
+	  target.$off(event, fn);
+	}
+	
+	function updateComponentListeners (
+	  vm,
+	  listeners,
+	  oldListeners
+	) {
+	  target = vm;
+	  updateListeners(listeners, oldListeners || {}, add$1, remove$2, vm);
+	}
+	
+	function eventsMixin (Vue) {
+	  var hookRE = /^hook:/;
+	  Vue.prototype.$on = function (event, fn) {
+	    var vm = this;(vm._events[event] || (vm._events[event] = [])).push(fn);
+	    // optimize hook:event cost by using a boolean flag marked at registration
+	    // instead of a hash lookup
+	    if (hookRE.test(event)) {
+	      vm._hasHookEvent = true;
+	    }
+	    return vm
+	  };
+	
+	  Vue.prototype.$once = function (event, fn) {
+	    var vm = this;
+	    function on () {
+	      vm.$off(event, on);
+	      fn.apply(vm, arguments);
+	    }
+	    on.fn = fn;
+	    vm.$on(event, on);
+	    return vm
+	  };
+	
+	  Vue.prototype.$off = function (event, fn) {
+	    var vm = this;
+	    // all
+	    if (!arguments.length) {
+	      vm._events = Object.create(null);
+	      return vm
+	    }
+	    // specific event
+	    var cbs = vm._events[event];
+	    if (!cbs) {
+	      return vm
+	    }
+	    if (arguments.length === 1) {
+	      vm._events[event] = null;
+	      return vm
+	    }
+	    // specific handler
+	    var cb;
+	    var i = cbs.length;
+	    while (i--) {
+	      cb = cbs[i];
+	      if (cb === fn || cb.fn === fn) {
+	        cbs.splice(i, 1);
+	        break
+	      }
+	    }
+	    return vm
+	  };
+	
+	  Vue.prototype.$emit = function (event) {
+	    var vm = this;
+	    var cbs = vm._events[event];
+	    if (cbs) {
+	      cbs = cbs.length > 1 ? toArray(cbs) : cbs;
+	      var args = toArray(arguments, 1);
+	      for (var i = 0, l = cbs.length; i < l; i++) {
+	        cbs[i].apply(vm, args);
+	      }
+	    }
+	    return vm
+	  };
+	}
+	
+	/*  */
+	
+	var activeInstance = null;
+	
+	function initLifecycle (vm) {
+	  var options = vm.$options;
+	
+	  // locate first non-abstract parent
+	  var parent = options.parent;
+	  if (parent && !options.abstract) {
+	    while (parent.$options.abstract && parent.$parent) {
+	      parent = parent.$parent;
+	    }
+	    parent.$children.push(vm);
+	  }
+	
+	  vm.$parent = parent;
+	  vm.$root = parent ? parent.$root : vm;
+	
+	  vm.$children = [];
+	  vm.$refs = {};
+	
+	  vm._watcher = null;
+	  vm._inactive = false;
+	  vm._isMounted = false;
+	  vm._isDestroyed = false;
+	  vm._isBeingDestroyed = false;
+	}
+	
+	function lifecycleMixin (Vue) {
+	  Vue.prototype._mount = function (
+	    el,
+	    hydrating
+	  ) {
+	    var vm = this;
+	    vm.$el = el;
+	    if (!vm.$options.render) {
+	      vm.$options.render = createEmptyVNode;
+	      {
+	        /* istanbul ignore if */
+	        if (vm.$options.template && vm.$options.template.charAt(0) !== '#') {
+	          warn(
+	            'You are using the runtime-only build of Vue where the template ' +
+	            'option is not available. Either pre-compile the templates into ' +
+	            'render functions, or use the compiler-included build.',
+	            vm
+	          );
+	        } else {
+	          warn(
+	            'Failed to mount component: template or render function not defined.',
+	            vm
+	          );
+	        }
+	      }
+	    }
+	    callHook(vm, 'beforeMount');
+	    vm._watcher = new Watcher(vm, function updateComponent () {
+	      vm._update(vm._render(), hydrating);
+	    }, noop);
+	    hydrating = false;
+	    // manually mounted instance, call mounted on self
+	    // mounted is called for render-created child components in its inserted hook
+	    if (vm.$vnode == null) {
+	      vm._isMounted = true;
+	      callHook(vm, 'mounted');
+	    }
+	    return vm
+	  };
+	
+	  Vue.prototype._update = function (vnode, hydrating) {
+	    var vm = this;
+	    if (vm._isMounted) {
+	      callHook(vm, 'beforeUpdate');
+	    }
+	    var prevEl = vm.$el;
+	    var prevVnode = vm._vnode;
+	    var prevActiveInstance = activeInstance;
+	    activeInstance = vm;
+	    vm._vnode = vnode;
+	    // Vue.prototype.__patch__ is injected in entry points
+	    // based on the rendering backend used.
+	    if (!prevVnode) {
+	      // initial render
+	      vm.$el = vm.__patch__(
+	        vm.$el, vnode, hydrating, false /* removeOnly */,
+	        vm.$options._parentElm,
+	        vm.$options._refElm
+	      );
+	    } else {
+	      // updates
+	      vm.$el = vm.__patch__(prevVnode, vnode);
+	    }
+	    activeInstance = prevActiveInstance;
+	    // update __vue__ reference
+	    if (prevEl) {
+	      prevEl.__vue__ = null;
+	    }
+	    if (vm.$el) {
+	      vm.$el.__vue__ = vm;
+	    }
+	    // if parent is an HOC, update its $el as well
+	    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+	      vm.$parent.$el = vm.$el;
+	    }
+	    // updated hook is called by the scheduler to ensure that children are
+	    // updated in a parent's updated hook.
+	  };
+	
+	  Vue.prototype._updateFromParent = function (
+	    propsData,
+	    listeners,
+	    parentVnode,
+	    renderChildren
+	  ) {
+	    var vm = this;
+	    var hasChildren = !!(vm.$options._renderChildren || renderChildren);
+	    vm.$options._parentVnode = parentVnode;
+	    vm.$vnode = parentVnode; // update vm's placeholder node without re-render
+	    if (vm._vnode) { // update child tree's parent
+	      vm._vnode.parent = parentVnode;
+	    }
+	    vm.$options._renderChildren = renderChildren;
+	    // update props
+	    if (propsData && vm.$options.props) {
+	      observerState.shouldConvert = false;
+	      {
+	        observerState.isSettingProps = true;
+	      }
+	      var propKeys = vm.$options._propKeys || [];
+	      for (var i = 0; i < propKeys.length; i++) {
+	        var key = propKeys[i];
+	        vm[key] = validateProp(key, vm.$options.props, propsData, vm);
+	      }
+	      observerState.shouldConvert = true;
+	      {
+	        observerState.isSettingProps = false;
+	      }
+	      vm.$options.propsData = propsData;
+	    }
+	    // update listeners
+	    if (listeners) {
+	      var oldListeners = vm.$options._parentListeners;
+	      vm.$options._parentListeners = listeners;
+	      updateComponentListeners(vm, listeners, oldListeners);
+	    }
+	    // resolve slots + force update if has children
+	    if (hasChildren) {
+	      vm.$slots = resolveSlots(renderChildren, parentVnode.context);
+	      vm.$forceUpdate();
+	    }
+	  };
+	
+	  Vue.prototype.$forceUpdate = function () {
+	    var vm = this;
+	    if (vm._watcher) {
+	      vm._watcher.update();
+	    }
+	  };
+	
+	  Vue.prototype.$destroy = function () {
+	    var vm = this;
+	    if (vm._isBeingDestroyed) {
+	      return
+	    }
+	    callHook(vm, 'beforeDestroy');
+	    vm._isBeingDestroyed = true;
+	    // remove self from parent
+	    var parent = vm.$parent;
+	    if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
+	      remove$1(parent.$children, vm);
+	    }
+	    // teardown watchers
+	    if (vm._watcher) {
+	      vm._watcher.teardown();
+	    }
+	    var i = vm._watchers.length;
+	    while (i--) {
+	      vm._watchers[i].teardown();
+	    }
+	    // remove reference from data ob
+	    // frozen object may not have observer.
+	    if (vm._data.__ob__) {
+	      vm._data.__ob__.vmCount--;
+	    }
+	    // call the last hook...
+	    vm._isDestroyed = true;
+	    callHook(vm, 'destroyed');
+	    // turn off all instance listeners.
+	    vm.$off();
+	    // remove __vue__ reference
+	    if (vm.$el) {
+	      vm.$el.__vue__ = null;
+	    }
+	    // invoke destroy hooks on current rendered tree
+	    vm.__patch__(vm._vnode, null);
+	  };
+	}
+	
+	function callHook (vm, hook) {
+	  var handlers = vm.$options[hook];
+	  if (handlers) {
+	    for (var i = 0, j = handlers.length; i < j; i++) {
+	      handlers[i].call(vm);
+	    }
+	  }
+	  if (vm._hasHookEvent) {
+	    vm.$emit('hook:' + hook);
+	  }
+	}
+	
+	/*  */
+	
 	
 	var queue = [];
 	var has$1 = {};
@@ -1643,6 +2905,7 @@
 	 */
 	function flushSchedulerQueue () {
 	  flushing = true;
+	  var watcher, id, vm;
 	
 	  // Sort queue before flush.
 	  // This ensures that:
@@ -1657,8 +2920,8 @@
 	  // do not cache length because more watchers might be pushed
 	  // as we run existing watchers
 	  for (index = 0; index < queue.length; index++) {
-	    var watcher = queue[index];
-	    var id = watcher.id;
+	    watcher = queue[index];
+	    id = watcher.id;
 	    has$1[id] = null;
 	    watcher.run();
 	    // in dev build, check and stop circular updates.
@@ -1675,6 +2938,16 @@
 	        );
 	        break
 	      }
+	    }
+	  }
+	
+	  // call updated hooks
+	  index = queue.length;
+	  while (index--) {
+	    watcher = queue[index];
+	    vm = watcher.vm;
+	    if (vm._watcher === watcher && vm._isMounted) {
+	      callHook(vm, 'updated');
 	    }
 	  }
 	
@@ -2183,1267 +3456,6 @@
 	
 	/*  */
 	
-	var VNode = function VNode (
-	  tag,
-	  data,
-	  children,
-	  text,
-	  elm,
-	  context,
-	  componentOptions
-	) {
-	  this.tag = tag;
-	  this.data = data;
-	  this.children = children;
-	  this.text = text;
-	  this.elm = elm;
-	  this.ns = undefined;
-	  this.context = context;
-	  this.functionalContext = undefined;
-	  this.key = data && data.key;
-	  this.componentOptions = componentOptions;
-	  this.child = undefined;
-	  this.parent = undefined;
-	  this.raw = false;
-	  this.isStatic = false;
-	  this.isRootInsert = true;
-	  this.isComment = false;
-	  this.isCloned = false;
-	  this.isOnce = false;
-	};
-	
-	var createEmptyVNode = function () {
-	  var node = new VNode();
-	  node.text = '';
-	  node.isComment = true;
-	  return node
-	};
-	
-	function createTextVNode (val) {
-	  return new VNode(undefined, undefined, undefined, String(val))
-	}
-	
-	// optimized shallow clone
-	// used for static nodes and slot nodes because they may be reused across
-	// multiple renders, cloning them avoids errors when DOM manipulations rely
-	// on their elm reference.
-	function cloneVNode (vnode) {
-	  var cloned = new VNode(
-	    vnode.tag,
-	    vnode.data,
-	    vnode.children,
-	    vnode.text,
-	    vnode.elm,
-	    vnode.context,
-	    vnode.componentOptions
-	  );
-	  cloned.ns = vnode.ns;
-	  cloned.isStatic = vnode.isStatic;
-	  cloned.key = vnode.key;
-	  cloned.isCloned = true;
-	  return cloned
-	}
-	
-	function cloneVNodes (vnodes) {
-	  var res = new Array(vnodes.length);
-	  for (var i = 0; i < vnodes.length; i++) {
-	    res[i] = cloneVNode(vnodes[i]);
-	  }
-	  return res
-	}
-	
-	/*  */
-	
-	function mergeVNodeHook (def, hookKey, hook, key) {
-	  key = key + hookKey;
-	  var injectedHash = def.__injected || (def.__injected = {});
-	  if (!injectedHash[key]) {
-	    injectedHash[key] = true;
-	    var oldHook = def[hookKey];
-	    if (oldHook) {
-	      def[hookKey] = function () {
-	        oldHook.apply(this, arguments);
-	        hook.apply(this, arguments);
-	      };
-	    } else {
-	      def[hookKey] = hook;
-	    }
-	  }
-	}
-	
-	/*  */
-	
-	function updateListeners (
-	  on,
-	  oldOn,
-	  add,
-	  remove$$1,
-	  vm
-	) {
-	  var name, cur, old, fn, event, capture, once;
-	  for (name in on) {
-	    cur = on[name];
-	    old = oldOn[name];
-	    if (!cur) {
-	      "development" !== 'production' && warn(
-	        "Invalid handler for event \"" + name + "\": got " + String(cur),
-	        vm
-	      );
-	    } else if (!old) {
-	      once = name.charAt(0) === '~'; // Prefixed last, checked first
-	      event = once ? name.slice(1) : name;
-	      capture = event.charAt(0) === '!';
-	      event = capture ? event.slice(1) : event;
-	      if (Array.isArray(cur)) {
-	        add(event, (cur.invoker = arrInvoker(cur)), once, capture);
-	      } else {
-	        if (!cur.invoker) {
-	          fn = cur;
-	          cur = on[name] = {};
-	          cur.fn = fn;
-	          cur.invoker = fnInvoker(cur);
-	        }
-	        add(event, cur.invoker, once, capture);
-	      }
-	    } else if (cur !== old) {
-	      if (Array.isArray(old)) {
-	        old.length = cur.length;
-	        for (var i = 0; i < old.length; i++) { old[i] = cur[i]; }
-	        on[name] = old;
-	      } else {
-	        old.fn = cur;
-	        on[name] = old;
-	      }
-	    }
-	  }
-	  for (name in oldOn) {
-	    if (!on[name]) {
-	      once = name.charAt(0) === '~'; // Prefixed last, checked first
-	      event = once ? name.slice(1) : name;
-	      capture = event.charAt(0) === '!';
-	      event = capture ? event.slice(1) : event;
-	      remove$$1(event, oldOn[name].invoker, capture);
-	    }
-	  }
-	}
-	
-	function arrInvoker (arr) {
-	  return function (ev) {
-	    var arguments$1 = arguments;
-	
-	    var single = arguments.length === 1;
-	    for (var i = 0; i < arr.length; i++) {
-	      single ? arr[i](ev) : arr[i].apply(null, arguments$1);
-	    }
-	  }
-	}
-	
-	function fnInvoker (o) {
-	  return function (ev) {
-	    var single = arguments.length === 1;
-	    single ? o.fn(ev) : o.fn.apply(null, arguments);
-	  }
-	}
-	
-	/*  */
-	
-	// The template compiler attempts to minimize the need for normalization by
-	// statically analyzing the template at compile time.
-	//
-	// For plain HTML markup, normalization can be completely skipped because the
-	// generated render function is guaranteed to return Array<VNode>. There are
-	// two cases where extra normalization is needed:
-	
-	// 1. When the children contains components - because a functional component
-	// may return an Array instead of a single root. In this case, just a simple
-	// nomralization is needed - if any child is an Array, we flatten the whole
-	// thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
-	// because functional components already normalize their own children.
-	function simpleNormalizeChildren (children) {
-	  for (var i = 0; i < children.length; i++) {
-	    if (Array.isArray(children[i])) {
-	      return Array.prototype.concat.apply([], children)
-	    }
-	  }
-	  return children
-	}
-	
-	// 2. When the children contains constrcuts that always generated nested Arrays,
-	// e.g. <template>, <slot>, v-for, or when the children is provided by user
-	// with hand-written render functions / JSX. In such cases a full normalization
-	// is needed to cater to all possible types of children values.
-	function normalizeChildren (children) {
-	  return isPrimitive(children)
-	    ? [createTextVNode(children)]
-	    : Array.isArray(children)
-	      ? normalizeArrayChildren(children)
-	      : undefined
-	}
-	
-	function normalizeArrayChildren (children, nestedIndex) {
-	  var res = [];
-	  var i, c, last;
-	  for (i = 0; i < children.length; i++) {
-	    c = children[i];
-	    if (c == null || typeof c === 'boolean') { continue }
-	    last = res[res.length - 1];
-	    //  nested
-	    if (Array.isArray(c)) {
-	      res.push.apply(res, normalizeArrayChildren(c, ((nestedIndex || '') + "_" + i)));
-	    } else if (isPrimitive(c)) {
-	      if (last && last.text) {
-	        last.text += String(c);
-	      } else if (c !== '') {
-	        // convert primitive to vnode
-	        res.push(createTextVNode(c));
-	      }
-	    } else {
-	      if (c.text && last && last.text) {
-	        res[res.length - 1] = createTextVNode(last.text + c.text);
-	      } else {
-	        // default key for nested array children (likely generated by v-for)
-	        if (c.tag && c.key == null && nestedIndex != null) {
-	          c.key = "__vlist" + nestedIndex + "_" + i + "__";
-	        }
-	        res.push(c);
-	      }
-	    }
-	  }
-	  return res
-	}
-	
-	/*  */
-	
-	function getFirstComponentChild (children) {
-	  return children && children.filter(function (c) { return c && c.componentOptions; })[0]
-	}
-	
-	/*  */
-	
-	function initEvents (vm) {
-	  vm._events = Object.create(null);
-	  vm._hasHookEvent = false;
-	  // init parent attached events
-	  var listeners = vm.$options._parentListeners;
-	  if (listeners) {
-	    updateComponentListeners(vm, listeners);
-	  }
-	}
-	
-	var target;
-	
-	function add$1 (event, fn, once) {
-	  if (once) {
-	    target.$once(event, fn);
-	  } else {
-	    target.$on(event, fn);
-	  }
-	}
-	
-	function remove$2 (event, fn) {
-	  target.$off(event, fn);
-	}
-	
-	function updateComponentListeners (
-	  vm,
-	  listeners,
-	  oldListeners
-	) {
-	  target = vm;
-	  updateListeners(listeners, oldListeners || {}, add$1, remove$2, vm);
-	}
-	
-	function eventsMixin (Vue) {
-	  var hookRE = /^hook:/;
-	  Vue.prototype.$on = function (event, fn) {
-	    var vm = this;(vm._events[event] || (vm._events[event] = [])).push(fn);
-	    // optimize hook:event cost by using a boolean flag marked at registration
-	    // instead of a hash lookup
-	    if (hookRE.test(event)) {
-	      vm._hasHookEvent = true;
-	    }
-	    return vm
-	  };
-	
-	  Vue.prototype.$once = function (event, fn) {
-	    var vm = this;
-	    function on () {
-	      vm.$off(event, on);
-	      fn.apply(vm, arguments);
-	    }
-	    on.fn = fn;
-	    vm.$on(event, on);
-	    return vm
-	  };
-	
-	  Vue.prototype.$off = function (event, fn) {
-	    var vm = this;
-	    // all
-	    if (!arguments.length) {
-	      vm._events = Object.create(null);
-	      return vm
-	    }
-	    // specific event
-	    var cbs = vm._events[event];
-	    if (!cbs) {
-	      return vm
-	    }
-	    if (arguments.length === 1) {
-	      vm._events[event] = null;
-	      return vm
-	    }
-	    // specific handler
-	    var cb;
-	    var i = cbs.length;
-	    while (i--) {
-	      cb = cbs[i];
-	      if (cb === fn || cb.fn === fn) {
-	        cbs.splice(i, 1);
-	        break
-	      }
-	    }
-	    return vm
-	  };
-	
-	  Vue.prototype.$emit = function (event) {
-	    var vm = this;
-	    var cbs = vm._events[event];
-	    if (cbs) {
-	      cbs = cbs.length > 1 ? toArray(cbs) : cbs;
-	      var args = toArray(arguments, 1);
-	      for (var i = 0, l = cbs.length; i < l; i++) {
-	        cbs[i].apply(vm, args);
-	      }
-	    }
-	    return vm
-	  };
-	}
-	
-	/*  */
-	
-	var activeInstance = null;
-	
-	function initLifecycle (vm) {
-	  var options = vm.$options;
-	
-	  // locate first non-abstract parent
-	  var parent = options.parent;
-	  if (parent && !options.abstract) {
-	    while (parent.$options.abstract && parent.$parent) {
-	      parent = parent.$parent;
-	    }
-	    parent.$children.push(vm);
-	  }
-	
-	  vm.$parent = parent;
-	  vm.$root = parent ? parent.$root : vm;
-	
-	  vm.$children = [];
-	  vm.$refs = {};
-	
-	  vm._watcher = null;
-	  vm._inactive = false;
-	  vm._isMounted = false;
-	  vm._isDestroyed = false;
-	  vm._isBeingDestroyed = false;
-	}
-	
-	function lifecycleMixin (Vue) {
-	  Vue.prototype._mount = function (
-	    el,
-	    hydrating
-	  ) {
-	    var vm = this;
-	    vm.$el = el;
-	    if (!vm.$options.render) {
-	      vm.$options.render = createEmptyVNode;
-	      {
-	        /* istanbul ignore if */
-	        if (vm.$options.template && vm.$options.template.charAt(0) !== '#') {
-	          warn(
-	            'You are using the runtime-only build of Vue where the template ' +
-	            'option is not available. Either pre-compile the templates into ' +
-	            'render functions, or use the compiler-included build.',
-	            vm
-	          );
-	        } else {
-	          warn(
-	            'Failed to mount component: template or render function not defined.',
-	            vm
-	          );
-	        }
-	      }
-	    }
-	    callHook(vm, 'beforeMount');
-	    vm._watcher = new Watcher(vm, function () {
-	      vm._update(vm._render(), hydrating);
-	    }, noop);
-	    hydrating = false;
-	    // manually mounted instance, call mounted on self
-	    // mounted is called for render-created child components in its inserted hook
-	    if (vm.$vnode == null) {
-	      vm._isMounted = true;
-	      callHook(vm, 'mounted');
-	    }
-	    return vm
-	  };
-	
-	  Vue.prototype._update = function (vnode, hydrating) {
-	    var vm = this;
-	    if (vm._isMounted) {
-	      callHook(vm, 'beforeUpdate');
-	    }
-	    var prevEl = vm.$el;
-	    var prevVnode = vm._vnode;
-	    var prevActiveInstance = activeInstance;
-	    activeInstance = vm;
-	    vm._vnode = vnode;
-	    // Vue.prototype.__patch__ is injected in entry points
-	    // based on the rendering backend used.
-	    if (!prevVnode) {
-	      // initial render
-	      vm.$el = vm.__patch__(
-	        vm.$el, vnode, hydrating, false /* removeOnly */,
-	        vm.$options._parentElm,
-	        vm.$options._refElm
-	      );
-	    } else {
-	      // updates
-	      vm.$el = vm.__patch__(prevVnode, vnode);
-	    }
-	    activeInstance = prevActiveInstance;
-	    // update __vue__ reference
-	    if (prevEl) {
-	      prevEl.__vue__ = null;
-	    }
-	    if (vm.$el) {
-	      vm.$el.__vue__ = vm;
-	    }
-	    // if parent is an HOC, update its $el as well
-	    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
-	      vm.$parent.$el = vm.$el;
-	    }
-	    if (vm._isMounted) {
-	      callHook(vm, 'updated');
-	    }
-	  };
-	
-	  Vue.prototype._updateFromParent = function (
-	    propsData,
-	    listeners,
-	    parentVnode,
-	    renderChildren
-	  ) {
-	    var vm = this;
-	    var hasChildren = !!(vm.$options._renderChildren || renderChildren);
-	    vm.$options._parentVnode = parentVnode;
-	    vm.$vnode = parentVnode; // update vm's placeholder node without re-render
-	    if (vm._vnode) { // update child tree's parent
-	      vm._vnode.parent = parentVnode;
-	    }
-	    vm.$options._renderChildren = renderChildren;
-	    // update props
-	    if (propsData && vm.$options.props) {
-	      observerState.shouldConvert = false;
-	      {
-	        observerState.isSettingProps = true;
-	      }
-	      var propKeys = vm.$options._propKeys || [];
-	      for (var i = 0; i < propKeys.length; i++) {
-	        var key = propKeys[i];
-	        vm[key] = validateProp(key, vm.$options.props, propsData, vm);
-	      }
-	      observerState.shouldConvert = true;
-	      {
-	        observerState.isSettingProps = false;
-	      }
-	      vm.$options.propsData = propsData;
-	    }
-	    // update listeners
-	    if (listeners) {
-	      var oldListeners = vm.$options._parentListeners;
-	      vm.$options._parentListeners = listeners;
-	      updateComponentListeners(vm, listeners, oldListeners);
-	    }
-	    // resolve slots + force update if has children
-	    if (hasChildren) {
-	      vm.$slots = resolveSlots(renderChildren, parentVnode.context);
-	      vm.$forceUpdate();
-	    }
-	  };
-	
-	  Vue.prototype.$forceUpdate = function () {
-	    var vm = this;
-	    if (vm._watcher) {
-	      vm._watcher.update();
-	    }
-	  };
-	
-	  Vue.prototype.$destroy = function () {
-	    var vm = this;
-	    if (vm._isBeingDestroyed) {
-	      return
-	    }
-	    callHook(vm, 'beforeDestroy');
-	    vm._isBeingDestroyed = true;
-	    // remove self from parent
-	    var parent = vm.$parent;
-	    if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
-	      remove$1(parent.$children, vm);
-	    }
-	    // teardown watchers
-	    if (vm._watcher) {
-	      vm._watcher.teardown();
-	    }
-	    var i = vm._watchers.length;
-	    while (i--) {
-	      vm._watchers[i].teardown();
-	    }
-	    // remove reference from data ob
-	    // frozen object may not have observer.
-	    if (vm._data.__ob__) {
-	      vm._data.__ob__.vmCount--;
-	    }
-	    // call the last hook...
-	    vm._isDestroyed = true;
-	    callHook(vm, 'destroyed');
-	    // turn off all instance listeners.
-	    vm.$off();
-	    // remove __vue__ reference
-	    if (vm.$el) {
-	      vm.$el.__vue__ = null;
-	    }
-	    // invoke destroy hooks on current rendered tree
-	    vm.__patch__(vm._vnode, null);
-	  };
-	}
-	
-	function callHook (vm, hook) {
-	  var handlers = vm.$options[hook];
-	  if (handlers) {
-	    for (var i = 0, j = handlers.length; i < j; i++) {
-	      handlers[i].call(vm);
-	    }
-	  }
-	  if (vm._hasHookEvent) {
-	    vm.$emit('hook:' + hook);
-	  }
-	}
-	
-	/*  */
-	
-	var hooks = { init: init, prepatch: prepatch, insert: insert, destroy: destroy$1 };
-	var hooksToMerge = Object.keys(hooks);
-	
-	function createComponent (
-	  Ctor,
-	  data,
-	  context,
-	  children,
-	  tag
-	) {
-	  if (!Ctor) {
-	    return
-	  }
-	
-	  var baseCtor = context.$options._base;
-	  if (isObject(Ctor)) {
-	    Ctor = baseCtor.extend(Ctor);
-	  }
-	
-	  if (typeof Ctor !== 'function') {
-	    {
-	      warn(("Invalid Component definition: " + (String(Ctor))), context);
-	    }
-	    return
-	  }
-	
-	  // async component
-	  if (!Ctor.cid) {
-	    if (Ctor.resolved) {
-	      Ctor = Ctor.resolved;
-	    } else {
-	      Ctor = resolveAsyncComponent(Ctor, baseCtor, function () {
-	        // it's ok to queue this on every render because
-	        // $forceUpdate is buffered by the scheduler.
-	        context.$forceUpdate();
-	      });
-	      if (!Ctor) {
-	        // return nothing if this is indeed an async component
-	        // wait for the callback to trigger parent update.
-	        return
-	      }
-	    }
-	  }
-	
-	  // resolve constructor options in case global mixins are applied after
-	  // component constructor creation
-	  resolveConstructorOptions(Ctor);
-	
-	  data = data || {};
-	
-	  // extract props
-	  var propsData = extractProps(data, Ctor);
-	
-	  // functional component
-	  if (Ctor.options.functional) {
-	    return createFunctionalComponent(Ctor, propsData, data, context, children)
-	  }
-	
-	  // extract listeners, since these needs to be treated as
-	  // child component listeners instead of DOM listeners
-	  var listeners = data.on;
-	  // replace with listeners with .native modifier
-	  data.on = data.nativeOn;
-	
-	  if (Ctor.options.abstract) {
-	    // abstract components do not keep anything
-	    // other than props & listeners
-	    data = {};
-	  }
-	
-	  // merge component management hooks onto the placeholder node
-	  mergeHooks(data);
-	
-	  // return a placeholder vnode
-	  var name = Ctor.options.name || tag;
-	  var vnode = new VNode(
-	    ("vue-component-" + (Ctor.cid) + (name ? ("-" + name) : '')),
-	    data, undefined, undefined, undefined, context,
-	    { Ctor: Ctor, propsData: propsData, listeners: listeners, tag: tag, children: children }
-	  );
-	  return vnode
-	}
-	
-	function createFunctionalComponent (
-	  Ctor,
-	  propsData,
-	  data,
-	  context,
-	  children
-	) {
-	  var props = {};
-	  var propOptions = Ctor.options.props;
-	  if (propOptions) {
-	    for (var key in propOptions) {
-	      props[key] = validateProp(key, propOptions, propsData);
-	    }
-	  }
-	  // ensure the createElement function in functional components
-	  // gets a unique context - this is necessary for correct named slot check
-	  var _context = Object.create(context);
-	  var h = function (a, b, c, d) { return createElement(_context, a, b, c, d, true); };
-	  var vnode = Ctor.options.render.call(null, h, {
-	    props: props,
-	    data: data,
-	    parent: context,
-	    children: children,
-	    slots: function () { return resolveSlots(children, context); }
-	  });
-	  if (vnode instanceof VNode) {
-	    vnode.functionalContext = context;
-	    if (data.slot) {
-	      (vnode.data || (vnode.data = {})).slot = data.slot;
-	    }
-	  }
-	  return vnode
-	}
-	
-	function createComponentInstanceForVnode (
-	  vnode, // we know it's MountedComponentVNode but flow doesn't
-	  parent, // activeInstance in lifecycle state
-	  parentElm,
-	  refElm
-	) {
-	  var vnodeComponentOptions = vnode.componentOptions;
-	  var options = {
-	    _isComponent: true,
-	    parent: parent,
-	    propsData: vnodeComponentOptions.propsData,
-	    _componentTag: vnodeComponentOptions.tag,
-	    _parentVnode: vnode,
-	    _parentListeners: vnodeComponentOptions.listeners,
-	    _renderChildren: vnodeComponentOptions.children,
-	    _parentElm: parentElm || null,
-	    _refElm: refElm || null
-	  };
-	  // check inline-template render functions
-	  var inlineTemplate = vnode.data.inlineTemplate;
-	  if (inlineTemplate) {
-	    options.render = inlineTemplate.render;
-	    options.staticRenderFns = inlineTemplate.staticRenderFns;
-	  }
-	  return new vnodeComponentOptions.Ctor(options)
-	}
-	
-	function init (
-	  vnode,
-	  hydrating,
-	  parentElm,
-	  refElm
-	) {
-	  if (!vnode.child || vnode.child._isDestroyed) {
-	    var child = vnode.child = createComponentInstanceForVnode(
-	      vnode,
-	      activeInstance,
-	      parentElm,
-	      refElm
-	    );
-	    child.$mount(hydrating ? vnode.elm : undefined, hydrating);
-	  } else if (vnode.data.keepAlive) {
-	    // kept-alive components, treat as a patch
-	    var mountedNode = vnode; // work around flow
-	    prepatch(mountedNode, mountedNode);
-	  }
-	}
-	
-	function prepatch (
-	  oldVnode,
-	  vnode
-	) {
-	  var options = vnode.componentOptions;
-	  var child = vnode.child = oldVnode.child;
-	  child._updateFromParent(
-	    options.propsData, // updated props
-	    options.listeners, // updated listeners
-	    vnode, // new parent vnode
-	    options.children // new children
-	  );
-	}
-	
-	function insert (vnode) {
-	  if (!vnode.child._isMounted) {
-	    vnode.child._isMounted = true;
-	    callHook(vnode.child, 'mounted');
-	  }
-	  if (vnode.data.keepAlive) {
-	    vnode.child._inactive = false;
-	    callHook(vnode.child, 'activated');
-	  }
-	}
-	
-	function destroy$1 (vnode) {
-	  if (!vnode.child._isDestroyed) {
-	    if (!vnode.data.keepAlive) {
-	      vnode.child.$destroy();
-	    } else {
-	      vnode.child._inactive = true;
-	      callHook(vnode.child, 'deactivated');
-	    }
-	  }
-	}
-	
-	function resolveAsyncComponent (
-	  factory,
-	  baseCtor,
-	  cb
-	) {
-	  if (factory.requested) {
-	    // pool callbacks
-	    factory.pendingCallbacks.push(cb);
-	  } else {
-	    factory.requested = true;
-	    var cbs = factory.pendingCallbacks = [cb];
-	    var sync = true;
-	
-	    var resolve = function (res) {
-	      if (isObject(res)) {
-	        res = baseCtor.extend(res);
-	      }
-	      // cache resolved
-	      factory.resolved = res;
-	      // invoke callbacks only if this is not a synchronous resolve
-	      // (async resolves are shimmed as synchronous during SSR)
-	      if (!sync) {
-	        for (var i = 0, l = cbs.length; i < l; i++) {
-	          cbs[i](res);
-	        }
-	      }
-	    };
-	
-	    var reject = function (reason) {
-	      "development" !== 'production' && warn(
-	        "Failed to resolve async component: " + (String(factory)) +
-	        (reason ? ("\nReason: " + reason) : '')
-	      );
-	    };
-	
-	    var res = factory(resolve, reject);
-	
-	    // handle promise
-	    if (res && typeof res.then === 'function' && !factory.resolved) {
-	      res.then(resolve, reject);
-	    }
-	
-	    sync = false;
-	    // return in case resolved synchronously
-	    return factory.resolved
-	  }
-	}
-	
-	function extractProps (data, Ctor) {
-	  // we are only extracting raw values here.
-	  // validation and default values are handled in the child
-	  // component itself.
-	  var propOptions = Ctor.options.props;
-	  if (!propOptions) {
-	    return
-	  }
-	  var res = {};
-	  var attrs = data.attrs;
-	  var props = data.props;
-	  var domProps = data.domProps;
-	  if (attrs || props || domProps) {
-	    for (var key in propOptions) {
-	      var altKey = hyphenate(key);
-	      checkProp(res, props, key, altKey, true) ||
-	      checkProp(res, attrs, key, altKey) ||
-	      checkProp(res, domProps, key, altKey);
-	    }
-	  }
-	  return res
-	}
-	
-	function checkProp (
-	  res,
-	  hash,
-	  key,
-	  altKey,
-	  preserve
-	) {
-	  if (hash) {
-	    if (hasOwn(hash, key)) {
-	      res[key] = hash[key];
-	      if (!preserve) {
-	        delete hash[key];
-	      }
-	      return true
-	    } else if (hasOwn(hash, altKey)) {
-	      res[key] = hash[altKey];
-	      if (!preserve) {
-	        delete hash[altKey];
-	      }
-	      return true
-	    }
-	  }
-	  return false
-	}
-	
-	function mergeHooks (data) {
-	  if (!data.hook) {
-	    data.hook = {};
-	  }
-	  for (var i = 0; i < hooksToMerge.length; i++) {
-	    var key = hooksToMerge[i];
-	    var fromParent = data.hook[key];
-	    var ours = hooks[key];
-	    data.hook[key] = fromParent ? mergeHook$1(ours, fromParent) : ours;
-	  }
-	}
-	
-	function mergeHook$1 (one, two) {
-	  return function (a, b, c, d) {
-	    one(a, b, c, d);
-	    two(a, b, c, d);
-	  }
-	}
-	
-	/*  */
-	
-	var SIMPLE_NORMALIZE = 1;
-	var ALWAYS_NORMALIZE = 2;
-	
-	// wrapper function for providing a more flexible interface
-	// without getting yelled at by flow
-	function createElement (
-	  context,
-	  tag,
-	  data,
-	  children,
-	  normalizationType,
-	  alwaysNormalize
-	) {
-	  if (Array.isArray(data) || isPrimitive(data)) {
-	    normalizationType = children;
-	    children = data;
-	    data = undefined;
-	  }
-	  if (alwaysNormalize) { normalizationType = ALWAYS_NORMALIZE; }
-	  return _createElement(context, tag, data, children, normalizationType)
-	}
-	
-	function _createElement (
-	  context,
-	  tag,
-	  data,
-	  children,
-	  normalizationType
-	) {
-	  if (data && data.__ob__) {
-	    "development" !== 'production' && warn(
-	      "Avoid using observed data object as vnode data: " + (JSON.stringify(data)) + "\n" +
-	      'Always create fresh vnode data objects in each render!',
-	      context
-	    );
-	    return createEmptyVNode()
-	  }
-	  if (!tag) {
-	    // in case of component :is set to falsy value
-	    return createEmptyVNode()
-	  }
-	  // support single function children as default scoped slot
-	  if (Array.isArray(children) &&
-	      typeof children[0] === 'function') {
-	    data = data || {};
-	    data.scopedSlots = { default: children[0] };
-	    children.length = 0;
-	  }
-	  if (normalizationType === ALWAYS_NORMALIZE) {
-	    children = normalizeChildren(children);
-	  } else if (normalizationType === SIMPLE_NORMALIZE) {
-	    children = simpleNormalizeChildren(children);
-	  }
-	  var vnode, ns;
-	  if (typeof tag === 'string') {
-	    var Ctor;
-	    ns = config.getTagNamespace(tag);
-	    if (config.isReservedTag(tag)) {
-	      // platform built-in elements
-	      vnode = new VNode(
-	        config.parsePlatformTagName(tag), data, children,
-	        undefined, undefined, context
-	      );
-	    } else if ((Ctor = resolveAsset(context.$options, 'components', tag))) {
-	      // component
-	      vnode = createComponent(Ctor, data, context, children, tag);
-	    } else {
-	      // unknown or unlisted namespaced elements
-	      // check at runtime because it may get assigned a namespace when its
-	      // parent normalizes children
-	      vnode = new VNode(
-	        tag, data, children,
-	        undefined, undefined, context
-	      );
-	    }
-	  } else {
-	    // direct component options / constructor
-	    vnode = createComponent(tag, data, context, children);
-	  }
-	  if (vnode) {
-	    if (ns) { applyNS(vnode, ns); }
-	    return vnode
-	  } else {
-	    return createEmptyVNode()
-	  }
-	}
-	
-	function applyNS (vnode, ns) {
-	  vnode.ns = ns;
-	  if (vnode.tag === 'foreignObject') {
-	    // use default namespace inside foreignObject
-	    return
-	  }
-	  if (vnode.children) {
-	    for (var i = 0, l = vnode.children.length; i < l; i++) {
-	      var child = vnode.children[i];
-	      if (child.tag && !child.ns) {
-	        applyNS(child, ns);
-	      }
-	    }
-	  }
-	}
-	
-	/*  */
-	
-	function initRender (vm) {
-	  vm.$vnode = null; // the placeholder node in parent tree
-	  vm._vnode = null; // the root of the child tree
-	  vm._staticTrees = null;
-	  var parentVnode = vm.$options._parentVnode;
-	  var renderContext = parentVnode && parentVnode.context;
-	  vm.$slots = resolveSlots(vm.$options._renderChildren, renderContext);
-	  vm.$scopedSlots = {};
-	  // bind the createElement fn to this instance
-	  // so that we get proper render context inside it.
-	  // args order: tag, data, children, normalizationType, alwaysNormalize
-	  // internal version is used by render functions compiled from templates
-	  vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
-	  // normalization is always applied for the public version, used in
-	  // user-written render functions.
-	  vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
-	  if (vm.$options.el) {
-	    vm.$mount(vm.$options.el);
-	  }
-	}
-	
-	function renderMixin (Vue) {
-	  Vue.prototype.$nextTick = function (fn) {
-	    return nextTick(fn, this)
-	  };
-	
-	  Vue.prototype._render = function () {
-	    var vm = this;
-	    var ref = vm.$options;
-	    var render = ref.render;
-	    var staticRenderFns = ref.staticRenderFns;
-	    var _parentVnode = ref._parentVnode;
-	
-	    if (vm._isMounted) {
-	      // clone slot nodes on re-renders
-	      for (var key in vm.$slots) {
-	        vm.$slots[key] = cloneVNodes(vm.$slots[key]);
-	      }
-	    }
-	
-	    if (_parentVnode && _parentVnode.data.scopedSlots) {
-	      vm.$scopedSlots = _parentVnode.data.scopedSlots;
-	    }
-	
-	    if (staticRenderFns && !vm._staticTrees) {
-	      vm._staticTrees = [];
-	    }
-	    // set parent vnode. this allows render functions to have access
-	    // to the data on the placeholder node.
-	    vm.$vnode = _parentVnode;
-	    // render self
-	    var vnode;
-	    try {
-	      vnode = render.call(vm._renderProxy, vm.$createElement);
-	    } catch (e) {
-	      /* istanbul ignore else */
-	      if (config.errorHandler) {
-	        config.errorHandler.call(null, e, vm);
-	      } else {
-	        {
-	          warn(("Error when rendering " + (formatComponentName(vm)) + ":"));
-	        }
-	        throw e
-	      }
-	      // return previous vnode to prevent render error causing blank component
-	      vnode = vm._vnode;
-	    }
-	    // return empty vnode in case the render function errored out
-	    if (!(vnode instanceof VNode)) {
-	      if ("development" !== 'production' && Array.isArray(vnode)) {
-	        warn(
-	          'Multiple root nodes returned from render function. Render function ' +
-	          'should return a single root node.',
-	          vm
-	        );
-	      }
-	      vnode = createEmptyVNode();
-	    }
-	    // set parent
-	    vnode.parent = _parentVnode;
-	    return vnode
-	  };
-	
-	  // toString for mustaches
-	  Vue.prototype._s = _toString;
-	  // convert text to vnode
-	  Vue.prototype._v = createTextVNode;
-	  // number conversion
-	  Vue.prototype._n = toNumber;
-	  // empty vnode
-	  Vue.prototype._e = createEmptyVNode;
-	  // loose equal
-	  Vue.prototype._q = looseEqual;
-	  // loose indexOf
-	  Vue.prototype._i = looseIndexOf;
-	
-	  // render static tree by index
-	  Vue.prototype._m = function renderStatic (
-	    index,
-	    isInFor
-	  ) {
-	    var tree = this._staticTrees[index];
-	    // if has already-rendered static tree and not inside v-for,
-	    // we can reuse the same tree by doing a shallow clone.
-	    if (tree && !isInFor) {
-	      return Array.isArray(tree)
-	        ? cloneVNodes(tree)
-	        : cloneVNode(tree)
-	    }
-	    // otherwise, render a fresh tree.
-	    tree = this._staticTrees[index] = this.$options.staticRenderFns[index].call(this._renderProxy);
-	    markStatic(tree, ("__static__" + index), false);
-	    return tree
-	  };
-	
-	  // mark node as static (v-once)
-	  Vue.prototype._o = function markOnce (
-	    tree,
-	    index,
-	    key
-	  ) {
-	    markStatic(tree, ("__once__" + index + (key ? ("_" + key) : "")), true);
-	    return tree
-	  };
-	
-	  function markStatic (tree, key, isOnce) {
-	    if (Array.isArray(tree)) {
-	      for (var i = 0; i < tree.length; i++) {
-	        if (tree[i] && typeof tree[i] !== 'string') {
-	          markStaticNode(tree[i], (key + "_" + i), isOnce);
-	        }
-	      }
-	    } else {
-	      markStaticNode(tree, key, isOnce);
-	    }
-	  }
-	
-	  function markStaticNode (node, key, isOnce) {
-	    node.isStatic = true;
-	    node.key = key;
-	    node.isOnce = isOnce;
-	  }
-	
-	  // filter resolution helper
-	  Vue.prototype._f = function resolveFilter (id) {
-	    return resolveAsset(this.$options, 'filters', id, true) || identity
-	  };
-	
-	  // render v-for
-	  Vue.prototype._l = function renderList (
-	    val,
-	    render
-	  ) {
-	    var ret, i, l, keys, key;
-	    if (Array.isArray(val) || typeof val === 'string') {
-	      ret = new Array(val.length);
-	      for (i = 0, l = val.length; i < l; i++) {
-	        ret[i] = render(val[i], i);
-	      }
-	    } else if (typeof val === 'number') {
-	      ret = new Array(val);
-	      for (i = 0; i < val; i++) {
-	        ret[i] = render(i + 1, i);
-	      }
-	    } else if (isObject(val)) {
-	      keys = Object.keys(val);
-	      ret = new Array(keys.length);
-	      for (i = 0, l = keys.length; i < l; i++) {
-	        key = keys[i];
-	        ret[i] = render(val[key], key, i);
-	      }
-	    }
-	    return ret
-	  };
-	
-	  // renderSlot
-	  Vue.prototype._t = function (
-	    name,
-	    fallback,
-	    props,
-	    bindObject
-	  ) {
-	    var scopedSlotFn = this.$scopedSlots[name];
-	    if (scopedSlotFn) { // scoped slot
-	      props = props || {};
-	      if (bindObject) {
-	        extend(props, bindObject);
-	      }
-	      return scopedSlotFn(props) || fallback
-	    } else {
-	      var slotNodes = this.$slots[name];
-	      // warn duplicate slot usage
-	      if (slotNodes && "development" !== 'production') {
-	        slotNodes._rendered && warn(
-	          "Duplicate presence of slot \"" + name + "\" found in the same render tree " +
-	          "- this will likely cause render errors.",
-	          this
-	        );
-	        slotNodes._rendered = true;
-	      }
-	      return slotNodes || fallback
-	    }
-	  };
-	
-	  // apply v-bind object
-	  Vue.prototype._b = function bindProps (
-	    data,
-	    tag,
-	    value,
-	    asProp
-	  ) {
-	    if (value) {
-	      if (!isObject(value)) {
-	        "development" !== 'production' && warn(
-	          'v-bind without argument expects an Object or Array value',
-	          this
-	        );
-	      } else {
-	        if (Array.isArray(value)) {
-	          value = toObject(value);
-	        }
-	        for (var key in value) {
-	          if (key === 'class' || key === 'style') {
-	            data[key] = value[key];
-	          } else {
-	            var hash = asProp || config.mustUseProp(tag, key)
-	              ? data.domProps || (data.domProps = {})
-	              : data.attrs || (data.attrs = {});
-	            hash[key] = value[key];
-	          }
-	        }
-	      }
-	    }
-	    return data
-	  };
-	
-	  // check v-on keyCodes
-	  Vue.prototype._k = function checkKeyCodes (
-	    eventKeyCode,
-	    key,
-	    builtInAlias
-	  ) {
-	    var keyCodes = config.keyCodes[key] || builtInAlias;
-	    if (Array.isArray(keyCodes)) {
-	      return keyCodes.indexOf(eventKeyCode) === -1
-	    } else {
-	      return keyCodes !== eventKeyCode
-	    }
-	  };
-	}
-	
-	function resolveSlots (
-	  children,
-	  context
-	) {
-	  var slots = {};
-	  if (!children) {
-	    return slots
-	  }
-	  var defaultSlot = [];
-	  var name, child;
-	  for (var i = 0, l = children.length; i < l; i++) {
-	    child = children[i];
-	    // named slots should only be respected if the vnode was rendered in the
-	    // same context.
-	    if ((child.context === context || child.functionalContext === context) &&
-	        child.data && (name = child.data.slot)) {
-	      var slot = (slots[name] || (slots[name] = []));
-	      if (child.tag === 'template') {
-	        slot.push.apply(slot, child.children);
-	      } else {
-	        slot.push(child);
-	      }
-	    } else {
-	      defaultSlot.push(child);
-	    }
-	  }
-	  // ignore single whitespace
-	  if (defaultSlot.length && !(
-	    defaultSlot.length === 1 &&
-	    (defaultSlot[0].text === ' ' || defaultSlot[0].isComment)
-	  )) {
-	    slots.default = defaultSlot;
-	  }
-	  return slots
-	}
-	
-	/*  */
-	
 	var uid = 0;
 	
 	function initMixin (Vue) {
@@ -3474,10 +3486,13 @@
 	    vm._self = vm;
 	    initLifecycle(vm);
 	    initEvents(vm);
+	    initRender(vm);
 	    callHook(vm, 'beforeCreate');
 	    initState(vm);
 	    callHook(vm, 'created');
-	    initRender(vm);
+	    if (vm.$options.el) {
+	      vm.$mount(vm.$options.el);
+	    }
 	  };
 	}
 	
@@ -3670,6 +3685,10 @@
 	
 	var patternTypes = [String, RegExp];
 	
+	function getComponentName (opts) {
+	  return opts && (opts.Ctor.options.name || opts.tag)
+	}
+	
 	function matches (pattern, name) {
 	  if (typeof pattern === 'string') {
 	    return pattern.split(',').indexOf(name) > -1
@@ -3678,22 +3697,64 @@
 	  }
 	}
 	
+	function pruneCache (cache, filter) {
+	  for (var key in cache) {
+	    var cachedNode = cache[key];
+	    if (cachedNode) {
+	      var name = getComponentName(cachedNode.componentOptions);
+	      if (name && !filter(name)) {
+	        pruneCacheEntry(cachedNode);
+	        cache[key] = null;
+	      }
+	    }
+	  }
+	}
+	
+	function pruneCacheEntry (vnode) {
+	  if (vnode) {
+	    if (!vnode.componentInstance._inactive) {
+	      callHook(vnode.componentInstance, 'deactivated');
+	    }
+	    vnode.componentInstance.$destroy();
+	  }
+	}
+	
 	var KeepAlive = {
 	  name: 'keep-alive',
 	  abstract: true,
+	
 	  props: {
 	    include: patternTypes,
 	    exclude: patternTypes
 	  },
+	
 	  created: function created () {
 	    this.cache = Object.create(null);
 	  },
+	
+	  destroyed: function destroyed () {
+	    var this$1 = this;
+	
+	    for (var key in this.cache) {
+	      pruneCacheEntry(this$1.cache[key]);
+	    }
+	  },
+	
+	  watch: {
+	    include: function include (val) {
+	      pruneCache(this.cache, function (name) { return matches(val, name); });
+	    },
+	    exclude: function exclude (val) {
+	      pruneCache(this.cache, function (name) { return !matches(val, name); });
+	    }
+	  },
+	
 	  render: function render () {
 	    var vnode = getFirstComponentChild(this.$slots.default);
-	    if (vnode && vnode.componentOptions) {
-	      var opts = vnode.componentOptions;
+	    var componentOptions = vnode && vnode.componentOptions;
+	    if (componentOptions) {
 	      // check pattern
-	      var name = opts.Ctor.options.name || opts.tag;
+	      var name = getComponentName(componentOptions);
 	      if (name && (
 	        (this.include && !matches(this.include, name)) ||
 	        (this.exclude && matches(this.exclude, name))
@@ -3703,25 +3764,16 @@
 	      var key = vnode.key == null
 	        // same constructor may get registered as different local components
 	        // so cid alone is not enough (#3269)
-	        ? opts.Ctor.cid + (opts.tag ? ("::" + (opts.tag)) : '')
+	        ? componentOptions.Ctor.cid + (componentOptions.tag ? ("::" + (componentOptions.tag)) : '')
 	        : vnode.key;
 	      if (this.cache[key]) {
-	        vnode.child = this.cache[key].child;
+	        vnode.componentInstance = this.cache[key].componentInstance;
 	      } else {
 	        this.cache[key] = vnode;
 	      }
 	      vnode.data.keepAlive = true;
 	    }
 	    return vnode
-	  },
-	  destroyed: function destroyed () {
-	    var this$1 = this;
-	
-	    for (var key in this.cache) {
-	      var vnode = this$1.cache[key];
-	      callHook(vnode.child, 'deactivated');
-	      vnode.child.$destroy();
-	    }
 	  }
 	};
 	
@@ -3771,15 +3823,15 @@
 	  get: isServerRendering
 	});
 	
-	Vue$3.version = '2.1.8';
+	Vue$3.version = '2.1.10';
 	
 	/*  */
 	
 	// attributes that should be using props for binding
 	var acceptValue = makeMap('input,textarea,option,select');
-	var mustUseProp = function (tag, attr) {
+	var mustUseProp = function (tag, type, attr) {
 	  return (
-	    (attr === 'value' && acceptValue(tag)) ||
+	    (attr === 'value' && acceptValue(tag)) && type !== 'button' ||
 	    (attr === 'selected' && tag === 'option') ||
 	    (attr === 'checked' && tag === 'input') ||
 	    (attr === 'muted' && tag === 'video')
@@ -3817,8 +3869,8 @@
 	  var data = vnode.data;
 	  var parentNode = vnode;
 	  var childNode = vnode;
-	  while (childNode.child) {
-	    childNode = childNode.child._vnode;
+	  while (childNode.componentInstance) {
+	    childNode = childNode.componentInstance._vnode;
 	    if (childNode.data) {
 	      data = mergeClassData(childNode.data, data);
 	    }
@@ -4070,7 +4122,7 @@
 	  if (!key) { return }
 	
 	  var vm = vnode.context;
-	  var ref = vnode.child || vnode.elm;
+	  var ref = vnode.componentInstance || vnode.elm;
 	  var refs = vm.$refs;
 	  if (isRemoval) {
 	    if (Array.isArray(refs[key])) {
@@ -4230,7 +4282,7 @@
 	  function createComponent (vnode, insertedVnodeQueue, parentElm, refElm) {
 	    var i = vnode.data;
 	    if (isDef(i)) {
-	      var isReactivated = isDef(vnode.child) && i.keepAlive;
+	      var isReactivated = isDef(vnode.componentInstance) && i.keepAlive;
 	      if (isDef(i = i.hook) && isDef(i = i.init)) {
 	        i(vnode, false /* hydrating */, parentElm, refElm);
 	      }
@@ -4238,13 +4290,30 @@
 	      // it should've created a child instance and mounted it. the child
 	      // component also has set the placeholder vnode's elm.
 	      // in that case we can just return the element and be done.
-	      if (isDef(vnode.child)) {
+	      if (isDef(vnode.componentInstance)) {
 	        initComponent(vnode, insertedVnodeQueue);
 	        if (isReactivated) {
 	          reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm);
 	        }
 	        return true
 	      }
+	    }
+	  }
+	
+	  function initComponent (vnode, insertedVnodeQueue) {
+	    if (vnode.data.pendingInsert) {
+	      insertedVnodeQueue.push.apply(insertedVnodeQueue, vnode.data.pendingInsert);
+	    }
+	    vnode.elm = vnode.componentInstance.$el;
+	    if (isPatchable(vnode)) {
+	      invokeCreateHooks(vnode, insertedVnodeQueue);
+	      setScope(vnode);
+	    } else {
+	      // empty component root.
+	      // skip all element-related modules except for ref (#3455)
+	      registerRef(vnode);
+	      // make sure to invoke the insert hook
+	      insertedVnodeQueue.push(vnode);
 	    }
 	  }
 	
@@ -4255,8 +4324,8 @@
 	    // again. It's not ideal to involve module-specific logic in here but
 	    // there doesn't seem to be a better way to do it.
 	    var innerNode = vnode;
-	    while (innerNode.child) {
-	      innerNode = innerNode.child._vnode;
+	    while (innerNode.componentInstance) {
+	      innerNode = innerNode.componentInstance._vnode;
 	      if (isDef(i = innerNode.data) && isDef(i = i.transition)) {
 	        for (i = 0; i < cbs.activate.length; ++i) {
 	          cbs.activate[i](emptyNode, innerNode);
@@ -4291,8 +4360,8 @@
 	  }
 	
 	  function isPatchable (vnode) {
-	    while (vnode.child) {
-	      vnode = vnode.child._vnode;
+	    while (vnode.componentInstance) {
+	      vnode = vnode.componentInstance._vnode;
 	    }
 	    return isDef(vnode.tag)
 	  }
@@ -4305,23 +4374,6 @@
 	    if (isDef(i)) {
 	      if (i.create) { i.create(emptyNode, vnode); }
 	      if (i.insert) { insertedVnodeQueue.push(vnode); }
-	    }
-	  }
-	
-	  function initComponent (vnode, insertedVnodeQueue) {
-	    if (vnode.data.pendingInsert) {
-	      insertedVnodeQueue.push.apply(insertedVnodeQueue, vnode.data.pendingInsert);
-	    }
-	    vnode.elm = vnode.child.$el;
-	    if (isPatchable(vnode)) {
-	      invokeCreateHooks(vnode, insertedVnodeQueue);
-	      setScope(vnode);
-	    } else {
-	      // empty component root.
-	      // skip all element-related modules except for ref (#3455)
-	      registerRef(vnode);
-	      // make sure to invoke the insert hook
-	      insertedVnodeQueue.push(vnode);
 	    }
 	  }
 	
@@ -4386,7 +4438,7 @@
 	        rm.listeners += listeners;
 	      }
 	      // recursively invoke hooks on child component root node
-	      if (isDef(i = vnode.child) && isDef(i = i._vnode) && isDef(i.data)) {
+	      if (isDef(i = vnode.componentInstance) && isDef(i = i._vnode) && isDef(i.data)) {
 	        removeAndInvokeRemoveHook(i, rm);
 	      }
 	      for (i = 0; i < cbs.remove.length; ++i) {
@@ -4490,7 +4542,7 @@
 	        vnode.key === oldVnode.key &&
 	        (vnode.isCloned || vnode.isOnce)) {
 	      vnode.elm = oldVnode.elm;
-	      vnode.child = oldVnode.child;
+	      vnode.componentInstance = oldVnode.componentInstance;
 	      return
 	    }
 	    var i;
@@ -4555,7 +4607,7 @@
 	    var children = vnode.children;
 	    if (isDef(data)) {
 	      if (isDef(i = data.hook) && isDef(i = i.init)) { i(vnode, true /* hydrating */); }
-	      if (isDef(i = vnode.child)) {
+	      if (isDef(i = vnode.componentInstance)) {
 	        // child component. it should have hydrated its own tree.
 	        initComponent(vnode, insertedVnodeQueue);
 	        return true
@@ -4621,7 +4673,6 @@
 	      return
 	    }
 	
-	    var elm, parent;
 	    var isInitialPatch = false;
 	    var insertedVnodeQueue = [];
 	
@@ -4662,9 +4713,17 @@
 	          oldVnode = emptyNodeAt(oldVnode);
 	        }
 	        // replacing existing element
-	        elm = oldVnode.elm;
-	        parent = nodeOps.parentNode(elm);
-	        createElm(vnode, insertedVnodeQueue, parent, nodeOps.nextSibling(elm));
+	        var oldElm = oldVnode.elm;
+	        var parentElm$1 = nodeOps.parentNode(oldElm);
+	        createElm(
+	          vnode,
+	          insertedVnodeQueue,
+	          // extremely rare edge case: do not insert if old element is in a
+	          // leaving transition. Only happens when combining transition +
+	          // keep-alive + HOCs. (#4590)
+	          oldElm._leaveCb ? null : parentElm$1,
+	          nodeOps.nextSibling(oldElm)
+	        );
 	
 	        if (vnode.parent) {
 	          // component root element replaced.
@@ -4681,8 +4740,8 @@
 	          }
 	        }
 	
-	        if (parent !== null) {
-	          removeVnodes(parent, [oldVnode], 0, 0);
+	        if (parentElm$1 !== null) {
+	          removeVnodes(parentElm$1, [oldVnode], 0, 0);
 	        } else if (isDef(oldVnode.tag)) {
 	          invokeDestroyHook(oldVnode);
 	        }
@@ -4912,11 +4971,17 @@
 	
 	var target$1;
 	
-	function add$2 (event, handler, once, capture) {
+	function add$2 (
+	  event,
+	  handler,
+	  once,
+	  capture
+	) {
 	  if (once) {
 	    var oldHandler = handler;
+	    var _target = target$1; // save current target element in closure
 	    handler = function (ev) {
-	      remove$3(event, handler, capture);
+	      remove$3(event, handler, capture, _target);
 	      arguments.length === 1
 	        ? oldHandler(ev)
 	        : oldHandler.apply(null, arguments);
@@ -4925,8 +4990,13 @@
 	  target$1.addEventListener(event, handler, capture);
 	}
 	
-	function remove$3 (event, handler, capture) {
-	  target$1.removeEventListener(event, handler, capture);
+	function remove$3 (
+	  event,
+	  handler,
+	  capture,
+	  _target
+	) {
+	  (_target || target$1).removeEventListener(event, handler, capture);
 	}
 	
 	function updateDOMListeners (oldVnode, vnode) {
@@ -4973,13 +5043,7 @@
 	      if (vnode.children) { vnode.children.length = 0; }
 	      if (cur === oldProps[key]) { continue }
 	    }
-	    // #4521: if a click event triggers update before the change event is
-	    // dispatched on a checkbox/radio input, the input's checked state will
-	    // be reset and fail to trigger another update.
-	    /* istanbul ignore next */
-	    if (key === 'checked' && !isDirty(elm, cur)) {
-	      continue
-	    }
+	
 	    if (key === 'value') {
 	      // store value as _value as well since
 	      // non-string values will be stringified
@@ -5003,17 +5067,15 @@
 	  vnode,
 	  checkVal
 	) {
-	  if (!elm.composing && (
+	  return (!elm.composing && (
 	    vnode.tag === 'option' ||
 	    isDirty(elm, checkVal) ||
 	    isInputChanged(vnode, checkVal)
-	  )) {
-	    return true
-	  }
-	  return false
+	  ))
 	}
 	
 	function isDirty (elm, checkVal) {
+	  // return true when textbox (.number and .trim) loses focus and its value is not equal to the updated value
 	  return document.activeElement !== elm && elm.value !== checkVal
 	}
 	
@@ -5080,8 +5142,8 @@
 	
 	  if (checkChild) {
 	    var childNode = vnode;
-	    while (childNode.child) {
-	      childNode = childNode.child._vnode;
+	    while (childNode.componentInstance) {
+	      childNode = childNode.componentInstance._vnode;
 	      if (childNode.data && (styleData = normalizeStyleData(childNode.data))) {
 	        extend(res, styleData);
 	      }
@@ -5255,7 +5317,11 @@
 	  }
 	}
 	
-	var raf = (inBrowser && window.requestAnimationFrame) || setTimeout;
+	// binding to window is necessary to make hot reload work in IE in strict mode
+	var raf = inBrowser && window.requestAnimationFrame
+	  ? window.requestAnimationFrame.bind(window)
+	  : setTimeout;
+	
 	function nextFrame (fn) {
 	  raf(function () {
 	    raf(fn);
@@ -5463,7 +5529,6 @@
 	      var parent = el.parentNode;
 	      var pendingNode = parent && parent._pending && parent._pending[vnode.key];
 	      if (pendingNode &&
-	          pendingNode.context === vnode.context &&
 	          pendingNode.tag === vnode.tag &&
 	          pendingNode.elm._leaveCb) {
 	        pendingNode.elm._leaveCb();
@@ -5801,8 +5866,8 @@
 	
 	// recursively search for possible transition defined inside the component root
 	function locateNode (vnode) {
-	  return vnode.child && (!vnode.data || !vnode.data.transition)
-	    ? locateNode(vnode.child._vnode)
+	  return vnode.componentInstance && (!vnode.data || !vnode.data.transition)
+	    ? locateNode(vnode.componentInstance._vnode)
 	    : vnode
 	}
 	
@@ -5937,6 +6002,7 @@
 	  name: 'transition',
 	  props: transitionProps,
 	  abstract: true,
+	
 	  render: function render (h) {
 	    var this$1 = this;
 	
@@ -5992,9 +6058,15 @@
 	      return placeholder(h, rawChild)
 	    }
 	
-	    var key = child.key = child.key == null || child.isStatic
-	      ? ("__v" + (child.tag + this._uid) + "__")
-	      : child.key;
+	    // ensure a key that is unique to the vnode type and to this transition
+	    // component instance. This key will be used to remove pending leaving nodes
+	    // during entering.
+	    var id = "__transition-" + (this._uid) + "-";
+	    var key = child.key = child.key == null
+	      ? id + child.tag
+	      : isPrimitive(child.key)
+	        ? (String(child.key).indexOf(id) === 0 ? child.key : id + child.key)
+	        : child.key;
 	    var data = (child.data || (child.data = {})).transition = extractTransitionData(this);
 	    var oldRawChild = this._vnode;
 	    var oldChild = getRealChild(oldRawChild);
@@ -6341,22 +6413,6 @@
 	
 	// Special Elements (can contain anything)
 	var isScriptOrStyle = makeMap('script,style', true);
-	var hasLang = function (attr) { return attr.name === 'lang' && attr.value !== 'html'; };
-	var isSpecialTag = function (tag, isSFC, stack) {
-	  if (isScriptOrStyle(tag)) {
-	    return true
-	  }
-	  if (isSFC && stack.length === 1) {
-	    // top-level template that has no pre-processor
-	    if (tag === 'template' && !stack[0].attrs.some(hasLang)) {
-	      return false
-	    } else {
-	      return true
-	    }
-	  }
-	  return false
-	};
-	
 	var reCache = {};
 	
 	var ltRE = /&lt;/g;
@@ -6385,7 +6441,7 @@
 	  while (html) {
 	    last = html;
 	    // Make sure we're not in a script or style element
-	    if (!lastTag || !isSpecialTag(lastTag, options.sfc, stack)) {
+	    if (!lastTag || !isScriptOrStyle(lastTag)) {
 	      var textEnd = html.indexOf('<');
 	      if (textEnd === 0) {
 	        // Comment:
@@ -6420,7 +6476,7 @@
 	        if (endTagMatch) {
 	          var curIndex = index;
 	          advance(endTagMatch[0].length);
-	          parseEndTag(endTagMatch[0], endTagMatch[1], curIndex, index);
+	          parseEndTag(endTagMatch[1], curIndex, index);
 	          continue
 	        }
 	
@@ -6477,7 +6533,7 @@
 	      });
 	      index += html.length - rest.length;
 	      html = rest;
-	      parseEndTag('</' + stackedTag + '>', stackedTag, index - endTagLength, index);
+	      parseEndTag(stackedTag, index - endTagLength, index);
 	    }
 	
 	    if (html === last && options.chars) {
@@ -6523,10 +6579,10 @@
 	
 	    if (expectHTML) {
 	      if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
-	        parseEndTag('', lastTag);
+	        parseEndTag(lastTag);
 	      }
 	      if (canBeLeftOpenTag(tagName) && lastTag === tagName) {
-	        parseEndTag('', tagName);
+	        parseEndTag(tagName);
 	      }
 	    }
 	
@@ -6553,7 +6609,7 @@
 	    }
 	
 	    if (!unary) {
-	      stack.push({ tag: tagName, attrs: attrs });
+	      stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs });
 	      lastTag = tagName;
 	      unarySlash = '';
 	    }
@@ -6563,16 +6619,19 @@
 	    }
 	  }
 	
-	  function parseEndTag (tag, tagName, start, end) {
-	    var pos;
+	  function parseEndTag (tagName, start, end) {
+	    var pos, lowerCasedTagName;
 	    if (start == null) { start = index; }
 	    if (end == null) { end = index; }
 	
+	    if (tagName) {
+	      lowerCasedTagName = tagName.toLowerCase();
+	    }
+	
 	    // Find the closest opened tag of the same type
 	    if (tagName) {
-	      var needle = tagName.toLowerCase();
 	      for (pos = stack.length - 1; pos >= 0; pos--) {
-	        if (stack[pos].tag.toLowerCase() === needle) {
+	        if (stack[pos].lowerCasedTag === lowerCasedTagName) {
 	          break
 	        }
 	      }
@@ -6592,11 +6651,11 @@
 	      // Remove the open elements from the stack
 	      stack.length = pos;
 	      lastTag = pos && stack[pos - 1].tag;
-	    } else if (tagName.toLowerCase() === 'br') {
+	    } else if (lowerCasedTagName === 'br') {
 	      if (options.start) {
 	        options.start(tagName, [], true, start, end);
 	      }
-	    } else if (tagName.toLowerCase() === 'p') {
+	    } else if (lowerCasedTagName === 'p') {
 	      if (options.start) {
 	        options.start(tagName, [], false, start, end);
 	      }
@@ -6706,7 +6765,7 @@
 	/*  */
 	
 	var defaultTagRE = /\{\{((?:.|\n)+?)\}\}/g;
-	var regexEscapeRE = /[-.*+?^${}()|[\]/\\]/g;
+	var regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g;
 	
 	var buildRegex = cached(function (delimiters) {
 	  var open = delimiters[0].replace(regexEscapeRE, '\\$&');
@@ -7359,7 +7418,7 @@
 	            name = camelize(name);
 	          }
 	        }
-	        if (isProp || platformMustUseProp(el.tag, name)) {
+	        if (isProp || platformMustUseProp(el.tag, el.attrsMap.type, name)) {
 	          addProp(el, name, value);
 	        } else {
 	          addAttr(el, name, value);
@@ -7393,15 +7452,6 @@
 	        }
 	      }
 	      addAttr(el, name, JSON.stringify(value));
-	      // #4530 also bind special attributes as props even if they are static
-	      // so that patches between dynamic/static are consistent
-	      if (platformMustUseProp(el.tag, name)) {
-	        if (name === 'value') {
-	          addProp(el, name, JSON.stringify(value));
-	        } else {
-	          addProp(el, name, 'true');
-	        }
-	      }
 	    }
 	  }
 	}
@@ -7978,13 +8028,16 @@
 	  var res = 0;
 	  for (var i = 0; i < children.length; i++) {
 	    var el = children[i];
+	    if (el.type !== 1) {
+	      continue
+	    }
 	    if (needsNormalization(el) ||
-	        (el.if && el.ifConditions.some(function (c) { return needsNormalization(c.block); }))) {
+	        (el.ifConditions && el.ifConditions.some(function (c) { return needsNormalization(c.block); }))) {
 	      res = 2;
 	      break
 	    }
 	    if (maybeComponent(el) ||
-	        (el.if && el.ifConditions.some(function (c) { return maybeComponent(c.block); }))) {
+	        (el.ifConditions && el.ifConditions.some(function (c) { return maybeComponent(c.block); }))) {
 	      res = 1;
 	    }
 	  }
@@ -7992,11 +8045,11 @@
 	}
 	
 	function needsNormalization (el) {
-	  return el.for || el.tag === 'template' || el.tag === 'slot'
+	  return el.for !== undefined || el.tag === 'template' || el.tag === 'slot'
 	}
 	
 	function maybeComponent (el) {
-	  return el.type === 1 && !isPlatformReservedTag$1(el.tag)
+	  return !isPlatformReservedTag$1(el.tag)
 	}
 	
 	function genNode (node) {
@@ -8299,7 +8352,7 @@
 	          : (":_q(" + value + "," + trueValueBinding + ")")
 	      )
 	  );
-	  addHandler(el, 'change',
+	  addHandler(el, 'click',
 	    "var $$a=" + value + "," +
 	        '$$el=$event.target,' +
 	        "$$c=$$el.checked?(" + trueValueBinding + "):(" + falseValueBinding + ");" +
@@ -8330,7 +8383,7 @@
 	  var valueBinding = getBindingAttr(el, 'value') || 'null';
 	  valueBinding = number ? ("_n(" + valueBinding + ")") : valueBinding;
 	  addProp(el, 'checked', ("_q(" + value + "," + valueBinding + ")"));
-	  addHandler(el, 'change', genAssignmentCode(value, valueBinding), null, true);
+	  addHandler(el, 'click', genAssignmentCode(value, valueBinding), null, true);
 	}
 	
 	function genDefaultModel (
@@ -8663,7 +8716,7 @@
 	
 	/* hot reload */
 	if (false) {(function () {
-	  var hotAPI = require("vue-hot-reload-api")
+	  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
 	  hotAPI.install(require("vue"), false)
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
@@ -8694,8 +8747,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-97185a80!./../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-97185a80!./../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-97185a80!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-97185a80!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./app.vue");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -9422,12 +9475,12 @@
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-	  return _c('div', {
+	module.exports={render:function (){var _vm=this;
+	  return _vm._c('div', {
 	    staticClass: "app-panel"
-	  }, [_c('div', {
+	  }, [_vm._c('div', {
 	    staticClass: "settings-panel"
-	  }, [_c('h1', [_vm._v("Map information")]), _vm._v("\n  Map center latitude:\n    "), _c('input', {
+	  }, [_vm._c('h1', [_vm._v("Map information")]), _vm._v("\n  Map center latitude:\n    "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9451,7 +9504,7 @@
 	        _vm.$forceUpdate()
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v("\n  Map center longitude:\n    "), _c('input', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v("\n  Map center longitude:\n    "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9475,7 +9528,7 @@
 	        _vm.$forceUpdate()
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v("\n  Map bounds: " + _vm._s(_vm._f("json")(_vm.mapBounds)) + "\n  "), _c('br'), _vm._v("\n  Map zoom: "), _c('input', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v("\n  Map bounds: " + _vm._s(_vm._f("json")(_vm.mapBounds)) + "\n  "), _vm._c('br'), _vm._v("\n  Map zoom: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9498,7 +9551,7 @@
 	        _vm.$forceUpdate()
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v("\n  Dragged " + _vm._s(_vm.drag) + " times\n  "), _c('br'), _vm._v("\n  Left clicked " + _vm._s(_vm.mapClickedCount) + " times\n  "), _c('br'), _vm._v("\n  Map type: "), _c('select', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v("\n  Dragged " + _vm._s(_vm.drag) + " times\n  "), _vm._c('br'), _vm._v("\n  Left clicked " + _vm._s(_vm.mapClickedCount) + " times\n  "), _vm._c('br'), _vm._v("\n  Map type: "), _vm._c('select', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9519,23 +9572,23 @@
 	        })[0]
 	      }
 	    }
-	  }, [_c('option', {
+	  }, [_vm._c('option', {
 	    attrs: {
 	      "value": "roadmap"
 	    }
-	  }, [_vm._v("roadmap")]), _vm._v(" "), _c('option', {
+	  }, [_vm._v("roadmap")]), _vm._v(" "), _vm._c('option', {
 	    attrs: {
 	      "value": "hybrid"
 	    }
-	  }, [_vm._v("hybrid")]), _vm._v(" "), _c('option', {
+	  }, [_vm._v("hybrid")]), _vm._v(" "), _vm._c('option', {
 	    attrs: {
 	      "value": "satellite"
 	    }
-	  }, [_vm._v("satellite")]), _vm._v(" "), _c('option', {
+	  }, [_vm._v("satellite")]), _vm._v(" "), _vm._c('option', {
 	    attrs: {
 	      "value": "terrain"
 	    }
-	  }, [_vm._v("terrain")])]), _vm._v(" "), _c('br'), _vm._v("\n  Map style: "), _c('select', {
+	  }, [_vm._v("terrain")])]), _vm._v(" "), _vm._c('br'), _vm._v("\n  Map style: "), _vm._c('select', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9556,19 +9609,19 @@
 	        })[0]
 	      }
 	    }
-	  }, [_c('option', {
+	  }, [_vm._c('option', {
 	    attrs: {
 	      "value": "red"
 	    }
-	  }, [_vm._v("red")]), _vm._v(" "), _c('option', {
+	  }, [_vm._v("red")]), _vm._v(" "), _vm._c('option', {
 	    attrs: {
 	      "value": "green"
 	    }
-	  }, [_vm._v("green")]), _vm._v(" "), _c('option', {
+	  }, [_vm._v("green")]), _vm._v(" "), _vm._c('option', {
 	    attrs: {
 	      "value": "normal"
 	    }
-	  }, [_vm._v("normal")])]), _vm._v(" "), _c('br'), _vm._v("\n  Enable scrollwheel zooming on the map: "), _c('input', {
+	  }, [_vm._v("normal")])]), _vm._v(" "), _vm._c('br'), _vm._v("\n  Enable scrollwheel zooming on the map: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9599,11 +9652,11 @@
 	        }
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('button', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v(" "), _vm._c('button', {
 	    on: {
 	      "click": _vm.addMarker
 	    }
-	  }, [_vm._v(" Add a new Marker")]), _vm._v(" (or right click on the map :) )\n  "), _c('h1', [_vm._v("Clusters")]), _vm._v("\n  enabled: "), _c('input', {
+	  }, [_vm._v(" Add a new Marker")]), _vm._v(" (or right click on the map :) )\n  "), _vm._c('h1', [_vm._v("Clusters")]), _vm._v("\n  enabled: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9635,7 +9688,7 @@
 	        }
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v("\n  Grid size: "), _c('input', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v("\n  Grid size: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9658,7 +9711,7 @@
 	        _vm.$forceUpdate()
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Polyline")]), _vm._v("\n  Editable: "), _c('input', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v(" "), _vm._c('h1', [_vm._v("Polyline")]), _vm._v("\n  Editable: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9690,11 +9743,11 @@
 	        }
 	      }
 	    }
-	  }), _vm._v(" "), _c('button', {
+	  }), _vm._v(" "), _vm._c('button', {
 	    on: {
 	      "click": _vm.resetPlPath
 	    }
-	  }, [_vm._v("Reset path")]), _vm._v(" "), _c('br'), _vm._v("\n  Visible: "), _c('input', {
+	  }, [_vm._v("Reset path")]), _vm._v(" "), _vm._c('br'), _vm._v("\n  Visible: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9726,7 +9779,7 @@
 	        }
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Polygon")]), _vm._v("\n  Visible: "), _c('input', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v(" "), _vm._c('h1', [_vm._v("Polygon")]), _vm._v("\n  Visible: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9758,19 +9811,19 @@
 	        }
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('button', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v(" "), _vm._c('button', {
 	    on: {
 	      "click": function($event) {
 	        _vm.pgPath = _vm.opgPath
 	      }
 	    }
-	  }, [_vm._v("Reset Polygon to pentagon")]), _c('br'), _vm._v(" "), _c('button', {
+	  }, [_vm._v("Reset Polygon to pentagon")]), _vm._c('br'), _vm._v(" "), _vm._c('button', {
 	    on: {
 	      "click": function($event) {
 	        _vm.pgPath = _vm.originalPlPath
 	      }
 	    }
-	  }, [_vm._v("Reset Polygon to a simple polygon")]), _c('br'), _vm._v("\n  Path: " + _vm._s(_vm._f("json")(_vm.pgPath)) + "\n  "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Circle")]), _vm._v("\n  Visible: "), _c('input', {
+	  }, [_vm._v("Reset Polygon to a simple polygon")]), _vm._c('br'), _vm._v("\n  Path: " + _vm._s(_vm._f("json")(_vm.pgPath)) + "\n  "), _vm._c('br'), _vm._v(" "), _vm._c('h1', [_vm._v("Circle")]), _vm._v("\n  Visible: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9802,7 +9855,7 @@
 	        }
 	      }
 	    }
-	  }), _c('br'), _vm._v("\n  " + _vm._s(_vm._f("json")(_vm.circleBounds)) + "\n  "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Rectangle")]), _vm._v("\n  Visible: "), _c('input', {
+	  }), _vm._c('br'), _vm._v("\n  " + _vm._s(_vm._f("json")(_vm.circleBounds)) + "\n  "), _vm._c('br'), _vm._v(" "), _vm._c('h1', [_vm._v("Rectangle")]), _vm._v("\n  Visible: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9834,7 +9887,7 @@
 	        }
 	      }
 	    }
-	  }), _c('br'), _vm._v("\n  " + _vm._s(_vm._f("json")(_vm.rectangleBounds)) + "\n  "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("PlaceInput")]), _vm._v(" "), _c('gmap-place-input', {
+	  }), _vm._c('br'), _vm._v("\n  " + _vm._s(_vm._f("json")(_vm.rectangleBounds)) + "\n  "), _vm._c('br'), _vm._v(" "), _vm._c('h1', [_vm._v("PlaceInput")]), _vm._v(" "), _vm._c('gmap-place-input', {
 	    attrs: {
 	      "label": "Add a marker at this place",
 	      "select-first-on-enter": true
@@ -9844,7 +9897,7 @@
 	        _vm.updatePlace($event)
 	      }
 	    }
-	  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v(" Standalone infoWindow ")]), _vm._v("\n  modal 1 : "), _c('input', {
+	  }), _vm._v(" "), _vm._c('br'), _vm._v(" "), _vm._c('h1', [_vm._v(" Standalone infoWindow ")]), _vm._v("\n  modal 1 : "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9876,7 +9929,7 @@
 	        }
 	      }
 	    }
-	  }), _c('br'), _vm._v("\n  modal 2: "), _c('input', {
+	  }), _vm._c('br'), _vm._v("\n  modal 2: "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9908,7 +9961,7 @@
 	        }
 	      }
 	    }
-	  }), _vm._v(" "), _c('input', {
+	  }), _vm._v(" "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9927,7 +9980,7 @@
 	        _vm.ifw2text = $event.target.value
 	      }
 	    }
-	  }), _vm._v(" "), _c('h1', [_vm._v("Markers")]), _vm._v("\n  Display only markers with even ID (to test filters) "), _c('input', {
+	  }), _vm._v(" "), _vm._c('h1', [_vm._v("Markers")]), _vm._v("\n  Display only markers with even ID (to test filters) "), _vm._c('input', {
 	    directives: [{
 	      name: "model",
 	      rawName: "v-model",
@@ -9959,8 +10012,8 @@
 	        }
 	      }
 	    }
-	  }), _c('br'), _vm._v(" "), _c('table', [_vm._m(0), _vm._v(" "), _vm._l((_vm.markers), function(m) {
-	    return _c('tr', [_c('td', [_c('input', {
+	  }), _vm._c('br'), _vm._v(" "), _vm._c('table', [_vm._m(0), _vm._v(" "), _vm._l((_vm.markers), function(m) {
+	    return _vm._c('tr', [_vm._c('td', [_vm._c('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -9983,7 +10036,7 @@
 	          _vm.$forceUpdate()
 	        }
 	      }
-	    })]), _vm._v(" "), _c('td', [_c('input', {
+	    })]), _vm._v(" "), _vm._c('td', [_vm._c('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -10006,7 +10059,7 @@
 	          _vm.$forceUpdate()
 	        }
 	      }
-	    })]), _vm._v(" "), _c('td', [_c('input', {
+	    })]), _vm._v(" "), _vm._c('td', [_vm._c('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -10029,7 +10082,7 @@
 	          _vm.$forceUpdate()
 	        }
 	      }
-	    })]), _vm._v(" "), _c('td', [_c('input', {
+	    })]), _vm._v(" "), _vm._c('td', [_vm._c('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -10061,7 +10114,7 @@
 	          }
 	        }
 	      }
-	    })]), _vm._v(" "), _c('td', [_c('input', {
+	    })]), _vm._v(" "), _vm._c('td', [_vm._c('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -10093,7 +10146,7 @@
 	          }
 	        }
 	      }
-	    })]), _vm._v(" "), _c('td', [_vm._v(_vm._s(m.clicked))]), _vm._v(" "), _c('td', [_vm._v(_vm._s(m.rightClicked))]), _vm._v(" "), _c('td', [_vm._v(_vm._s(m.dragended))]), _vm._v(" "), _c('td', [_c('input', {
+	    })]), _vm._v(" "), _vm._c('td', [_vm._v(_vm._s(m.clicked))]), _vm._v(" "), _vm._c('td', [_vm._v(_vm._s(m.rightClicked))]), _vm._v(" "), _vm._c('td', [_vm._v(_vm._s(m.dragended))]), _vm._v(" "), _vm._c('td', [_vm._c('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -10125,7 +10178,7 @@
 	          }
 	        }
 	      }
-	    })]), _vm._v(" "), _c('td', [_c('input', {
+	    })]), _vm._v(" "), _vm._c('td', [_vm._c('input', {
 	      directives: [{
 	        name: "model",
 	        rawName: "v-model",
@@ -10144,14 +10197,14 @@
 	          m.ifw2text = $event.target.value
 	        }
 	      }
-	    })]), _vm._v(" "), _c('td', [_c('button', {
+	    })]), _vm._v(" "), _vm._c('td', [_vm._c('button', {
 	      on: {
 	        "click": function($event) {
 	          _vm.markers.splice(_vm.markers.indexOf(m), 1)
 	        }
 	      }
 	    }, [_vm._v("Delete me ")])])])
-	  })], 2)], 1), _vm._v(" "), _c('gmap-map', {
+	  })], 2)], 1), _vm._v(" "), _vm._c('gmap-map', {
 	    staticClass: "map-panel",
 	    attrs: {
 	      "center": _vm.center,
@@ -10183,12 +10236,12 @@
 	        _vm.update('bounds', $event)
 	      }
 	    }
-	  }, [(_vm.clustering) ? _c('gmap-cluster', {
+	  }, [(_vm.clustering) ? _vm._c('gmap-cluster', {
 	    attrs: {
 	      "grid-size": _vm.gridSize
 	    }
 	  }, _vm._l((_vm.activeMarkers), function(m) {
-	    return (m.enabled) ? _c('gmap-marker', {
+	    return (m.enabled) ? _vm._c('gmap-marker', {
 	      attrs: {
 	        "position": m.position,
 	        "opacity": m.opacity,
@@ -10208,14 +10261,14 @@
 	          _vm.updateChild(m, 'position', $event)
 	        }
 	      }
-	    }, [_c('gmap-info-window', {
+	    }, [_vm._c('gmap-info-window', {
 	      attrs: {
 	        "opened": m.ifw,
 	        "content": m.ifw2text
 	      }
 	    })], 1) : _vm._e()
-	  })) : _vm._e(), _vm._v(" "), (!_vm.clustering) ? _c('div', _vm._l((_vm.activeMarkers), function(m) {
-	    return (m.enabled) ? _c('gmap-marker', {
+	  })) : _vm._e(), _vm._v(" "), (!_vm.clustering) ? _vm._c('div', _vm._l((_vm.activeMarkers), function(m) {
+	    return (m.enabled) ? _vm._c('gmap-marker', {
 	      attrs: {
 	        "position": m.position,
 	        "opacity": m.opacity,
@@ -10235,24 +10288,24 @@
 	          _vm.updateChild(m, 'position', $event)
 	        }
 	      }
-	    }, [_c('gmap-info-window', {
+	    }, [_vm._c('gmap-info-window', {
 	      attrs: {
 	        "opened": m.ifw,
 	        "content": m.ifw2text
 	      }
 	    })], 1) : _vm._e()
-	  })) : _vm._e(), _vm._v(" "), _c('gmap-info-window', {
+	  })) : _vm._e(), _vm._v(" "), _vm._c('gmap-info-window', {
 	    attrs: {
 	      "position": _vm.reportedCenter,
 	      "opened": _vm.ifw
 	    }
-	  }, [_vm._v("\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    "), _c('br'), _vm._v("\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    "), _c('b', [_vm._v(_vm._s(_vm.mapClickedCount))])]), _vm._v(" "), _c('gmap-info-window', {
+	  }, [_vm._v("\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    "), _vm._c('br'), _vm._v("\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    "), _vm._c('b', [_vm._v(_vm._s(_vm.mapClickedCount))])]), _vm._v(" "), _vm._c('gmap-info-window', {
 	    attrs: {
 	      "position": _vm.reportedCenter,
 	      "opened": _vm.ifw2,
 	      "content": _vm.ifw2text
 	    }
-	  }), _vm._v(" "), (_vm.plvisible) ? _c('gmap-polyline', {
+	  }), _vm._v(" "), (_vm.plvisible) ? _vm._c('gmap-polyline', {
 	    attrs: {
 	      "path": _vm.plPath,
 	      "editable": _vm.pleditable,
@@ -10267,7 +10320,7 @@
 	        _vm.updatePolylinePath($event)
 	      }
 	    }
-	  }) : _vm._e(), _vm._v(" "), (_vm.pgvisible) ? _c('gmap-polygon', {
+	  }) : _vm._e(), _vm._v(" "), (_vm.pgvisible) ? _vm._c('gmap-polygon', {
 	    attrs: {
 	      "paths": _vm.pgPath,
 	      "editable": true,
@@ -10282,7 +10335,7 @@
 	        _vm.updatePolygonPaths($event)
 	      }
 	    }
-	  }) : _vm._e(), _vm._v(" "), (_vm.displayCircle) ? _c('gmap-circle', {
+	  }) : _vm._e(), _vm._v(" "), (_vm.displayCircle) ? _vm._c('gmap-circle', {
 	    attrs: {
 	      "bounds": _vm.circleBounds,
 	      "center": _vm.reportedCenter,
@@ -10299,7 +10352,7 @@
 	        _vm.updateCircle('bounds', $event)
 	      }
 	    }
-	  }) : _vm._e(), _vm._v(" "), (_vm.displayRectangle) ? _c('gmap-rectangle', {
+	  }) : _vm._e(), _vm._v(" "), (_vm.displayRectangle) ? _vm._c('gmap-rectangle', {
 	    attrs: {
 	      "bounds": _vm.rectangleBounds,
 	      "options": {
@@ -10312,14 +10365,13 @@
 	      }
 	    }
 	  }) : _vm._e()], 1)], 1)
-	},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-	  return _c('tr', [_c('th', [_vm._v("lat")]), _vm._v(" "), _c('th', [_vm._v("lng")]), _vm._v(" "), _c('th', [_vm._v("opacity")]), _vm._v(" "), _c('th', [_vm._v("enabled")]), _vm._v(" "), _c('th', [_vm._v("draggable")]), _vm._v(" "), _c('th', [_vm._v("clicked")]), _vm._v(" "), _c('th', [_vm._v("right clicked")]), _vm._v(" "), _c('th', [_vm._v("Drag-ended")]), _vm._v(" "), _c('th', [_vm._v("Open info window")]), _vm._v(" "), _c('th', [_vm._v("infoWIndow text")]), _vm._v(" "), _c('th', [_vm._v("Delete me")])])
+	},staticRenderFns: [function (){var _vm=this;
+	  return _vm._c('tr', [_vm._c('th', [_vm._v("lat")]), _vm._v(" "), _vm._c('th', [_vm._v("lng")]), _vm._v(" "), _vm._c('th', [_vm._v("opacity")]), _vm._v(" "), _vm._c('th', [_vm._v("enabled")]), _vm._v(" "), _vm._c('th', [_vm._v("draggable")]), _vm._v(" "), _vm._c('th', [_vm._v("clicked")]), _vm._v(" "), _vm._c('th', [_vm._v("right clicked")]), _vm._v(" "), _vm._c('th', [_vm._v("Drag-ended")]), _vm._v(" "), _vm._c('th', [_vm._v("Open info window")]), _vm._v(" "), _vm._c('th', [_vm._v("infoWIndow text")]), _vm._v(" "), _vm._c('th', [_vm._v("Delete me")])])
 	}]}
-	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-hot-reload-api").rerender("data-v-97185a80", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-97185a80", module.exports)
 	  }
 	}
 
@@ -10395,7 +10447,9 @@
 	
 	var _deferredReady = __webpack_require__(88);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	// export everything
 	
@@ -10472,7 +10526,9 @@
 	
 	var _promise2 = _interopRequireDefault(_promise);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	/* vim: set softtabstop=2 shiftwidth=2 expandtab : */
 	
@@ -12199,7 +12255,9 @@
 	
 	var _assert2 = _interopRequireDefault(_assert);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	var props = {
 	  animation: {
@@ -12306,7 +12364,6 @@
 	    this.createMarker(options, this.$map);
 	  },
 	
-	
 	  methods: {
 	    createMarker: function createMarker(options, map) {
 	      this.$markerObject = new google.maps.Marker(options);
@@ -12326,8 +12383,8 @@
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {/**
 	 * @license
-	 * Lodash <https://lodash.com/>
-	 * Copyright JS Foundation and other contributors <https://js.foundation/>
+	 * lodash <https://lodash.com/>
+	 * Copyright jQuery Foundation and other contributors <https://jquery.org/>
 	 * Released under MIT license <https://lodash.com/license>
 	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
 	 * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -12338,13 +12395,13 @@
 	  var undefined;
 	
 	  /** Used as the semantic version number. */
-	  var VERSION = '4.17.4';
+	  var VERSION = '4.16.4';
 	
 	  /** Used as the size to enable large array optimizations. */
 	  var LARGE_ARRAY_SIZE = 200;
 	
 	  /** Error message constants. */
-	  var CORE_ERROR_TEXT = 'Unsupported core-js use. Try https://npms.io/search?q=ponyfill.',
+	  var CORE_ERROR_TEXT = 'Unsupported core-js use. Try https://github.com/es-shims.',
 	      FUNC_ERROR_TEXT = 'Expected a function';
 	
 	  /** Used to stand-in for `undefined` hash values. */
@@ -12356,33 +12413,28 @@
 	  /** Used as the internal argument placeholder. */
 	  var PLACEHOLDER = '__lodash_placeholder__';
 	
-	  /** Used to compose bitmasks for cloning. */
-	  var CLONE_DEEP_FLAG = 1,
-	      CLONE_FLAT_FLAG = 2,
-	      CLONE_SYMBOLS_FLAG = 4;
-	
-	  /** Used to compose bitmasks for value comparisons. */
-	  var COMPARE_PARTIAL_FLAG = 1,
-	      COMPARE_UNORDERED_FLAG = 2;
-	
 	  /** Used to compose bitmasks for function metadata. */
-	  var WRAP_BIND_FLAG = 1,
-	      WRAP_BIND_KEY_FLAG = 2,
-	      WRAP_CURRY_BOUND_FLAG = 4,
-	      WRAP_CURRY_FLAG = 8,
-	      WRAP_CURRY_RIGHT_FLAG = 16,
-	      WRAP_PARTIAL_FLAG = 32,
-	      WRAP_PARTIAL_RIGHT_FLAG = 64,
-	      WRAP_ARY_FLAG = 128,
-	      WRAP_REARG_FLAG = 256,
-	      WRAP_FLIP_FLAG = 512;
+	  var BIND_FLAG = 1,
+	      BIND_KEY_FLAG = 2,
+	      CURRY_BOUND_FLAG = 4,
+	      CURRY_FLAG = 8,
+	      CURRY_RIGHT_FLAG = 16,
+	      PARTIAL_FLAG = 32,
+	      PARTIAL_RIGHT_FLAG = 64,
+	      ARY_FLAG = 128,
+	      REARG_FLAG = 256,
+	      FLIP_FLAG = 512;
+	
+	  /** Used to compose bitmasks for comparison styles. */
+	  var UNORDERED_COMPARE_FLAG = 1,
+	      PARTIAL_COMPARE_FLAG = 2;
 	
 	  /** Used as default options for `_.truncate`. */
 	  var DEFAULT_TRUNC_LENGTH = 30,
 	      DEFAULT_TRUNC_OMISSION = '...';
 	
 	  /** Used to detect hot functions by number of calls within a span of milliseconds. */
-	  var HOT_COUNT = 800,
+	  var HOT_COUNT = 500,
 	      HOT_SPAN = 16;
 	
 	  /** Used to indicate the type of lazy iteratees. */
@@ -12403,30 +12455,27 @@
 	
 	  /** Used to associate wrap methods with their bit flags. */
 	  var wrapFlags = [
-	    ['ary', WRAP_ARY_FLAG],
-	    ['bind', WRAP_BIND_FLAG],
-	    ['bindKey', WRAP_BIND_KEY_FLAG],
-	    ['curry', WRAP_CURRY_FLAG],
-	    ['curryRight', WRAP_CURRY_RIGHT_FLAG],
-	    ['flip', WRAP_FLIP_FLAG],
-	    ['partial', WRAP_PARTIAL_FLAG],
-	    ['partialRight', WRAP_PARTIAL_RIGHT_FLAG],
-	    ['rearg', WRAP_REARG_FLAG]
+	    ['ary', ARY_FLAG],
+	    ['bind', BIND_FLAG],
+	    ['bindKey', BIND_KEY_FLAG],
+	    ['curry', CURRY_FLAG],
+	    ['curryRight', CURRY_RIGHT_FLAG],
+	    ['flip', FLIP_FLAG],
+	    ['partial', PARTIAL_FLAG],
+	    ['partialRight', PARTIAL_RIGHT_FLAG],
+	    ['rearg', REARG_FLAG]
 	  ];
 	
 	  /** `Object#toString` result references. */
 	  var argsTag = '[object Arguments]',
 	      arrayTag = '[object Array]',
-	      asyncTag = '[object AsyncFunction]',
 	      boolTag = '[object Boolean]',
 	      dateTag = '[object Date]',
-	      domExcTag = '[object DOMException]',
 	      errorTag = '[object Error]',
 	      funcTag = '[object Function]',
 	      genTag = '[object GeneratorFunction]',
 	      mapTag = '[object Map]',
 	      numberTag = '[object Number]',
-	      nullTag = '[object Null]',
 	      objectTag = '[object Object]',
 	      promiseTag = '[object Promise]',
 	      proxyTag = '[object Proxy]',
@@ -12434,7 +12483,6 @@
 	      setTag = '[object Set]',
 	      stringTag = '[object String]',
 	      symbolTag = '[object Symbol]',
-	      undefinedTag = '[object Undefined]',
 	      weakMapTag = '[object WeakMap]',
 	      weakSetTag = '[object WeakSet]';
 	
@@ -12530,10 +12578,8 @@
 	
 	  /** Used to compose unicode character classes. */
 	  var rsAstralRange = '\\ud800-\\udfff',
-	      rsComboMarksRange = '\\u0300-\\u036f',
-	      reComboHalfMarksRange = '\\ufe20-\\ufe2f',
-	      rsComboSymbolsRange = '\\u20d0-\\u20ff',
-	      rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange,
+	      rsComboMarksRange = '\\u0300-\\u036f\\ufe20-\\ufe23',
+	      rsComboSymbolsRange = '\\u20d0-\\u20f0',
 	      rsDingbatRange = '\\u2700-\\u27bf',
 	      rsLowerRange = 'a-z\\xdf-\\xf6\\xf8-\\xff',
 	      rsMathOpRange = '\\xac\\xb1\\xd7\\xf7',
@@ -12548,7 +12594,7 @@
 	  var rsApos = "['\u2019]",
 	      rsAstral = '[' + rsAstralRange + ']',
 	      rsBreak = '[' + rsBreakRange + ']',
-	      rsCombo = '[' + rsComboRange + ']',
+	      rsCombo = '[' + rsComboMarksRange + rsComboSymbolsRange + ']',
 	      rsDigits = '\\d+',
 	      rsDingbat = '[' + rsDingbatRange + ']',
 	      rsLower = '[' + rsLowerRange + ']',
@@ -12562,15 +12608,13 @@
 	      rsZWJ = '\\u200d';
 	
 	  /** Used to compose unicode regexes. */
-	  var rsMiscLower = '(?:' + rsLower + '|' + rsMisc + ')',
-	      rsMiscUpper = '(?:' + rsUpper + '|' + rsMisc + ')',
-	      rsOptContrLower = '(?:' + rsApos + '(?:d|ll|m|re|s|t|ve))?',
-	      rsOptContrUpper = '(?:' + rsApos + '(?:D|LL|M|RE|S|T|VE))?',
+	  var rsLowerMisc = '(?:' + rsLower + '|' + rsMisc + ')',
+	      rsUpperMisc = '(?:' + rsUpper + '|' + rsMisc + ')',
+	      rsOptLowerContr = '(?:' + rsApos + '(?:d|ll|m|re|s|t|ve))?',
+	      rsOptUpperContr = '(?:' + rsApos + '(?:D|LL|M|RE|S|T|VE))?',
 	      reOptMod = rsModifier + '?',
 	      rsOptVar = '[' + rsVarRange + ']?',
 	      rsOptJoin = '(?:' + rsZWJ + '(?:' + [rsNonAstral, rsRegional, rsSurrPair].join('|') + ')' + rsOptVar + reOptMod + ')*',
-	      rsOrdLower = '\\d*(?:(?:1st|2nd|3rd|(?![123])\\dth)\\b)',
-	      rsOrdUpper = '\\d*(?:(?:1ST|2ND|3RD|(?![123])\\dTH)\\b)',
 	      rsSeq = rsOptVar + reOptMod + rsOptJoin,
 	      rsEmoji = '(?:' + [rsDingbat, rsRegional, rsSurrPair].join('|') + ')' + rsSeq,
 	      rsSymbol = '(?:' + [rsNonAstral + rsCombo + '?', rsCombo, rsRegional, rsSurrPair, rsAstral].join('|') + ')';
@@ -12589,18 +12633,16 @@
 	
 	  /** Used to match complex or compound words. */
 	  var reUnicodeWord = RegExp([
-	    rsUpper + '?' + rsLower + '+' + rsOptContrLower + '(?=' + [rsBreak, rsUpper, '$'].join('|') + ')',
-	    rsMiscUpper + '+' + rsOptContrUpper + '(?=' + [rsBreak, rsUpper + rsMiscLower, '$'].join('|') + ')',
-	    rsUpper + '?' + rsMiscLower + '+' + rsOptContrLower,
-	    rsUpper + '+' + rsOptContrUpper,
-	    rsOrdUpper,
-	    rsOrdLower,
+	    rsUpper + '?' + rsLower + '+' + rsOptLowerContr + '(?=' + [rsBreak, rsUpper, '$'].join('|') + ')',
+	    rsUpperMisc + '+' + rsOptUpperContr + '(?=' + [rsBreak, rsUpper + rsLowerMisc, '$'].join('|') + ')',
+	    rsUpper + '?' + rsLowerMisc + '+' + rsOptLowerContr,
+	    rsUpper + '+' + rsOptUpperContr,
 	    rsDigits,
 	    rsEmoji
 	  ].join('|'), 'g');
 	
 	  /** Used to detect strings with [zero-width joiners or code points from the astral planes](http://eev.ee/blog/2015/09/12/dark-corners-of-unicode/). */
-	  var reHasUnicode = RegExp('[' + rsZWJ + rsAstralRange  + rsComboRange + rsVarRange + ']');
+	  var reHasUnicode = RegExp('[' + rsZWJ + rsAstralRange  + rsComboMarksRange + rsComboSymbolsRange + rsVarRange + ']');
 	
 	  /** Used to detect strings that need a more robust regexp to match words. */
 	  var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2,}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
@@ -12763,7 +12805,7 @@
 	  /** Used to access faster Node.js helpers. */
 	  var nodeUtil = (function() {
 	    try {
-	      return freeProcess && freeProcess.binding && freeProcess.binding('util');
+	      return freeProcess && freeProcess.binding('util');
 	    } catch (e) {}
 	  }());
 	
@@ -12837,7 +12879,7 @@
 	   */
 	  function arrayAggregator(array, setter, iteratee, accumulator) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length;
+	        length = array ? array.length : 0;
 	
 	    while (++index < length) {
 	      var value = array[index];
@@ -12857,7 +12899,7 @@
 	   */
 	  function arrayEach(array, iteratee) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length;
+	        length = array ? array.length : 0;
 	
 	    while (++index < length) {
 	      if (iteratee(array[index], index, array) === false) {
@@ -12877,7 +12919,7 @@
 	   * @returns {Array} Returns `array`.
 	   */
 	  function arrayEachRight(array, iteratee) {
-	    var length = array == null ? 0 : array.length;
+	    var length = array ? array.length : 0;
 	
 	    while (length--) {
 	      if (iteratee(array[length], length, array) === false) {
@@ -12899,7 +12941,7 @@
 	   */
 	  function arrayEvery(array, predicate) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length;
+	        length = array ? array.length : 0;
 	
 	    while (++index < length) {
 	      if (!predicate(array[index], index, array)) {
@@ -12920,7 +12962,7 @@
 	   */
 	  function arrayFilter(array, predicate) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length,
+	        length = array ? array.length : 0,
 	        resIndex = 0,
 	        result = [];
 	
@@ -12943,7 +12985,7 @@
 	   * @returns {boolean} Returns `true` if `target` is found, else `false`.
 	   */
 	  function arrayIncludes(array, value) {
-	    var length = array == null ? 0 : array.length;
+	    var length = array ? array.length : 0;
 	    return !!length && baseIndexOf(array, value, 0) > -1;
 	  }
 	
@@ -12958,7 +13000,7 @@
 	   */
 	  function arrayIncludesWith(array, value, comparator) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length;
+	        length = array ? array.length : 0;
 	
 	    while (++index < length) {
 	      if (comparator(value, array[index])) {
@@ -12979,7 +13021,7 @@
 	   */
 	  function arrayMap(array, iteratee) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length,
+	        length = array ? array.length : 0,
 	        result = Array(length);
 	
 	    while (++index < length) {
@@ -13021,7 +13063,7 @@
 	   */
 	  function arrayReduce(array, iteratee, accumulator, initAccum) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length;
+	        length = array ? array.length : 0;
 	
 	    if (initAccum && length) {
 	      accumulator = array[++index];
@@ -13045,7 +13087,7 @@
 	   * @returns {*} Returns the accumulated value.
 	   */
 	  function arrayReduceRight(array, iteratee, accumulator, initAccum) {
-	    var length = array == null ? 0 : array.length;
+	    var length = array ? array.length : 0;
 	    if (initAccum && length) {
 	      accumulator = array[--length];
 	    }
@@ -13067,7 +13109,7 @@
 	   */
 	  function arraySome(array, predicate) {
 	    var index = -1,
-	        length = array == null ? 0 : array.length;
+	        length = array ? array.length : 0;
 	
 	    while (++index < length) {
 	      if (predicate(array[index], index, array)) {
@@ -13211,7 +13253,7 @@
 	   * @returns {number} Returns the mean.
 	   */
 	  function baseMean(array, iteratee) {
-	    var length = array == null ? 0 : array.length;
+	    var length = array ? array.length : 0;
 	    return length ? (baseSum(array, iteratee) / length) : NAN;
 	  }
 	
@@ -13751,7 +13793,7 @@
 	   * var defer = _.runInContext({ 'setTimeout': setImmediate }).defer;
 	   */
 	  var runInContext = (function runInContext(context) {
-	    context = context == null ? root : _.defaults(root.Object(), context, _.pick(root, contextProps));
+	    context = context ? _.defaults(root.Object(), context, _.pick(root, contextProps)) : root;
 	
 	    /** Built-in constructor references. */
 	    var Array = context.Array,
@@ -13772,6 +13814,12 @@
 	    /** Used to detect overreaching core-js shims. */
 	    var coreJsData = context['__core-js_shared__'];
 	
+	    /** Used to detect methods masquerading as native. */
+	    var maskSrcKey = (function() {
+	      var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
+	      return uid ? ('Symbol(src)_1.' + uid) : '';
+	    }());
+	
 	    /** Used to resolve the decompiled source of functions. */
 	    var funcToString = funcProto.toString;
 	
@@ -13781,21 +13829,15 @@
 	    /** Used to generate unique IDs. */
 	    var idCounter = 0;
 	
-	    /** Used to detect methods masquerading as native. */
-	    var maskSrcKey = (function() {
-	      var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
-	      return uid ? ('Symbol(src)_1.' + uid) : '';
-	    }());
+	    /** Used to infer the `Object` constructor. */
+	    var objectCtorString = funcToString.call(Object);
 	
 	    /**
 	     * Used to resolve the
 	     * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
 	     * of values.
 	     */
-	    var nativeObjectToString = objectProto.toString;
-	
-	    /** Used to infer the `Object` constructor. */
-	    var objectCtorString = funcToString.call(Object);
+	    var objectToString = objectProto.toString;
 	
 	    /** Used to restore the original `_` reference in `_.noConflict`. */
 	    var oldDash = root._;
@@ -13812,12 +13854,11 @@
 	        Uint8Array = context.Uint8Array,
 	        allocUnsafe = Buffer ? Buffer.allocUnsafe : undefined,
 	        getPrototype = overArg(Object.getPrototypeOf, Object),
+	        iteratorSymbol = Symbol ? Symbol.iterator : undefined,
 	        objectCreate = Object.create,
 	        propertyIsEnumerable = objectProto.propertyIsEnumerable,
 	        splice = arrayProto.splice,
-	        spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined,
-	        symIterator = Symbol ? Symbol.iterator : undefined,
-	        symToStringTag = Symbol ? Symbol.toStringTag : undefined;
+	        spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
 	
 	    var defineProperty = (function() {
 	      try {
@@ -13893,9 +13934,9 @@
 	     * Shortcut fusion is an optimization to merge iteratee calls; this avoids
 	     * the creation of intermediate arrays and can greatly reduce the number of
 	     * iteratee executions. Sections of a chain sequence qualify for shortcut
-	     * fusion if the section is applied to an array and iteratees accept only
-	     * one argument. The heuristic for whether a section qualifies for shortcut
-	     * fusion is subject to change.
+	     * fusion if the section is applied to an array of at least `200` elements
+	     * and any iteratees accept only one argument. The heuristic for whether a
+	     * section qualifies for shortcut fusion is subject to change.
 	     *
 	     * Chaining is supported in custom builds as long as the `_#value` method is
 	     * directly or indirectly included in the build.
@@ -14054,8 +14095,8 @@
 	
 	    /**
 	     * By default, the template delimiters used by lodash are like those in
-	     * embedded Ruby (ERB) as well as ES2015 template strings. Change the
-	     * following template settings to use alternative delimiters.
+	     * embedded Ruby (ERB). Change the following template settings to use
+	     * alternative delimiters.
 	     *
 	     * @static
 	     * @memberOf _
@@ -14202,7 +14243,8 @@
 	          resIndex = 0,
 	          takeCount = nativeMin(length, this.__takeCount__);
 	
-	      if (!isArr || (!isRight && arrLength == length && takeCount == length)) {
+	      if (!isArr || arrLength < LARGE_ARRAY_SIZE ||
+	          (arrLength == length && takeCount == length)) {
 	        return baseWrapperValue(array, this.__actions__);
 	      }
 	      var result = [];
@@ -14250,7 +14292,7 @@
 	     */
 	    function Hash(entries) {
 	      var index = -1,
-	          length = entries == null ? 0 : entries.length;
+	          length = entries ? entries.length : 0;
 	
 	      this.clear();
 	      while (++index < length) {
@@ -14316,7 +14358,7 @@
 	     */
 	    function hashHas(key) {
 	      var data = this.__data__;
-	      return nativeCreate ? (data[key] !== undefined) : hasOwnProperty.call(data, key);
+	      return nativeCreate ? data[key] !== undefined : hasOwnProperty.call(data, key);
 	    }
 	
 	    /**
@@ -14354,7 +14396,7 @@
 	     */
 	    function ListCache(entries) {
 	      var index = -1,
-	          length = entries == null ? 0 : entries.length;
+	          length = entries ? entries.length : 0;
 	
 	      this.clear();
 	      while (++index < length) {
@@ -14471,7 +14513,7 @@
 	     */
 	    function MapCache(entries) {
 	      var index = -1,
-	          length = entries == null ? 0 : entries.length;
+	          length = entries ? entries.length : 0;
 	
 	      this.clear();
 	      while (++index < length) {
@@ -14575,7 +14617,7 @@
 	     */
 	    function SetCache(values) {
 	      var index = -1,
-	          length = values == null ? 0 : values.length;
+	          length = values ? values.length : 0;
 	
 	      this.__data__ = new MapCache;
 	      while (++index < length) {
@@ -14790,6 +14832,24 @@
 	    }
 	
 	    /**
+	     * Used by `_.defaults` to customize its `_.assignIn` use.
+	     *
+	     * @private
+	     * @param {*} objValue The destination value.
+	     * @param {*} srcValue The source value.
+	     * @param {string} key The key of the property to assign.
+	     * @param {Object} object The parent object of `objValue`.
+	     * @returns {*} Returns the value to assign.
+	     */
+	    function assignInDefaults(objValue, srcValue, key, object) {
+	      if (objValue === undefined ||
+	          (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
+	        return srcValue;
+	      }
+	      return objValue;
+	    }
+	
+	    /**
 	     * This function is like `assignValue` except that it doesn't assign
 	     * `undefined` values.
 	     *
@@ -14873,19 +14933,6 @@
 	    }
 	
 	    /**
-	     * The base implementation of `_.assignIn` without support for multiple sources
-	     * or `customizer` functions.
-	     *
-	     * @private
-	     * @param {Object} object The destination object.
-	     * @param {Object} source The source object.
-	     * @returns {Object} Returns `object`.
-	     */
-	    function baseAssignIn(object, source) {
-	      return object && copyObject(source, keysIn(source), object);
-	    }
-	
-	    /**
 	     * The base implementation of `assignValue` and `assignMergeValue` without
 	     * value checks.
 	     *
@@ -14912,17 +14959,17 @@
 	     *
 	     * @private
 	     * @param {Object} object The object to iterate over.
-	     * @param {string[]} paths The property paths to pick.
+	     * @param {string[]} paths The property paths of elements to pick.
 	     * @returns {Array} Returns the picked elements.
 	     */
 	    function baseAt(object, paths) {
 	      var index = -1,
+	          isNil = object == null,
 	          length = paths.length,
-	          result = Array(length),
-	          skip = object == null;
+	          result = Array(length);
 	
 	      while (++index < length) {
-	        result[index] = skip ? undefined : get(object, paths[index]);
+	        result[index] = isNil ? undefined : get(object, paths[index]);
 	      }
 	      return result;
 	    }
@@ -14954,22 +15001,16 @@
 	     *
 	     * @private
 	     * @param {*} value The value to clone.
-	     * @param {boolean} bitmask The bitmask flags.
-	     *  1 - Deep clone
-	     *  2 - Flatten inherited properties
-	     *  4 - Clone symbols
+	     * @param {boolean} [isDeep] Specify a deep clone.
+	     * @param {boolean} [isFull] Specify a clone including symbols.
 	     * @param {Function} [customizer] The function to customize cloning.
 	     * @param {string} [key] The key of `value`.
 	     * @param {Object} [object] The parent object of `value`.
 	     * @param {Object} [stack] Tracks traversed objects and their clone counterparts.
 	     * @returns {*} Returns the cloned value.
 	     */
-	    function baseClone(value, bitmask, customizer, key, object, stack) {
-	      var result,
-	          isDeep = bitmask & CLONE_DEEP_FLAG,
-	          isFlat = bitmask & CLONE_FLAT_FLAG,
-	          isFull = bitmask & CLONE_SYMBOLS_FLAG;
-	
+	    function baseClone(value, isDeep, isFull, customizer, key, object, stack) {
+	      var result;
 	      if (customizer) {
 	        result = object ? customizer(value, key, object, stack) : customizer(value);
 	      }
@@ -14993,11 +15034,9 @@
 	          return cloneBuffer(value, isDeep);
 	        }
 	        if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
-	          result = (isFlat || isFunc) ? {} : initCloneObject(value);
+	          result = initCloneObject(isFunc ? {} : value);
 	          if (!isDeep) {
-	            return isFlat
-	              ? copySymbolsIn(value, baseAssignIn(result, value))
-	              : copySymbols(value, baseAssign(result, value));
+	            return copySymbols(value, baseAssign(result, value));
 	          }
 	        } else {
 	          if (!cloneableTags[tag]) {
@@ -15014,18 +15053,14 @@
 	      }
 	      stack.set(value, result);
 	
-	      var keysFunc = isFull
-	        ? (isFlat ? getAllKeysIn : getAllKeys)
-	        : (isFlat ? keysIn : keys);
-	
-	      var props = isArr ? undefined : keysFunc(value);
+	      var props = isArr ? undefined : (isFull ? getAllKeys : keys)(value);
 	      arrayEach(props || value, function(subValue, key) {
 	        if (props) {
 	          key = subValue;
 	          subValue = value[key];
 	        }
 	        // Recursively populate clone (susceptible to call stack limits).
-	        assignValue(result, key, baseClone(subValue, bitmask, customizer, key, value, stack));
+	        assignValue(result, key, baseClone(subValue, isDeep, isFull, customizer, key, value, stack));
 	      });
 	      return result;
 	    }
@@ -15124,7 +15159,7 @@
 	      outer:
 	      while (++index < length) {
 	        var value = array[index],
-	            computed = iteratee == null ? value : iteratee(value);
+	            computed = iteratee ? iteratee(value) : value;
 	
 	        value = (comparator || value !== 0) ? value : 0;
 	        if (isCommon && computed === computed) {
@@ -15363,7 +15398,7 @@
 	     * @returns {*} Returns the resolved value.
 	     */
 	    function baseGet(object, path) {
-	      path = castPath(path, object);
+	      path = isKey(path, object) ? [path] : castPath(path);
 	
 	      var index = 0,
 	          length = path.length;
@@ -15391,19 +15426,14 @@
 	    }
 	
 	    /**
-	     * The base implementation of `getTag` without fallbacks for buggy environments.
+	     * The base implementation of `getTag`.
 	     *
 	     * @private
 	     * @param {*} value The value to query.
 	     * @returns {string} Returns the `toStringTag`.
 	     */
 	    function baseGetTag(value) {
-	      if (value == null) {
-	        return value === undefined ? undefinedTag : nullTag;
-	      }
-	      return (symToStringTag && symToStringTag in Object(value))
-	        ? getRawTag(value)
-	        : objectToString(value);
+	      return objectToString.call(value);
 	    }
 	
 	    /**
@@ -15548,9 +15578,12 @@
 	     * @returns {*} Returns the result of the invoked method.
 	     */
 	    function baseInvoke(object, path, args) {
-	      path = castPath(path, object);
-	      object = parent(object, path);
-	      var func = object == null ? object : object[toKey(last(path))];
+	      if (!isKey(path, object)) {
+	        path = castPath(path);
+	        object = parent(object, path);
+	        path = last(path);
+	      }
+	      var func = object == null ? object : object[toKey(path)];
 	      return func == null ? undefined : apply(func, object, args);
 	    }
 	
@@ -15562,7 +15595,7 @@
 	     * @returns {boolean} Returns `true` if `value` is an `arguments` object,
 	     */
 	    function baseIsArguments(value) {
-	      return isObjectLike(value) && baseGetTag(value) == argsTag;
+	      return isObjectLike(value) && objectToString.call(value) == argsTag;
 	    }
 	
 	    /**
@@ -15573,7 +15606,7 @@
 	     * @returns {boolean} Returns `true` if `value` is an array buffer, else `false`.
 	     */
 	    function baseIsArrayBuffer(value) {
-	      return isObjectLike(value) && baseGetTag(value) == arrayBufferTag;
+	      return isObjectLike(value) && objectToString.call(value) == arrayBufferTag;
 	    }
 	
 	    /**
@@ -15584,7 +15617,7 @@
 	     * @returns {boolean} Returns `true` if `value` is a date object, else `false`.
 	     */
 	    function baseIsDate(value) {
-	      return isObjectLike(value) && baseGetTag(value) == dateTag;
+	      return isObjectLike(value) && objectToString.call(value) == dateTag;
 	    }
 	
 	    /**
@@ -15594,21 +15627,22 @@
 	     * @private
 	     * @param {*} value The value to compare.
 	     * @param {*} other The other value to compare.
-	     * @param {boolean} bitmask The bitmask flags.
-	     *  1 - Unordered comparison
-	     *  2 - Partial comparison
 	     * @param {Function} [customizer] The function to customize comparisons.
+	     * @param {boolean} [bitmask] The bitmask of comparison flags.
+	     *  The bitmask may be composed of the following flags:
+	     *     1 - Unordered comparison
+	     *     2 - Partial comparison
 	     * @param {Object} [stack] Tracks traversed `value` and `other` objects.
 	     * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
 	     */
-	    function baseIsEqual(value, other, bitmask, customizer, stack) {
+	    function baseIsEqual(value, other, customizer, bitmask, stack) {
 	      if (value === other) {
 	        return true;
 	      }
-	      if (value == null || other == null || (!isObjectLike(value) && !isObjectLike(other))) {
+	      if (value == null || other == null || (!isObject(value) && !isObjectLike(other))) {
 	        return value !== value && other !== other;
 	      }
-	      return baseIsEqualDeep(value, other, bitmask, customizer, baseIsEqual, stack);
+	      return baseIsEqualDeep(value, other, baseIsEqual, customizer, bitmask, stack);
 	    }
 	
 	    /**
@@ -15619,21 +15653,27 @@
 	     * @private
 	     * @param {Object} object The object to compare.
 	     * @param {Object} other The other object to compare.
-	     * @param {number} bitmask The bitmask flags. See `baseIsEqual` for more details.
-	     * @param {Function} customizer The function to customize comparisons.
 	     * @param {Function} equalFunc The function to determine equivalents of values.
+	     * @param {Function} [customizer] The function to customize comparisons.
+	     * @param {number} [bitmask] The bitmask of comparison flags. See `baseIsEqual`
+	     *  for more details.
 	     * @param {Object} [stack] Tracks traversed `object` and `other` objects.
 	     * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
 	     */
-	    function baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
+	    function baseIsEqualDeep(object, other, equalFunc, customizer, bitmask, stack) {
 	      var objIsArr = isArray(object),
 	          othIsArr = isArray(other),
-	          objTag = objIsArr ? arrayTag : getTag(object),
-	          othTag = othIsArr ? arrayTag : getTag(other);
+	          objTag = arrayTag,
+	          othTag = arrayTag;
 	
-	      objTag = objTag == argsTag ? objectTag : objTag;
-	      othTag = othTag == argsTag ? objectTag : othTag;
-	
+	      if (!objIsArr) {
+	        objTag = getTag(object);
+	        objTag = objTag == argsTag ? objectTag : objTag;
+	      }
+	      if (!othIsArr) {
+	        othTag = getTag(other);
+	        othTag = othTag == argsTag ? objectTag : othTag;
+	      }
 	      var objIsObj = objTag == objectTag,
 	          othIsObj = othTag == objectTag,
 	          isSameTag = objTag == othTag;
@@ -15648,10 +15688,10 @@
 	      if (isSameTag && !objIsObj) {
 	        stack || (stack = new Stack);
 	        return (objIsArr || isTypedArray(object))
-	          ? equalArrays(object, other, bitmask, customizer, equalFunc, stack)
-	          : equalByTag(object, other, objTag, bitmask, customizer, equalFunc, stack);
+	          ? equalArrays(object, other, equalFunc, customizer, bitmask, stack)
+	          : equalByTag(object, other, objTag, equalFunc, customizer, bitmask, stack);
 	      }
-	      if (!(bitmask & COMPARE_PARTIAL_FLAG)) {
+	      if (!(bitmask & PARTIAL_COMPARE_FLAG)) {
 	        var objIsWrapped = objIsObj && hasOwnProperty.call(object, '__wrapped__'),
 	            othIsWrapped = othIsObj && hasOwnProperty.call(other, '__wrapped__');
 	
@@ -15660,14 +15700,14 @@
 	              othUnwrapped = othIsWrapped ? other.value() : other;
 	
 	          stack || (stack = new Stack);
-	          return equalFunc(objUnwrapped, othUnwrapped, bitmask, customizer, stack);
+	          return equalFunc(objUnwrapped, othUnwrapped, customizer, bitmask, stack);
 	        }
 	      }
 	      if (!isSameTag) {
 	        return false;
 	      }
 	      stack || (stack = new Stack);
-	      return equalObjects(object, other, bitmask, customizer, equalFunc, stack);
+	      return equalObjects(object, other, equalFunc, customizer, bitmask, stack);
 	    }
 	
 	    /**
@@ -15725,7 +15765,7 @@
 	            var result = customizer(objValue, srcValue, key, object, source, stack);
 	          }
 	          if (!(result === undefined
-	                ? baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG, customizer, stack)
+	                ? baseIsEqual(srcValue, objValue, customizer, UNORDERED_COMPARE_FLAG | PARTIAL_COMPARE_FLAG, stack)
 	                : result
 	              )) {
 	            return false;
@@ -15759,7 +15799,7 @@
 	     * @returns {boolean} Returns `true` if `value` is a regexp, else `false`.
 	     */
 	    function baseIsRegExp(value) {
-	      return isObjectLike(value) && baseGetTag(value) == regexpTag;
+	      return isObject(value) && objectToString.call(value) == regexpTag;
 	    }
 	
 	    /**
@@ -15782,7 +15822,7 @@
 	     */
 	    function baseIsTypedArray(value) {
 	      return isObjectLike(value) &&
-	        isLength(value.length) && !!typedArrayTags[baseGetTag(value)];
+	        isLength(value.length) && !!typedArrayTags[objectToString.call(value)];
 	    }
 	
 	    /**
@@ -15915,7 +15955,7 @@
 	        var objValue = get(object, path);
 	        return (objValue === undefined && objValue === srcValue)
 	          ? hasIn(object, path)
-	          : baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG);
+	          : baseIsEqual(srcValue, objValue, undefined, UNORDERED_COMPARE_FLAG | PARTIAL_COMPARE_FLAG);
 	      };
 	    }
 	
@@ -16077,12 +16117,13 @@
 	     *
 	     * @private
 	     * @param {Object} object The source object.
-	     * @param {string[]} paths The property paths to pick.
+	     * @param {string[]} props The property identifiers to pick.
 	     * @returns {Object} Returns the new object.
 	     */
-	    function basePick(object, paths) {
-	      return basePickBy(object, paths, function(value, path) {
-	        return hasIn(object, path);
+	    function basePick(object, props) {
+	      object = Object(object);
+	      return basePickBy(object, props, function(value, key) {
+	        return key in object;
 	      });
 	    }
 	
@@ -16091,21 +16132,21 @@
 	     *
 	     * @private
 	     * @param {Object} object The source object.
-	     * @param {string[]} paths The property paths to pick.
+	     * @param {string[]} props The property identifiers to pick from.
 	     * @param {Function} predicate The function invoked per property.
 	     * @returns {Object} Returns the new object.
 	     */
-	    function basePickBy(object, paths, predicate) {
+	    function basePickBy(object, props, predicate) {
 	      var index = -1,
-	          length = paths.length,
+	          length = props.length,
 	          result = {};
 	
 	      while (++index < length) {
-	        var path = paths[index],
-	            value = baseGet(object, path);
+	        var key = props[index],
+	            value = object[key];
 	
-	        if (predicate(value, path)) {
-	          baseSet(result, castPath(path, object), value);
+	        if (predicate(value, key)) {
+	          baseAssignValue(result, key, value);
 	        }
 	      }
 	      return result;
@@ -16181,8 +16222,17 @@
 	          var previous = index;
 	          if (isIndex(index)) {
 	            splice.call(array, index, 1);
-	          } else {
-	            baseUnset(array, index);
+	          }
+	          else if (!isKey(index, array)) {
+	            var path = castPath(index),
+	                object = parent(array, path);
+	
+	            if (object != null) {
+	              delete object[toKey(last(path))];
+	            }
+	          }
+	          else {
+	            delete array[toKey(index)];
 	          }
 	        }
 	      }
@@ -16303,7 +16353,7 @@
 	      if (!isObject(object)) {
 	        return object;
 	      }
-	      path = castPath(path, object);
+	      path = isKey(path, object) ? [path] : castPath(path);
 	
 	      var index = -1,
 	          length = path.length,
@@ -16433,7 +16483,7 @@
 	     */
 	    function baseSortedIndex(array, value, retHighest) {
 	      var low = 0,
-	          high = array == null ? low : array.length;
+	          high = array ? array.length : low;
 	
 	      if (typeof value == 'number' && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
 	        while (low < high) {
@@ -16469,7 +16519,7 @@
 	      value = iteratee(value);
 	
 	      var low = 0,
-	          high = array == null ? 0 : array.length,
+	          high = array ? array.length : 0,
 	          valIsNaN = value !== value,
 	          valIsNull = value === null,
 	          valIsSymbol = isSymbol(value),
@@ -16640,13 +16690,15 @@
 	     *
 	     * @private
 	     * @param {Object} object The object to modify.
-	     * @param {Array|string} path The property path to unset.
+	     * @param {Array|string} path The path of the property to unset.
 	     * @returns {boolean} Returns `true` if the property is deleted, else `false`.
 	     */
 	    function baseUnset(object, path) {
-	      path = castPath(path, object);
+	      path = isKey(path, object) ? [path] : castPath(path);
 	      object = parent(object, path);
-	      return object == null || delete object[toKey(last(path))];
+	
+	      var key = toKey(last(path));
+	      return !(object != null && hasOwnProperty.call(object, key)) || delete object[key];
 	    }
 	
 	    /**
@@ -16717,24 +16769,18 @@
 	     * @returns {Array} Returns the new array of values.
 	     */
 	    function baseXor(arrays, iteratee, comparator) {
-	      var length = arrays.length;
-	      if (length < 2) {
-	        return length ? baseUniq(arrays[0]) : [];
-	      }
 	      var index = -1,
-	          result = Array(length);
+	          length = arrays.length;
 	
 	      while (++index < length) {
-	        var array = arrays[index],
-	            othIndex = -1;
-	
-	        while (++othIndex < length) {
-	          if (othIndex != index) {
-	            result[index] = baseDifference(result[index] || array, arrays[othIndex], iteratee, comparator);
-	          }
-	        }
+	        var result = result
+	          ? arrayPush(
+	              baseDifference(result, arrays[index], iteratee, comparator),
+	              baseDifference(arrays[index], result, iteratee, comparator)
+	            )
+	          : arrays[index];
 	      }
-	      return baseUniq(baseFlatten(result, 1), iteratee, comparator);
+	      return (result && result.length) ? baseUniq(result, iteratee, comparator) : [];
 	    }
 	
 	    /**
@@ -16786,14 +16832,10 @@
 	     *
 	     * @private
 	     * @param {*} value The value to inspect.
-	     * @param {Object} [object] The object to query keys on.
 	     * @returns {Array} Returns the cast property path array.
 	     */
-	    function castPath(value, object) {
-	      if (isArray(value)) {
-	        return value;
-	      }
-	      return isKey(value, object) ? [value] : stringToPath(toString(value));
+	    function castPath(value) {
+	      return isArray(value) ? value : stringToPath(value);
 	    }
 	
 	    /**
@@ -16887,7 +16929,7 @@
 	     * @returns {Object} Returns the cloned map.
 	     */
 	    function cloneMap(map, isDeep, cloneFunc) {
-	      var array = isDeep ? cloneFunc(mapToArray(map), CLONE_DEEP_FLAG) : mapToArray(map);
+	      var array = isDeep ? cloneFunc(mapToArray(map), true) : mapToArray(map);
 	      return arrayReduce(array, addMapEntry, new map.constructor);
 	    }
 	
@@ -16914,7 +16956,7 @@
 	     * @returns {Object} Returns the cloned set.
 	     */
 	    function cloneSet(set, isDeep, cloneFunc) {
-	      var array = isDeep ? cloneFunc(setToArray(set), CLONE_DEEP_FLAG) : setToArray(set);
+	      var array = isDeep ? cloneFunc(setToArray(set), true) : setToArray(set);
 	      return arrayReduce(array, addSetEntry, new set.constructor);
 	    }
 	
@@ -17149,7 +17191,7 @@
 	    }
 	
 	    /**
-	     * Copies own symbols of `source` to `object`.
+	     * Copies own symbol properties of `source` to `object`.
 	     *
 	     * @private
 	     * @param {Object} source The object to copy symbols from.
@@ -17158,18 +17200,6 @@
 	     */
 	    function copySymbols(source, object) {
 	      return copyObject(source, getSymbols(source), object);
-	    }
-	
-	    /**
-	     * Copies own and inherited symbols of `source` to `object`.
-	     *
-	     * @private
-	     * @param {Object} source The object to copy symbols from.
-	     * @param {Object} [object={}] The object to copy symbols to.
-	     * @returns {Object} Returns `object`.
-	     */
-	    function copySymbolsIn(source, object) {
-	      return copyObject(source, getSymbolsIn(source), object);
 	    }
 	
 	    /**
@@ -17286,7 +17316,7 @@
 	     * @returns {Function} Returns the new wrapped function.
 	     */
 	    function createBind(func, bitmask, thisArg) {
-	      var isBind = bitmask & WRAP_BIND_FLAG,
+	      var isBind = bitmask & BIND_FLAG,
 	          Ctor = createCtor(func);
 	
 	      function wrapper() {
@@ -17459,7 +17489,7 @@
 	              data = funcName == 'wrapper' ? getData(func) : undefined;
 	
 	          if (data && isLaziable(data[0]) &&
-	                data[1] == (WRAP_ARY_FLAG | WRAP_CURRY_FLAG | WRAP_PARTIAL_FLAG | WRAP_REARG_FLAG) &&
+	                data[1] == (ARY_FLAG | CURRY_FLAG | PARTIAL_FLAG | REARG_FLAG) &&
 	                !data[4].length && data[9] == 1
 	              ) {
 	            wrapper = wrapper[getFuncName(data[0])].apply(wrapper, data[3]);
@@ -17473,7 +17503,8 @@
 	          var args = arguments,
 	              value = args[0];
 	
-	          if (wrapper && args.length == 1 && isArray(value)) {
+	          if (wrapper && args.length == 1 &&
+	              isArray(value) && value.length >= LARGE_ARRAY_SIZE) {
 	            return wrapper.plant(value).value();
 	          }
 	          var index = 0,
@@ -17507,11 +17538,11 @@
 	     * @returns {Function} Returns the new wrapped function.
 	     */
 	    function createHybrid(func, bitmask, thisArg, partials, holders, partialsRight, holdersRight, argPos, ary, arity) {
-	      var isAry = bitmask & WRAP_ARY_FLAG,
-	          isBind = bitmask & WRAP_BIND_FLAG,
-	          isBindKey = bitmask & WRAP_BIND_KEY_FLAG,
-	          isCurried = bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG),
-	          isFlip = bitmask & WRAP_FLIP_FLAG,
+	      var isAry = bitmask & ARY_FLAG,
+	          isBind = bitmask & BIND_FLAG,
+	          isBindKey = bitmask & BIND_KEY_FLAG,
+	          isCurried = bitmask & (CURRY_FLAG | CURRY_RIGHT_FLAG),
+	          isFlip = bitmask & FLIP_FLAG,
 	          Ctor = isBindKey ? undefined : createCtor(func);
 	
 	      function wrapper() {
@@ -17662,7 +17693,7 @@
 	     * @returns {Function} Returns the new wrapped function.
 	     */
 	    function createPartial(func, bitmask, thisArg, partials) {
-	      var isBind = bitmask & WRAP_BIND_FLAG,
+	      var isBind = bitmask & BIND_FLAG,
 	          Ctor = createCtor(func);
 	
 	      function wrapper() {
@@ -17744,17 +17775,17 @@
 	     * @returns {Function} Returns the new wrapped function.
 	     */
 	    function createRecurry(func, bitmask, wrapFunc, placeholder, thisArg, partials, holders, argPos, ary, arity) {
-	      var isCurry = bitmask & WRAP_CURRY_FLAG,
+	      var isCurry = bitmask & CURRY_FLAG,
 	          newHolders = isCurry ? holders : undefined,
 	          newHoldersRight = isCurry ? undefined : holders,
 	          newPartials = isCurry ? partials : undefined,
 	          newPartialsRight = isCurry ? undefined : partials;
 	
-	      bitmask |= (isCurry ? WRAP_PARTIAL_FLAG : WRAP_PARTIAL_RIGHT_FLAG);
-	      bitmask &= ~(isCurry ? WRAP_PARTIAL_RIGHT_FLAG : WRAP_PARTIAL_FLAG);
+	      bitmask |= (isCurry ? PARTIAL_FLAG : PARTIAL_RIGHT_FLAG);
+	      bitmask &= ~(isCurry ? PARTIAL_RIGHT_FLAG : PARTIAL_FLAG);
 	
-	      if (!(bitmask & WRAP_CURRY_BOUND_FLAG)) {
-	        bitmask &= ~(WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG);
+	      if (!(bitmask & CURRY_BOUND_FLAG)) {
+	        bitmask &= ~(BIND_FLAG | BIND_KEY_FLAG);
 	      }
 	      var newData = [
 	        func, bitmask, thisArg, newPartials, newHolders, newPartialsRight,
@@ -17780,7 +17811,7 @@
 	      var func = Math[methodName];
 	      return function(number, precision) {
 	        number = toNumber(number);
-	        precision = precision == null ? 0 : nativeMin(toInteger(precision), 292);
+	        precision = nativeMin(toInteger(precision), 292);
 	        if (precision) {
 	          // Shift with exponential notation to avoid floating-point issues.
 	          // See [MDN](https://mdn.io/round#Examples) for more details.
@@ -17832,16 +17863,17 @@
 	     * @private
 	     * @param {Function|string} func The function or method name to wrap.
 	     * @param {number} bitmask The bitmask flags.
-	     *    1 - `_.bind`
-	     *    2 - `_.bindKey`
-	     *    4 - `_.curry` or `_.curryRight` of a bound function
-	     *    8 - `_.curry`
-	     *   16 - `_.curryRight`
-	     *   32 - `_.partial`
-	     *   64 - `_.partialRight`
-	     *  128 - `_.rearg`
-	     *  256 - `_.ary`
-	     *  512 - `_.flip`
+	     *  The bitmask may be composed of the following flags:
+	     *     1 - `_.bind`
+	     *     2 - `_.bindKey`
+	     *     4 - `_.curry` or `_.curryRight` of a bound function
+	     *     8 - `_.curry`
+	     *    16 - `_.curryRight`
+	     *    32 - `_.partial`
+	     *    64 - `_.partialRight`
+	     *   128 - `_.rearg`
+	     *   256 - `_.ary`
+	     *   512 - `_.flip`
 	     * @param {*} [thisArg] The `this` binding of `func`.
 	     * @param {Array} [partials] The arguments to be partially applied.
 	     * @param {Array} [holders] The `partials` placeholder indexes.
@@ -17851,20 +17883,20 @@
 	     * @returns {Function} Returns the new wrapped function.
 	     */
 	    function createWrap(func, bitmask, thisArg, partials, holders, argPos, ary, arity) {
-	      var isBindKey = bitmask & WRAP_BIND_KEY_FLAG;
+	      var isBindKey = bitmask & BIND_KEY_FLAG;
 	      if (!isBindKey && typeof func != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      var length = partials ? partials.length : 0;
 	      if (!length) {
-	        bitmask &= ~(WRAP_PARTIAL_FLAG | WRAP_PARTIAL_RIGHT_FLAG);
+	        bitmask &= ~(PARTIAL_FLAG | PARTIAL_RIGHT_FLAG);
 	        partials = holders = undefined;
 	      }
 	      ary = ary === undefined ? ary : nativeMax(toInteger(ary), 0);
 	      arity = arity === undefined ? arity : toInteger(arity);
 	      length -= holders ? holders.length : 0;
 	
-	      if (bitmask & WRAP_PARTIAL_RIGHT_FLAG) {
+	      if (bitmask & PARTIAL_RIGHT_FLAG) {
 	        var partialsRight = partials,
 	            holdersRight = holders;
 	
@@ -17885,18 +17917,18 @@
 	      thisArg = newData[2];
 	      partials = newData[3];
 	      holders = newData[4];
-	      arity = newData[9] = newData[9] === undefined
+	      arity = newData[9] = newData[9] == null
 	        ? (isBindKey ? 0 : func.length)
 	        : nativeMax(newData[9] - length, 0);
 	
-	      if (!arity && bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG)) {
-	        bitmask &= ~(WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG);
+	      if (!arity && bitmask & (CURRY_FLAG | CURRY_RIGHT_FLAG)) {
+	        bitmask &= ~(CURRY_FLAG | CURRY_RIGHT_FLAG);
 	      }
-	      if (!bitmask || bitmask == WRAP_BIND_FLAG) {
+	      if (!bitmask || bitmask == BIND_FLAG) {
 	        var result = createBind(func, bitmask, thisArg);
-	      } else if (bitmask == WRAP_CURRY_FLAG || bitmask == WRAP_CURRY_RIGHT_FLAG) {
+	      } else if (bitmask == CURRY_FLAG || bitmask == CURRY_RIGHT_FLAG) {
 	        result = createCurry(func, bitmask, arity);
-	      } else if ((bitmask == WRAP_PARTIAL_FLAG || bitmask == (WRAP_BIND_FLAG | WRAP_PARTIAL_FLAG)) && !holders.length) {
+	      } else if ((bitmask == PARTIAL_FLAG || bitmask == (BIND_FLAG | PARTIAL_FLAG)) && !holders.length) {
 	        result = createPartial(func, bitmask, thisArg, partials);
 	      } else {
 	        result = createHybrid.apply(undefined, newData);
@@ -17906,77 +17938,21 @@
 	    }
 	
 	    /**
-	     * Used by `_.defaults` to customize its `_.assignIn` use to assign properties
-	     * of source objects to the destination object for all destination properties
-	     * that resolve to `undefined`.
-	     *
-	     * @private
-	     * @param {*} objValue The destination value.
-	     * @param {*} srcValue The source value.
-	     * @param {string} key The key of the property to assign.
-	     * @param {Object} object The parent object of `objValue`.
-	     * @returns {*} Returns the value to assign.
-	     */
-	    function customDefaultsAssignIn(objValue, srcValue, key, object) {
-	      if (objValue === undefined ||
-	          (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
-	        return srcValue;
-	      }
-	      return objValue;
-	    }
-	
-	    /**
-	     * Used by `_.defaultsDeep` to customize its `_.merge` use to merge source
-	     * objects into destination objects that are passed thru.
-	     *
-	     * @private
-	     * @param {*} objValue The destination value.
-	     * @param {*} srcValue The source value.
-	     * @param {string} key The key of the property to merge.
-	     * @param {Object} object The parent object of `objValue`.
-	     * @param {Object} source The parent object of `srcValue`.
-	     * @param {Object} [stack] Tracks traversed source values and their merged
-	     *  counterparts.
-	     * @returns {*} Returns the value to assign.
-	     */
-	    function customDefaultsMerge(objValue, srcValue, key, object, source, stack) {
-	      if (isObject(objValue) && isObject(srcValue)) {
-	        // Recursively merge objects and arrays (susceptible to call stack limits).
-	        stack.set(srcValue, objValue);
-	        baseMerge(objValue, srcValue, undefined, customDefaultsMerge, stack);
-	        stack['delete'](srcValue);
-	      }
-	      return objValue;
-	    }
-	
-	    /**
-	     * Used by `_.omit` to customize its `_.cloneDeep` use to only clone plain
-	     * objects.
-	     *
-	     * @private
-	     * @param {*} value The value to inspect.
-	     * @param {string} key The key of the property to inspect.
-	     * @returns {*} Returns the uncloned value or `undefined` to defer cloning to `_.cloneDeep`.
-	     */
-	    function customOmitClone(value) {
-	      return isPlainObject(value) ? undefined : value;
-	    }
-	
-	    /**
 	     * A specialized version of `baseIsEqualDeep` for arrays with support for
 	     * partial deep comparisons.
 	     *
 	     * @private
 	     * @param {Array} array The array to compare.
 	     * @param {Array} other The other array to compare.
-	     * @param {number} bitmask The bitmask flags. See `baseIsEqual` for more details.
-	     * @param {Function} customizer The function to customize comparisons.
 	     * @param {Function} equalFunc The function to determine equivalents of values.
+	     * @param {Function} customizer The function to customize comparisons.
+	     * @param {number} bitmask The bitmask of comparison flags. See `baseIsEqual`
+	     *  for more details.
 	     * @param {Object} stack Tracks traversed `array` and `other` objects.
 	     * @returns {boolean} Returns `true` if the arrays are equivalent, else `false`.
 	     */
-	    function equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
-	      var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
+	    function equalArrays(array, other, equalFunc, customizer, bitmask, stack) {
+	      var isPartial = bitmask & PARTIAL_COMPARE_FLAG,
 	          arrLength = array.length,
 	          othLength = other.length;
 	
@@ -17990,7 +17966,7 @@
 	      }
 	      var index = -1,
 	          result = true,
-	          seen = (bitmask & COMPARE_UNORDERED_FLAG) ? new SetCache : undefined;
+	          seen = (bitmask & UNORDERED_COMPARE_FLAG) ? new SetCache : undefined;
 	
 	      stack.set(array, other);
 	      stack.set(other, array);
@@ -18016,7 +17992,7 @@
 	        if (seen) {
 	          if (!arraySome(other, function(othValue, othIndex) {
 	                if (!cacheHas(seen, othIndex) &&
-	                    (arrValue === othValue || equalFunc(arrValue, othValue, bitmask, customizer, stack))) {
+	                    (arrValue === othValue || equalFunc(arrValue, othValue, customizer, bitmask, stack))) {
 	                  return seen.push(othIndex);
 	                }
 	              })) {
@@ -18025,7 +18001,7 @@
 	          }
 	        } else if (!(
 	              arrValue === othValue ||
-	                equalFunc(arrValue, othValue, bitmask, customizer, stack)
+	                equalFunc(arrValue, othValue, customizer, bitmask, stack)
 	            )) {
 	          result = false;
 	          break;
@@ -18047,13 +18023,14 @@
 	     * @param {Object} object The object to compare.
 	     * @param {Object} other The other object to compare.
 	     * @param {string} tag The `toStringTag` of the objects to compare.
-	     * @param {number} bitmask The bitmask flags. See `baseIsEqual` for more details.
-	     * @param {Function} customizer The function to customize comparisons.
 	     * @param {Function} equalFunc The function to determine equivalents of values.
+	     * @param {Function} customizer The function to customize comparisons.
+	     * @param {number} bitmask The bitmask of comparison flags. See `baseIsEqual`
+	     *  for more details.
 	     * @param {Object} stack Tracks traversed `object` and `other` objects.
 	     * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
 	     */
-	    function equalByTag(object, other, tag, bitmask, customizer, equalFunc, stack) {
+	    function equalByTag(object, other, tag, equalFunc, customizer, bitmask, stack) {
 	      switch (tag) {
 	        case dataViewTag:
 	          if ((object.byteLength != other.byteLength) ||
@@ -18091,7 +18068,7 @@
 	          var convert = mapToArray;
 	
 	        case setTag:
-	          var isPartial = bitmask & COMPARE_PARTIAL_FLAG;
+	          var isPartial = bitmask & PARTIAL_COMPARE_FLAG;
 	          convert || (convert = setToArray);
 	
 	          if (object.size != other.size && !isPartial) {
@@ -18102,11 +18079,11 @@
 	          if (stacked) {
 	            return stacked == other;
 	          }
-	          bitmask |= COMPARE_UNORDERED_FLAG;
+	          bitmask |= UNORDERED_COMPARE_FLAG;
 	
 	          // Recursively compare objects (susceptible to call stack limits).
 	          stack.set(object, other);
-	          var result = equalArrays(convert(object), convert(other), bitmask, customizer, equalFunc, stack);
+	          var result = equalArrays(convert(object), convert(other), equalFunc, customizer, bitmask, stack);
 	          stack['delete'](object);
 	          return result;
 	
@@ -18125,17 +18102,18 @@
 	     * @private
 	     * @param {Object} object The object to compare.
 	     * @param {Object} other The other object to compare.
-	     * @param {number} bitmask The bitmask flags. See `baseIsEqual` for more details.
-	     * @param {Function} customizer The function to customize comparisons.
 	     * @param {Function} equalFunc The function to determine equivalents of values.
+	     * @param {Function} customizer The function to customize comparisons.
+	     * @param {number} bitmask The bitmask of comparison flags. See `baseIsEqual`
+	     *  for more details.
 	     * @param {Object} stack Tracks traversed `object` and `other` objects.
 	     * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
 	     */
-	    function equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
-	      var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
-	          objProps = getAllKeys(object),
+	    function equalObjects(object, other, equalFunc, customizer, bitmask, stack) {
+	      var isPartial = bitmask & PARTIAL_COMPARE_FLAG,
+	          objProps = keys(object),
 	          objLength = objProps.length,
-	          othProps = getAllKeys(other),
+	          othProps = keys(other),
 	          othLength = othProps.length;
 	
 	      if (objLength != othLength && !isPartial) {
@@ -18170,7 +18148,7 @@
 	        }
 	        // Recursively compare objects (susceptible to call stack limits).
 	        if (!(compared === undefined
-	              ? (objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer, stack))
+	              ? (objValue === othValue || equalFunc(objValue, othValue, customizer, bitmask, stack))
 	              : compared
 	            )) {
 	          result = false;
@@ -18340,51 +18318,17 @@
 	    }
 	
 	    /**
-	     * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
-	     *
-	     * @private
-	     * @param {*} value The value to query.
-	     * @returns {string} Returns the raw `toStringTag`.
-	     */
-	    function getRawTag(value) {
-	      var isOwn = hasOwnProperty.call(value, symToStringTag),
-	          tag = value[symToStringTag];
-	
-	      try {
-	        value[symToStringTag] = undefined;
-	        var unmasked = true;
-	      } catch (e) {}
-	
-	      var result = nativeObjectToString.call(value);
-	      if (unmasked) {
-	        if (isOwn) {
-	          value[symToStringTag] = tag;
-	        } else {
-	          delete value[symToStringTag];
-	        }
-	      }
-	      return result;
-	    }
-	
-	    /**
-	     * Creates an array of the own enumerable symbols of `object`.
+	     * Creates an array of the own enumerable symbol properties of `object`.
 	     *
 	     * @private
 	     * @param {Object} object The object to query.
 	     * @returns {Array} Returns the array of symbols.
 	     */
-	    var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
-	      if (object == null) {
-	        return [];
-	      }
-	      object = Object(object);
-	      return arrayFilter(nativeGetSymbols(object), function(symbol) {
-	        return propertyIsEnumerable.call(object, symbol);
-	      });
-	    };
+	    var getSymbols = nativeGetSymbols ? overArg(nativeGetSymbols, Object) : stubArray;
 	
 	    /**
-	     * Creates an array of the own and inherited enumerable symbols of `object`.
+	     * Creates an array of the own and inherited enumerable symbol properties
+	     * of `object`.
 	     *
 	     * @private
 	     * @param {Object} object The object to query.
@@ -18415,9 +18359,9 @@
 	        (Set && getTag(new Set) != setTag) ||
 	        (WeakMap && getTag(new WeakMap) != weakMapTag)) {
 	      getTag = function(value) {
-	        var result = baseGetTag(value),
+	        var result = objectToString.call(value),
 	            Ctor = result == objectTag ? value.constructor : undefined,
-	            ctorString = Ctor ? toSource(Ctor) : '';
+	            ctorString = Ctor ? toSource(Ctor) : undefined;
 	
 	        if (ctorString) {
 	          switch (ctorString) {
@@ -18482,7 +18426,7 @@
 	     * @returns {boolean} Returns `true` if `path` exists, else `false`.
 	     */
 	    function hasPath(object, path, hasFunc) {
-	      path = castPath(path, object);
+	      path = isKey(path, object) ? [path] : castPath(path);
 	
 	      var index = -1,
 	          length = path.length,
@@ -18498,7 +18442,7 @@
 	      if (result || ++index != length) {
 	        return result;
 	      }
-	      length = object == null ? 0 : object.length;
+	      length = object ? object.length : 0;
 	      return !!length && isLength(length) && isIndex(key, length) &&
 	        (isArray(object) || isArguments(object));
 	    }
@@ -18816,22 +18760,22 @@
 	      var bitmask = data[1],
 	          srcBitmask = source[1],
 	          newBitmask = bitmask | srcBitmask,
-	          isCommon = newBitmask < (WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG | WRAP_ARY_FLAG);
+	          isCommon = newBitmask < (BIND_FLAG | BIND_KEY_FLAG | ARY_FLAG);
 	
 	      var isCombo =
-	        ((srcBitmask == WRAP_ARY_FLAG) && (bitmask == WRAP_CURRY_FLAG)) ||
-	        ((srcBitmask == WRAP_ARY_FLAG) && (bitmask == WRAP_REARG_FLAG) && (data[7].length <= source[8])) ||
-	        ((srcBitmask == (WRAP_ARY_FLAG | WRAP_REARG_FLAG)) && (source[7].length <= source[8]) && (bitmask == WRAP_CURRY_FLAG));
+	        ((srcBitmask == ARY_FLAG) && (bitmask == CURRY_FLAG)) ||
+	        ((srcBitmask == ARY_FLAG) && (bitmask == REARG_FLAG) && (data[7].length <= source[8])) ||
+	        ((srcBitmask == (ARY_FLAG | REARG_FLAG)) && (source[7].length <= source[8]) && (bitmask == CURRY_FLAG));
 	
 	      // Exit early if metadata can't be merged.
 	      if (!(isCommon || isCombo)) {
 	        return data;
 	      }
 	      // Use source `thisArg` if available.
-	      if (srcBitmask & WRAP_BIND_FLAG) {
+	      if (srcBitmask & BIND_FLAG) {
 	        data[2] = source[2];
 	        // Set when currying a bound function.
-	        newBitmask |= bitmask & WRAP_BIND_FLAG ? 0 : WRAP_CURRY_BOUND_FLAG;
+	        newBitmask |= bitmask & BIND_FLAG ? 0 : CURRY_BOUND_FLAG;
 	      }
 	      // Compose partial arguments.
 	      var value = source[3];
@@ -18853,7 +18797,7 @@
 	        data[7] = value;
 	      }
 	      // Use source `ary` if it's smaller.
-	      if (srcBitmask & WRAP_ARY_FLAG) {
+	      if (srcBitmask & ARY_FLAG) {
 	        data[8] = data[8] == null ? source[8] : nativeMin(data[8], source[8]);
 	      }
 	      // Use source `arity` if one is not provided.
@@ -18865,6 +18809,29 @@
 	      data[1] = newBitmask;
 	
 	      return data;
+	    }
+	
+	    /**
+	     * Used by `_.defaultsDeep` to customize its `_.merge` use.
+	     *
+	     * @private
+	     * @param {*} objValue The destination value.
+	     * @param {*} srcValue The source value.
+	     * @param {string} key The key of the property to merge.
+	     * @param {Object} object The parent object of `objValue`.
+	     * @param {Object} source The parent object of `srcValue`.
+	     * @param {Object} [stack] Tracks traversed source values and their merged
+	     *  counterparts.
+	     * @returns {*} Returns the value to assign.
+	     */
+	    function mergeDefaults(objValue, srcValue, key, object, source, stack) {
+	      if (isObject(objValue) && isObject(srcValue)) {
+	        // Recursively merge objects and arrays (susceptible to call stack limits).
+	        stack.set(srcValue, objValue);
+	        baseMerge(objValue, srcValue, undefined, mergeDefaults, stack);
+	        stack['delete'](srcValue);
+	      }
+	      return objValue;
 	    }
 	
 	    /**
@@ -18884,17 +18851,6 @@
 	        }
 	      }
 	      return result;
-	    }
-	
-	    /**
-	     * Converts `value` to a string using `Object.prototype.toString`.
-	     *
-	     * @private
-	     * @param {*} value The value to convert.
-	     * @returns {string} Returns the converted string.
-	     */
-	    function objectToString(value) {
-	      return nativeObjectToString.call(value);
 	    }
 	
 	    /**
@@ -18936,7 +18892,7 @@
 	     * @returns {*} Returns the parent value.
 	     */
 	    function parent(object, path) {
-	      return path.length < 2 ? object : baseGet(object, baseSlice(path, 0, -1));
+	      return path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
 	    }
 	
 	    /**
@@ -19076,6 +19032,8 @@
 	     * @returns {Array} Returns the property path array.
 	     */
 	    var stringToPath = memoizeCapped(function(string) {
+	      string = toString(string);
+	
 	      var result = [];
 	      if (reLeadingDot.test(string)) {
 	        result.push('');
@@ -19105,7 +19063,7 @@
 	     * Converts `func` to its source code.
 	     *
 	     * @private
-	     * @param {Function} func The function to convert.
+	     * @param {Function} func The function to process.
 	     * @returns {string} Returns the source code.
 	     */
 	    function toSource(func) {
@@ -19185,7 +19143,7 @@
 	      } else {
 	        size = nativeMax(toInteger(size), 0);
 	      }
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length || size < 1) {
 	        return [];
 	      }
@@ -19216,7 +19174,7 @@
 	     */
 	    function compact(array) {
 	      var index = -1,
-	          length = array == null ? 0 : array.length,
+	          length = array ? array.length : 0,
 	          resIndex = 0,
 	          result = [];
 	
@@ -19388,7 +19346,7 @@
 	     * // => [1, 2, 3]
 	     */
 	    function drop(array, n, guard) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return [];
 	      }
@@ -19422,7 +19380,7 @@
 	     * // => [1, 2, 3]
 	     */
 	    function dropRight(array, n, guard) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return [];
 	      }
@@ -19482,7 +19440,8 @@
 	     * @since 3.0.0
 	     * @category Array
 	     * @param {Array} array The array to query.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
@@ -19543,7 +19502,7 @@
 	     * // => [4, '*', '*', 10]
 	     */
 	    function fill(array, value, start, end) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return [];
 	      }
@@ -19563,7 +19522,8 @@
 	     * @since 1.1.0
 	     * @category Array
 	     * @param {Array} array The array to inspect.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @param {number} [fromIndex=0] The index to search from.
 	     * @returns {number} Returns the index of the found element, else `-1`.
 	     * @example
@@ -19590,7 +19550,7 @@
 	     * // => 2
 	     */
 	    function findIndex(array, predicate, fromIndex) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return -1;
 	      }
@@ -19610,7 +19570,8 @@
 	     * @since 2.0.0
 	     * @category Array
 	     * @param {Array} array The array to inspect.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @param {number} [fromIndex=array.length-1] The index to search from.
 	     * @returns {number} Returns the index of the found element, else `-1`.
 	     * @example
@@ -19637,7 +19598,7 @@
 	     * // => 0
 	     */
 	    function findLastIndex(array, predicate, fromIndex) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return -1;
 	      }
@@ -19666,7 +19627,7 @@
 	     * // => [1, 2, [3, [4]], 5]
 	     */
 	    function flatten(array) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      return length ? baseFlatten(array, 1) : [];
 	    }
 	
@@ -19685,7 +19646,7 @@
 	     * // => [1, 2, 3, 4, 5]
 	     */
 	    function flattenDeep(array) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      return length ? baseFlatten(array, INFINITY) : [];
 	    }
 	
@@ -19710,7 +19671,7 @@
 	     * // => [1, 2, 3, [4], 5]
 	     */
 	    function flattenDepth(array, depth) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return [];
 	      }
@@ -19735,7 +19696,7 @@
 	     */
 	    function fromPairs(pairs) {
 	      var index = -1,
-	          length = pairs == null ? 0 : pairs.length,
+	          length = pairs ? pairs.length : 0,
 	          result = {};
 	
 	      while (++index < length) {
@@ -19791,7 +19752,7 @@
 	     * // => 3
 	     */
 	    function indexOf(array, value, fromIndex) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return -1;
 	      }
@@ -19817,7 +19778,7 @@
 	     * // => [1, 2]
 	     */
 	    function initial(array) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      return length ? baseSlice(array, 0, -1) : [];
 	    }
 	
@@ -19907,8 +19868,9 @@
 	      var comparator = last(arrays),
 	          mapped = arrayMap(arrays, castArrayLikeObject);
 	
-	      comparator = typeof comparator == 'function' ? comparator : undefined;
-	      if (comparator) {
+	      if (comparator === last(mapped)) {
+	        comparator = undefined;
+	      } else {
 	        mapped.pop();
 	      }
 	      return (mapped.length && mapped[0] === arrays[0])
@@ -19932,7 +19894,7 @@
 	     * // => 'a~b~c'
 	     */
 	    function join(array, separator) {
-	      return array == null ? '' : nativeJoin.call(array, separator);
+	      return array ? nativeJoin.call(array, separator) : '';
 	    }
 	
 	    /**
@@ -19950,7 +19912,7 @@
 	     * // => 3
 	     */
 	    function last(array) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      return length ? array[length - 1] : undefined;
 	    }
 	
@@ -19976,7 +19938,7 @@
 	     * // => 1
 	     */
 	    function lastIndexOf(array, value, fromIndex) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return -1;
 	      }
@@ -20079,7 +20041,8 @@
 	     * @category Array
 	     * @param {Array} array The array to modify.
 	     * @param {Array} values The values to remove.
-	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee invoked per element.
 	     * @returns {Array} Returns `array`.
 	     * @example
 	     *
@@ -20149,7 +20112,7 @@
 	     * // => ['b', 'd']
 	     */
 	    var pullAt = flatRest(function(array, indexes) {
-	      var length = array == null ? 0 : array.length,
+	      var length = array ? array.length : 0,
 	          result = baseAt(array, indexes);
 	
 	      basePullAt(array, arrayMap(indexes, function(index) {
@@ -20172,7 +20135,8 @@
 	     * @since 2.0.0
 	     * @category Array
 	     * @param {Array} array The array to modify.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @returns {Array} Returns the new array of removed elements.
 	     * @example
 	     *
@@ -20232,7 +20196,7 @@
 	     * // => [3, 2, 1]
 	     */
 	    function reverse(array) {
-	      return array == null ? array : nativeReverse.call(array);
+	      return array ? nativeReverse.call(array) : array;
 	    }
 	
 	    /**
@@ -20252,7 +20216,7 @@
 	     * @returns {Array} Returns the slice of `array`.
 	     */
 	    function slice(array, start, end) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return [];
 	      }
@@ -20299,7 +20263,8 @@
 	     * @category Array
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
-	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee invoked per element.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
 	     * @example
@@ -20334,7 +20299,7 @@
 	     * // => 1
 	     */
 	    function sortedIndexOf(array, value) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (length) {
 	        var index = baseSortedIndex(array, value);
 	        if (index < length && eq(array[index], value)) {
@@ -20377,7 +20342,8 @@
 	     * @category Array
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
-	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee invoked per element.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
 	     * @example
@@ -20412,7 +20378,7 @@
 	     * // => 3
 	     */
 	    function sortedLastIndexOf(array, value) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (length) {
 	        var index = baseSortedIndex(array, value, true) - 1;
 	        if (eq(array[index], value)) {
@@ -20480,7 +20446,7 @@
 	     * // => [2, 3]
 	     */
 	    function tail(array) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      return length ? baseSlice(array, 1, length) : [];
 	    }
 	
@@ -20543,7 +20509,7 @@
 	     * // => []
 	     */
 	    function takeRight(array, n, guard) {
-	      var length = array == null ? 0 : array.length;
+	      var length = array ? array.length : 0;
 	      if (!length) {
 	        return [];
 	      }
@@ -20562,7 +20528,8 @@
 	     * @since 3.0.0
 	     * @category Array
 	     * @param {Array} array The array to query.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
@@ -20603,13 +20570,14 @@
 	     * @since 3.0.0
 	     * @category Array
 	     * @param {Array} array The array to query.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
 	     * var users = [
 	     *   { 'user': 'barney',  'active': false },
-	     *   { 'user': 'fred',    'active': false },
+	     *   { 'user': 'fred',    'active': false},
 	     *   { 'user': 'pebbles', 'active': true }
 	     * ];
 	     *
@@ -20666,7 +20634,8 @@
 	     * @since 4.0.0
 	     * @category Array
 	     * @param {...Array} [arrays] The arrays to inspect.
-	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee invoked per element.
 	     * @returns {Array} Returns the new array of combined values.
 	     * @example
 	     *
@@ -20708,7 +20677,9 @@
 	     */
 	    var unionWith = baseRest(function(arrays) {
 	      var comparator = last(arrays);
-	      comparator = typeof comparator == 'function' ? comparator : undefined;
+	      if (isArrayLikeObject(comparator)) {
+	        comparator = undefined;
+	      }
 	      return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), undefined, comparator);
 	    });
 	
@@ -20731,7 +20702,9 @@
 	     * // => [2, 1]
 	     */
 	    function uniq(array) {
-	      return (array && array.length) ? baseUniq(array) : [];
+	      return (array && array.length)
+	        ? baseUniq(array)
+	        : [];
 	    }
 	
 	    /**
@@ -20746,7 +20719,8 @@
 	     * @since 4.0.0
 	     * @category Array
 	     * @param {Array} array The array to inspect.
-	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee invoked per element.
 	     * @returns {Array} Returns the new duplicate free array.
 	     * @example
 	     *
@@ -20758,7 +20732,9 @@
 	     * // => [{ 'x': 1 }, { 'x': 2 }]
 	     */
 	    function uniqBy(array, iteratee) {
-	      return (array && array.length) ? baseUniq(array, getIteratee(iteratee, 2)) : [];
+	      return (array && array.length)
+	        ? baseUniq(array, getIteratee(iteratee, 2))
+	        : [];
 	    }
 	
 	    /**
@@ -20782,8 +20758,9 @@
 	     * // => [{ 'x': 1, 'y': 2 }, { 'x': 2, 'y': 1 }]
 	     */
 	    function uniqWith(array, comparator) {
-	      comparator = typeof comparator == 'function' ? comparator : undefined;
-	      return (array && array.length) ? baseUniq(array, undefined, comparator) : [];
+	      return (array && array.length)
+	        ? baseUniq(array, undefined, comparator)
+	        : [];
 	    }
 	
 	    /**
@@ -20915,7 +20892,8 @@
 	     * @since 4.0.0
 	     * @category Array
 	     * @param {...Array} [arrays] The arrays to inspect.
-	     * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee invoked per element.
 	     * @returns {Array} Returns the new array of filtered values.
 	     * @example
 	     *
@@ -20957,7 +20935,9 @@
 	     */
 	    var xorWith = baseRest(function(arrays) {
 	      var comparator = last(arrays);
-	      comparator = typeof comparator == 'function' ? comparator : undefined;
+	      if (isArrayLikeObject(comparator)) {
+	        comparator = undefined;
+	      }
 	      return baseXor(arrayFilter(arrays, isArrayLikeObject), undefined, comparator);
 	    });
 	
@@ -21028,8 +21008,7 @@
 	     * @since 3.8.0
 	     * @category Array
 	     * @param {...Array} [arrays] The arrays to process.
-	     * @param {Function} [iteratee=_.identity] The function to combine
-	     *  grouped values.
+	     * @param {Function} [iteratee=_.identity] The function to combine grouped values.
 	     * @returns {Array} Returns the new array of grouped elements.
 	     * @example
 	     *
@@ -21145,7 +21124,7 @@
 	     * @memberOf _
 	     * @since 1.0.0
 	     * @category Seq
-	     * @param {...(string|string[])} [paths] The property paths to pick.
+	     * @param {...(string|string[])} [paths] The property paths of elements to pick.
 	     * @returns {Object} Returns the new `lodash` wrapper instance.
 	     * @example
 	     *
@@ -21406,7 +21385,8 @@
 	     * @since 0.5.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The iteratee to transform keys.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee to transform keys.
 	     * @returns {Object} Returns the composed aggregate object.
 	     * @example
 	     *
@@ -21440,7 +21420,8 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @param- {Object} [guard] Enables use as an iteratee for methods like `_.map`.
 	     * @returns {boolean} Returns `true` if all elements pass the predicate check,
 	     *  else `false`.
@@ -21486,7 +21467,8 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @returns {Array} Returns the new filtered array.
 	     * @see _.reject
 	     * @example
@@ -21526,7 +21508,8 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to inspect.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @param {number} [fromIndex=0] The index to search from.
 	     * @returns {*} Returns the matched element, else `undefined`.
 	     * @example
@@ -21563,7 +21546,8 @@
 	     * @since 2.0.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to inspect.
-	     * @param {Function} [predicate=_.identity] The function invoked per iteration.
+	     * @param {Function} [predicate=_.identity]
+	     *  The function invoked per iteration.
 	     * @param {number} [fromIndex=collection.length-1] The index to search from.
 	     * @returns {*} Returns the matched element, else `undefined`.
 	     * @example
@@ -21585,7 +21569,8 @@
 	     * @since 4.0.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The function invoked per iteration.
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
 	     *
@@ -21609,7 +21594,8 @@
 	     * @since 4.7.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The function invoked per iteration.
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
 	     *
@@ -21633,7 +21619,8 @@
 	     * @since 4.7.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The function invoked per iteration.
 	     * @param {number} [depth=1] The maximum recursion depth.
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
@@ -21722,7 +21709,8 @@
 	     * @since 0.1.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The iteratee to transform keys.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee to transform keys.
 	     * @returns {Object} Returns the composed aggregate object.
 	     * @example
 	     *
@@ -21810,10 +21798,12 @@
 	    var invokeMap = baseRest(function(collection, path, args) {
 	      var index = -1,
 	          isFunc = typeof path == 'function',
+	          isProp = isKey(path),
 	          result = isArrayLike(collection) ? Array(collection.length) : [];
 	
 	      baseEach(collection, function(value) {
-	        result[++index] = isFunc ? apply(path, value, args) : baseInvoke(value, path, args);
+	        var func = isFunc ? path : ((isProp && value != null) ? value[path] : undefined);
+	        result[++index] = func ? apply(func, value, args) : baseInvoke(value, path, args);
 	      });
 	      return result;
 	    });
@@ -21829,7 +21819,8 @@
 	     * @since 4.0.0
 	     * @category Collection
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The iteratee to transform keys.
+	     * @param {Function} [iteratee=_.identity]
+	     *  The iteratee to transform keys.
 	     * @returns {Object} Returns the composed aggregate object.
 	     * @example
 	     *
@@ -22362,7 +22353,7 @@
 	    function ary(func, n, guard) {
 	      n = guard ? undefined : n;
 	      n = (func && n == null) ? func.length : n;
-	      return createWrap(func, WRAP_ARY_FLAG, undefined, undefined, undefined, undefined, n);
+	      return createWrap(func, ARY_FLAG, undefined, undefined, undefined, undefined, n);
 	    }
 	
 	    /**
@@ -22435,10 +22426,10 @@
 	     * // => 'hi fred!'
 	     */
 	    var bind = baseRest(function(func, thisArg, partials) {
-	      var bitmask = WRAP_BIND_FLAG;
+	      var bitmask = BIND_FLAG;
 	      if (partials.length) {
 	        var holders = replaceHolders(partials, getHolder(bind));
-	        bitmask |= WRAP_PARTIAL_FLAG;
+	        bitmask |= PARTIAL_FLAG;
 	      }
 	      return createWrap(func, bitmask, thisArg, partials, holders);
 	    });
@@ -22489,10 +22480,10 @@
 	     * // => 'hiya fred!'
 	     */
 	    var bindKey = baseRest(function(object, key, partials) {
-	      var bitmask = WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG;
+	      var bitmask = BIND_FLAG | BIND_KEY_FLAG;
 	      if (partials.length) {
 	        var holders = replaceHolders(partials, getHolder(bindKey));
-	        bitmask |= WRAP_PARTIAL_FLAG;
+	        bitmask |= PARTIAL_FLAG;
 	      }
 	      return createWrap(key, bitmask, object, partials, holders);
 	    });
@@ -22540,7 +22531,7 @@
 	     */
 	    function curry(func, arity, guard) {
 	      arity = guard ? undefined : arity;
-	      var result = createWrap(func, WRAP_CURRY_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
+	      var result = createWrap(func, CURRY_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
 	      result.placeholder = curry.placeholder;
 	      return result;
 	    }
@@ -22585,7 +22576,7 @@
 	     */
 	    function curryRight(func, arity, guard) {
 	      arity = guard ? undefined : arity;
-	      var result = createWrap(func, WRAP_CURRY_RIGHT_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
+	      var result = createWrap(func, CURRY_RIGHT_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
 	      result.placeholder = curryRight.placeholder;
 	      return result;
 	    }
@@ -22830,7 +22821,7 @@
 	     * // => ['d', 'c', 'b', 'a']
 	     */
 	    function flip(func) {
-	      return createWrap(func, WRAP_FLIP_FLAG);
+	      return createWrap(func, FLIP_FLAG);
 	    }
 	
 	    /**
@@ -22844,7 +22835,7 @@
 	     * function. Its creation may be customized by replacing the `_.memoize.Cache`
 	     * constructor with one whose instances implement the
 	     * [`Map`](http://ecma-international.org/ecma-262/7.0/#sec-properties-of-the-map-prototype-object)
-	     * method interface of `clear`, `delete`, `get`, `has`, and `set`.
+	     * method interface of `delete`, `get`, `has`, and `set`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -22878,7 +22869,7 @@
 	     * _.memoize.Cache = WeakMap;
 	     */
 	    function memoize(func, resolver) {
-	      if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
+	      if (typeof func != 'function' || (resolver && typeof resolver != 'function')) {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      var memoized = function() {
@@ -23041,7 +23032,7 @@
 	     */
 	    var partial = baseRest(function(func, partials) {
 	      var holders = replaceHolders(partials, getHolder(partial));
-	      return createWrap(func, WRAP_PARTIAL_FLAG, undefined, partials, holders);
+	      return createWrap(func, PARTIAL_FLAG, undefined, partials, holders);
 	    });
 	
 	    /**
@@ -23078,7 +23069,7 @@
 	     */
 	    var partialRight = baseRest(function(func, partials) {
 	      var holders = replaceHolders(partials, getHolder(partialRight));
-	      return createWrap(func, WRAP_PARTIAL_RIGHT_FLAG, undefined, partials, holders);
+	      return createWrap(func, PARTIAL_RIGHT_FLAG, undefined, partials, holders);
 	    });
 	
 	    /**
@@ -23104,7 +23095,7 @@
 	     * // => ['a', 'b', 'c']
 	     */
 	    var rearg = flatRest(function(func, indexes) {
-	      return createWrap(func, WRAP_REARG_FLAG, undefined, undefined, undefined, indexes);
+	      return createWrap(func, REARG_FLAG, undefined, undefined, undefined, indexes);
 	    });
 	
 	    /**
@@ -23178,7 +23169,7 @@
 	      if (typeof func != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
-	      start = start == null ? 0 : nativeMax(toInteger(start), 0);
+	      start = start === undefined ? 0 : nativeMax(toInteger(start), 0);
 	      return baseRest(function(args) {
 	        var array = args[start],
 	            otherArgs = castSlice(args, 0, start);
@@ -23294,7 +23285,8 @@
 	     * // => '<p>fred, barney, &amp; pebbles</p>'
 	     */
 	    function wrap(value, wrapper) {
-	      return partial(castFunction(wrapper), value);
+	      wrapper = wrapper == null ? identity : wrapper;
+	      return partial(wrapper, value);
 	    }
 	
 	    /*------------------------------------------------------------------------*/
@@ -23367,7 +23359,7 @@
 	     * // => true
 	     */
 	    function clone(value) {
-	      return baseClone(value, CLONE_SYMBOLS_FLAG);
+	      return baseClone(value, false, true);
 	    }
 	
 	    /**
@@ -23402,8 +23394,7 @@
 	     * // => 0
 	     */
 	    function cloneWith(value, customizer) {
-	      customizer = typeof customizer == 'function' ? customizer : undefined;
-	      return baseClone(value, CLONE_SYMBOLS_FLAG, customizer);
+	      return baseClone(value, false, true, customizer);
 	    }
 	
 	    /**
@@ -23425,7 +23416,7 @@
 	     * // => false
 	     */
 	    function cloneDeep(value) {
-	      return baseClone(value, CLONE_DEEP_FLAG | CLONE_SYMBOLS_FLAG);
+	      return baseClone(value, true, true);
 	    }
 	
 	    /**
@@ -23457,8 +23448,7 @@
 	     * // => 20
 	     */
 	    function cloneDeepWith(value, customizer) {
-	      customizer = typeof customizer == 'function' ? customizer : undefined;
-	      return baseClone(value, CLONE_DEEP_FLAG | CLONE_SYMBOLS_FLAG, customizer);
+	      return baseClone(value, true, true, customizer);
 	    }
 	
 	    /**
@@ -23721,7 +23711,7 @@
 	     */
 	    function isBoolean(value) {
 	      return value === true || value === false ||
-	        (isObjectLike(value) && baseGetTag(value) == boolTag);
+	        (isObjectLike(value) && objectToString.call(value) == boolTag);
 	    }
 	
 	    /**
@@ -23780,7 +23770,7 @@
 	     * // => false
 	     */
 	    function isElement(value) {
-	      return isObjectLike(value) && value.nodeType === 1 && !isPlainObject(value);
+	      return value != null && value.nodeType === 1 && isObjectLike(value) && !isPlainObject(value);
 	    }
 	
 	    /**
@@ -23817,9 +23807,6 @@
 	     * // => false
 	     */
 	    function isEmpty(value) {
-	      if (value == null) {
-	        return true;
-	      }
 	      if (isArrayLike(value) &&
 	          (isArray(value) || typeof value == 'string' || typeof value.splice == 'function' ||
 	            isBuffer(value) || isTypedArray(value) || isArguments(value))) {
@@ -23848,7 +23835,7 @@
 	     * date objects, error objects, maps, numbers, `Object` objects, regexes,
 	     * sets, strings, symbols, and typed arrays. `Object` objects are compared
 	     * by their own, not inherited, enumerable properties. Functions and DOM
-	     * nodes are compared by strict equality, i.e. `===`.
+	     * nodes are **not** supported.
 	     *
 	     * @static
 	     * @memberOf _
@@ -23907,7 +23894,7 @@
 	    function isEqualWith(value, other, customizer) {
 	      customizer = typeof customizer == 'function' ? customizer : undefined;
 	      var result = customizer ? customizer(value, other) : undefined;
-	      return result === undefined ? baseIsEqual(value, other, undefined, customizer) : !!result;
+	      return result === undefined ? baseIsEqual(value, other, customizer) : !!result;
 	    }
 	
 	    /**
@@ -23932,9 +23919,8 @@
 	      if (!isObjectLike(value)) {
 	        return false;
 	      }
-	      var tag = baseGetTag(value);
-	      return tag == errorTag || tag == domExcTag ||
-	        (typeof value.message == 'string' && typeof value.name == 'string' && !isPlainObject(value));
+	      return (objectToString.call(value) == errorTag) ||
+	        (typeof value.message == 'string' && typeof value.name == 'string');
 	    }
 	
 	    /**
@@ -23985,13 +23971,10 @@
 	     * // => false
 	     */
 	    function isFunction(value) {
-	      if (!isObject(value)) {
-	        return false;
-	      }
 	      // The use of `Object#toString` avoids issues with the `typeof` operator
-	      // in Safari 9 which returns 'object' for typed arrays and other constructors.
-	      var tag = baseGetTag(value);
-	      return tag == funcTag || tag == genTag || tag == asyncTag || tag == proxyTag;
+	      // in Safari 9 which returns 'object' for typed array and other constructors.
+	      var tag = isObject(value) ? objectToString.call(value) : '';
+	      return tag == funcTag || tag == genTag || tag == proxyTag;
 	    }
 	
 	    /**
@@ -24342,7 +24325,7 @@
 	     */
 	    function isNumber(value) {
 	      return typeof value == 'number' ||
-	        (isObjectLike(value) && baseGetTag(value) == numberTag);
+	        (isObjectLike(value) && objectToString.call(value) == numberTag);
 	    }
 	
 	    /**
@@ -24374,7 +24357,7 @@
 	     * // => true
 	     */
 	    function isPlainObject(value) {
-	      if (!isObjectLike(value) || baseGetTag(value) != objectTag) {
+	      if (!isObjectLike(value) || objectToString.call(value) != objectTag) {
 	        return false;
 	      }
 	      var proto = getPrototype(value);
@@ -24382,8 +24365,8 @@
 	        return true;
 	      }
 	      var Ctor = hasOwnProperty.call(proto, 'constructor') && proto.constructor;
-	      return typeof Ctor == 'function' && Ctor instanceof Ctor &&
-	        funcToString.call(Ctor) == objectCtorString;
+	      return (typeof Ctor == 'function' &&
+	        Ctor instanceof Ctor && funcToString.call(Ctor) == objectCtorString);
 	    }
 	
 	    /**
@@ -24474,7 +24457,7 @@
 	     */
 	    function isString(value) {
 	      return typeof value == 'string' ||
-	        (!isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag);
+	        (!isArray(value) && isObjectLike(value) && objectToString.call(value) == stringTag);
 	    }
 	
 	    /**
@@ -24496,7 +24479,7 @@
 	     */
 	    function isSymbol(value) {
 	      return typeof value == 'symbol' ||
-	        (isObjectLike(value) && baseGetTag(value) == symbolTag);
+	        (isObjectLike(value) && objectToString.call(value) == symbolTag);
 	    }
 	
 	    /**
@@ -24578,7 +24561,7 @@
 	     * // => false
 	     */
 	    function isWeakSet(value) {
-	      return isObjectLike(value) && baseGetTag(value) == weakSetTag;
+	      return isObjectLike(value) && objectToString.call(value) == weakSetTag;
 	    }
 	
 	    /**
@@ -24663,8 +24646,8 @@
 	      if (isArrayLike(value)) {
 	        return isString(value) ? stringToArray(value) : copyArray(value);
 	      }
-	      if (symIterator && value[symIterator]) {
-	        return iteratorToArray(value[symIterator]());
+	      if (iteratorSymbol && value[iteratorSymbol]) {
+	        return iteratorToArray(value[iteratorSymbol]());
 	      }
 	      var tag = getTag(value),
 	          func = tag == mapTag ? mapToArray : (tag == setTag ? setToArray : values);
@@ -24868,9 +24851,7 @@
 	     * // => 3
 	     */
 	    function toSafeInteger(value) {
-	      return value
-	        ? baseClamp(toInteger(value), -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER)
-	        : (value === 0 ? value : 0);
+	      return baseClamp(toInteger(value), -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER);
 	    }
 	
 	    /**
@@ -25052,7 +25033,7 @@
 	     * @since 1.0.0
 	     * @category Object
 	     * @param {Object} object The object to iterate over.
-	     * @param {...(string|string[])} [paths] The property paths to pick.
+	     * @param {...(string|string[])} [paths] The property paths of elements to pick.
 	     * @returns {Array} Returns the picked values.
 	     * @example
 	     *
@@ -25099,7 +25080,7 @@
 	     */
 	    function create(prototype, properties) {
 	      var result = baseCreate(prototype);
-	      return properties == null ? result : baseAssign(result, properties);
+	      return properties ? baseAssign(result, properties) : result;
 	    }
 	
 	    /**
@@ -25124,7 +25105,7 @@
 	     * // => { 'a': 1, 'b': 2 }
 	     */
 	    var defaults = baseRest(function(args) {
-	      args.push(undefined, customDefaultsAssignIn);
+	      args.push(undefined, assignInDefaults);
 	      return apply(assignInWith, undefined, args);
 	    });
 	
@@ -25148,7 +25129,7 @@
 	     * // => { 'a': { 'b': 2, 'c': 3 } }
 	     */
 	    var defaultsDeep = baseRest(function(args) {
-	      args.push(undefined, customDefaultsMerge);
+	      args.push(undefined, mergeDefaults);
 	      return apply(mergeWith, undefined, args);
 	    });
 	
@@ -25779,16 +25760,15 @@
 	
 	    /**
 	     * The opposite of `_.pick`; this method creates an object composed of the
-	     * own and inherited enumerable property paths of `object` that are not omitted.
-	     *
-	     * **Note:** This method is considerably slower than `_.pick`.
+	     * own and inherited enumerable string keyed properties of `object` that are
+	     * not omitted.
 	     *
 	     * @static
 	     * @since 0.1.0
 	     * @memberOf _
 	     * @category Object
 	     * @param {Object} object The source object.
-	     * @param {...(string|string[])} [paths] The property paths to omit.
+	     * @param {...(string|string[])} [props] The property identifiers to omit.
 	     * @returns {Object} Returns the new object.
 	     * @example
 	     *
@@ -25797,26 +25777,12 @@
 	     * _.omit(object, ['a', 'c']);
 	     * // => { 'b': '2' }
 	     */
-	    var omit = flatRest(function(object, paths) {
-	      var result = {};
+	    var omit = flatRest(function(object, props) {
 	      if (object == null) {
-	        return result;
+	        return {};
 	      }
-	      var isDeep = false;
-	      paths = arrayMap(paths, function(path) {
-	        path = castPath(path, object);
-	        isDeep || (isDeep = path.length > 1);
-	        return path;
-	      });
-	      copyObject(object, getAllKeysIn(object), result);
-	      if (isDeep) {
-	        result = baseClone(result, CLONE_DEEP_FLAG | CLONE_FLAT_FLAG | CLONE_SYMBOLS_FLAG, customOmitClone);
-	      }
-	      var length = paths.length;
-	      while (length--) {
-	        baseUnset(result, paths[length]);
-	      }
-	      return result;
+	      props = arrayMap(props, toKey);
+	      return basePick(object, baseDifference(getAllKeysIn(object), props));
 	    });
 	
 	    /**
@@ -25851,7 +25817,7 @@
 	     * @memberOf _
 	     * @category Object
 	     * @param {Object} object The source object.
-	     * @param {...(string|string[])} [paths] The property paths to pick.
+	     * @param {...(string|string[])} [props] The property identifiers to pick.
 	     * @returns {Object} Returns the new object.
 	     * @example
 	     *
@@ -25860,8 +25826,8 @@
 	     * _.pick(object, ['a', 'c']);
 	     * // => { 'a': 1, 'c': 3 }
 	     */
-	    var pick = flatRest(function(object, paths) {
-	      return object == null ? {} : basePick(object, paths);
+	    var pick = flatRest(function(object, props) {
+	      return object == null ? {} : basePick(object, arrayMap(props, toKey));
 	    });
 	
 	    /**
@@ -25883,16 +25849,7 @@
 	     * // => { 'a': 1, 'c': 3 }
 	     */
 	    function pickBy(object, predicate) {
-	      if (object == null) {
-	        return {};
-	      }
-	      var props = arrayMap(getAllKeysIn(object), function(prop) {
-	        return [prop];
-	      });
-	      predicate = getIteratee(predicate);
-	      return basePickBy(object, props, function(value, path) {
-	        return predicate(value, path[0]);
-	      });
+	      return object == null ? {} : basePickBy(object, getAllKeysIn(object), getIteratee(predicate));
 	    }
 	
 	    /**
@@ -25925,15 +25882,15 @@
 	     * // => 'default'
 	     */
 	    function result(object, path, defaultValue) {
-	      path = castPath(path, object);
+	      path = isKey(path, object) ? [path] : castPath(path);
 	
 	      var index = -1,
 	          length = path.length;
 	
 	      // Ensure the loop is entered when path is empty.
 	      if (!length) {
-	        length = 1;
 	        object = undefined;
+	        length = 1;
 	      }
 	      while (++index < length) {
 	        var value = object == null ? undefined : object[toKey(path[index])];
@@ -26230,7 +26187,7 @@
 	     * // => ['h', 'i']
 	     */
 	    function values(object) {
-	      return object == null ? [] : baseValues(object, keys(object));
+	      return object ? baseValues(object, keys(object)) : [];
 	    }
 	
 	    /**
@@ -26959,10 +26916,7 @@
 	     */
 	    function startsWith(string, target, position) {
 	      string = toString(string);
-	      position = position == null
-	        ? 0
-	        : baseClamp(toInteger(position), 0, string.length);
-	
+	      position = baseClamp(toInteger(position), 0, string.length);
 	      target = baseToString(target);
 	      return string.slice(position, position + target.length) == target;
 	    }
@@ -27081,9 +27035,9 @@
 	        options = undefined;
 	      }
 	      string = toString(string);
-	      options = assignInWith({}, options, settings, customDefaultsAssignIn);
+	      options = assignInWith({}, options, settings, assignInDefaults);
 	
-	      var imports = assignInWith({}, options.imports, settings.imports, customDefaultsAssignIn),
+	      var imports = assignInWith({}, options.imports, settings.imports, assignInDefaults),
 	          importsKeys = keys(imports),
 	          importsValues = baseValues(imports, importsKeys);
 	
@@ -27620,7 +27574,7 @@
 	     * // => 'no match'
 	     */
 	    function cond(pairs) {
-	      var length = pairs == null ? 0 : pairs.length,
+	      var length = pairs ? pairs.length : 0,
 	          toIteratee = getIteratee();
 	
 	      pairs = !length ? [] : arrayMap(pairs, function(pair) {
@@ -27666,7 +27620,7 @@
 	     * // => [{ 'a': 1, 'b': 2 }]
 	     */
 	    function conforms(source) {
-	      return baseConforms(baseClone(source, CLONE_DEEP_FLAG));
+	      return baseConforms(baseClone(source, true));
 	    }
 	
 	    /**
@@ -27828,7 +27782,7 @@
 	     * // => ['def']
 	     */
 	    function iteratee(func) {
-	      return baseIteratee(typeof func == 'function' ? func : baseClone(func, CLONE_DEEP_FLAG));
+	      return baseIteratee(typeof func == 'function' ? func : baseClone(func, true));
 	    }
 	
 	    /**
@@ -27860,7 +27814,7 @@
 	     * // => [{ 'a': 4, 'b': 5, 'c': 6 }]
 	     */
 	    function matches(source) {
-	      return baseMatches(baseClone(source, CLONE_DEEP_FLAG));
+	      return baseMatches(baseClone(source, true));
 	    }
 	
 	    /**
@@ -27890,7 +27844,7 @@
 	     * // => { 'a': 4, 'b': 5, 'c': 6 }
 	     */
 	    function matchesProperty(path, srcValue) {
-	      return baseMatchesProperty(path, baseClone(srcValue, CLONE_DEEP_FLAG));
+	      return baseMatchesProperty(path, baseClone(srcValue, true));
 	    }
 	
 	    /**
@@ -28446,7 +28400,7 @@
 	      if (isArray(value)) {
 	        return arrayMap(value, toKey);
 	      }
-	      return isSymbol(value) ? [value] : copyArray(stringToPath(toString(value)));
+	      return isSymbol(value) ? [value] : copyArray(stringToPath(value));
 	    }
 	
 	    /**
@@ -29167,13 +29121,14 @@
 	    // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
 	    arrayEach(['drop', 'take'], function(methodName, index) {
 	      LazyWrapper.prototype[methodName] = function(n) {
+	        var filtered = this.__filtered__;
+	        if (filtered && !index) {
+	          return new LazyWrapper(this);
+	        }
 	        n = n === undefined ? 1 : nativeMax(toInteger(n), 0);
 	
-	        var result = (this.__filtered__ && !index)
-	          ? new LazyWrapper(this)
-	          : this.clone();
-	
-	        if (result.__filtered__) {
+	        var result = this.clone();
+	        if (filtered) {
 	          result.__takeCount__ = nativeMin(n, result.__takeCount__);
 	        } else {
 	          result.__views__.push({
@@ -29349,7 +29304,7 @@
 	      }
 	    });
 	
-	    realNames[createHybrid(undefined, WRAP_BIND_KEY_FLAG).name] = [{
+	    realNames[createHybrid(undefined, BIND_KEY_FLAG).name] = [{
 	      'name': 'wrapper',
 	      'func': undefined
 	    }];
@@ -29371,8 +29326,8 @@
 	    // Add lazy aliases.
 	    lodash.prototype.first = lodash.prototype.head;
 	
-	    if (symIterator) {
-	      lodash.prototype[symIterator] = wrapperToIterator;
+	    if (iteratorSymbol) {
+	      lodash.prototype[iteratorSymbol] = wrapperToIterator;
 	    }
 	    return lodash;
 	  });
@@ -29441,7 +29396,9 @@
 	
 	var _lodash2 = _interopRequireDefault(_lodash);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	exports.default = function (vueElement, googleMapObject, events) {
 	  _lodash2.default.forEach(events, function (eventName) {
@@ -29466,7 +29423,9 @@
 	
 	var _lodash2 = _interopRequireDefault(_lodash);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	function capitalizeFirstLetter(string) {
 	  return string.charAt(0).toUpperCase() + string.slice(1);
@@ -29555,7 +29514,9 @@
 	
 	var _lodash2 = _interopRequireDefault(_lodash);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	exports.default = {
 	  methods: {
@@ -29587,7 +29548,9 @@
 	
 	var _map2 = _interopRequireDefault(_map);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	/**
 	 * @class MapElementMixin @mixins DeferredReadyMixin
@@ -29634,7 +29597,6 @@
 	    return this.$mapPromise;
 	  },
 	
-	
 	  methods: {
 	    $findAncestor: function $findAncestor(condition) {
 	      var search = this.$parent;
@@ -29666,7 +29628,9 @@
 	
 	var _promise2 = _interopRequireDefault(_promise);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	/**
 	 * 1. Create a DeferredReady plugin.
@@ -29793,20 +29757,20 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\node_modules\\vue2-google-maps\\dist\\components\\map.vue"
+	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\map.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
 	/* hot reload */
 	if (false) {(function () {
-	  var hotAPI = require("vue-hot-reload-api")
+	  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
 	  hotAPI.install(require("vue"), false)
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-fbb0e1ba", __vue_options__)
+	    hotAPI.createRecord("data-v-4d9eec52", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-fbb0e1ba", __vue_options__)
+	    hotAPI.reload("data-v-4d9eec52", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] map.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -29830,8 +29794,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../../../node_modules/css-loader/index.js?sourceMap!./../../../vue-loader/lib/style-rewriter.js?id=data-v-fbb0e1ba!./../../../vue-loader/lib/selector.js?type=styles&index=0!./map.vue", function() {
-				var newContent = require("!!./../../../../../node_modules/css-loader/index.js?sourceMap!./../../../vue-loader/lib/style-rewriter.js?id=data-v-fbb0e1ba!./../../../vue-loader/lib/selector.js?type=styles&index=0!./map.vue");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-4d9eec52!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./map.vue", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-4d9eec52!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./map.vue");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -29849,7 +29813,7 @@
 	
 	
 	// module
-	exports.push([module.id, "\n.vue-map-container {\n  position: relative;\n}\n.vue-map-container .vue-map {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n.vue-map-hidden {\n  display: none;\n}\n", "", {"version":3,"sources":["/./node_modules/vue2-google-maps/dist/components/map.vue?e1f76d12"],"names":[],"mappings":";AAcA;EACA,mBAAA;CACA;AAEA;EACA,QAAA,CAAA,SAAA,CAAA,OAAA,CAAA,UAAA;EACA,mBAAA;CACA;AACA;EACA,cAAA;CACA","file":"map.vue","sourcesContent":["<template>\n  <div class=\"vue-map-container\">\n    <div ref=\"vue-map\" class=\"vue-map\"></div>\n    <div class=\"vue-map-hidden\">\n      <slot></slot>\n    </div>\n    <slot name=\"visible\"></slot>\n  </div>\n</template>\n\n<script src=\"./mapImpl.js\">\n</script>\n\n<style lang=\"css\">\n.vue-map-container {\n  position: relative;\n}\n\n.vue-map-container .vue-map {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n.vue-map-hidden {\n  display: none;\n}\n</style>\n"],"sourceRoot":"webpack://"}]);
+	exports.push([module.id, "\n.vue-map-container {\n  position: relative;\n}\n.vue-map-container .vue-map {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n.vue-map-hidden {\n  display: none;\n}\n", "", {"version":3,"sources":["/../dist/components/map.vue?e1f76d12"],"names":[],"mappings":";AAcA;EACA,mBAAA;CACA;AAEA;EACA,QAAA,CAAA,SAAA,CAAA,OAAA,CAAA,UAAA;EACA,mBAAA;CACA;AACA;EACA,cAAA;CACA","file":"map.vue","sourcesContent":["<template>\n  <div class=\"vue-map-container\">\n    <div ref=\"vue-map\" class=\"vue-map\"></div>\n    <div class=\"vue-map-hidden\">\n      <slot></slot>\n    </div>\n    <slot name=\"visible\"></slot>\n  </div>\n</template>\n\n<script src=\"./mapImpl.js\">\n</script>\n\n<style lang=\"css\">\n.vue-map-container {\n  position: relative;\n}\n\n.vue-map-container .vue-map {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n.vue-map-hidden {\n  display: none;\n}\n</style>\n"],"sourceRoot":"webpack://"}]);
 	
 	// exports
 
@@ -30080,7 +30044,6 @@
 	    }
 	  },
 	
-	
 	  methods: {
 	    _resizeCallback: function _resizeCallback() {
 	      this.resize();
@@ -30145,21 +30108,20 @@
 /* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-	  return _c('div', {
+	module.exports={render:function (){var _vm=this;
+	  return _vm._c('div', {
 	    staticClass: "vue-map-container"
-	  }, [_c('div', {
+	  }, [_vm._c('div', {
 	    ref: "vue-map",
 	    staticClass: "vue-map"
-	  }), _vm._v(" "), _c('div', {
+	  }), _vm._v(" "), _vm._c('div', {
 	    staticClass: "vue-map-hidden"
 	  }, [_vm._t("default")], 2), _vm._v(" "), _vm._t("visible")], 2)
 	},staticRenderFns: []}
-	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-hot-reload-api").rerender("data-v-fbb0e1ba", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-4d9eec52", module.exports)
 	  }
 	}
 
@@ -30193,7 +30155,9 @@
 	
 	var _markerClustererPlus2 = _interopRequireDefault(_markerClustererPlus);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	var props = {
 	  maxZoom: {
@@ -33244,7 +33208,9 @@
 	
 	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	var props = {
 	  draggable: {
@@ -33481,7 +33447,9 @@
 	
 	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	var props = {
 	  draggable: {
@@ -33669,7 +33637,9 @@
 	
 	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	    return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	var props = {
 	    center: {
@@ -33712,7 +33682,6 @@
 	        delete options.bounds;
 	        this.createCircle(options, this.$map);
 	    },
-	
 	
 	    methods: {
 	        createCircle: function createCircle(options, map) {
@@ -33772,7 +33741,9 @@
 	
 	var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	  return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
 	var props = {
 	  bounds: {
@@ -33807,7 +33778,6 @@
 	    options.map = this.$map;
 	    this.createRectangle(options, this.$map);
 	  },
-	
 	
 	  methods: {
 	    createRectangle: function createRectangle(options, map) {
@@ -33847,20 +33817,20 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\node_modules\\vue2-google-maps\\dist\\components\\infoWindow.vue"
+	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\infoWindow.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
 	/* hot reload */
 	if (false) {(function () {
-	  var hotAPI = require("vue-hot-reload-api")
+	  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
 	  hotAPI.install(require("vue"), false)
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-9a1da472", __vue_options__)
+	    hotAPI.createRecord("data-v-433e6db8", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-9a1da472", __vue_options__)
+	    hotAPI.reload("data-v-433e6db8", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] infoWindow.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -34000,20 +33970,19 @@
 /* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-	  return _c('div', [_c('div', {
+	module.exports={render:function (){var _vm=this;
+	  return _vm._c('div', [_vm._c('div', {
 	    ref: "flyaway"
-	  }, [_vm._t("default", [_c('div', {
+	  }, [_vm._t("default", [_vm._c('div', {
 	    domProps: {
 	      "innerHTML": _vm._s(_vm.content)
 	    }
 	  })])], 2)])
 	},staticRenderFns: []}
-	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-hot-reload-api").rerender("data-v-9a1da472", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-433e6db8", module.exports)
 	  }
 	}
 
@@ -34043,20 +34012,20 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\node_modules\\vue2-google-maps\\dist\\components\\streetViewPanorama.vue"
+	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\streetViewPanorama.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
 	/* hot reload */
 	if (false) {(function () {
-	  var hotAPI = require("vue-hot-reload-api")
+	  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
 	  hotAPI.install(require("vue"), false)
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-59e64a34", __vue_options__)
+	    hotAPI.createRecord("data-v-321799d7", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-59e64a34", __vue_options__)
+	    hotAPI.reload("data-v-321799d7", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] streetViewPanorama.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -34080,8 +34049,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../../../node_modules/css-loader/index.js?sourceMap!./../../../vue-loader/lib/style-rewriter.js?id=data-v-59e64a34!./../../../vue-loader/lib/selector.js?type=styles&index=0!./streetViewPanorama.vue", function() {
-				var newContent = require("!!./../../../../../node_modules/css-loader/index.js?sourceMap!./../../../vue-loader/lib/style-rewriter.js?id=data-v-59e64a34!./../../../vue-loader/lib/selector.js?type=styles&index=0!./streetViewPanorama.vue");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-321799d7!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./streetViewPanorama.vue", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js?sourceMap!./../../node_modules/vue-loader/lib/style-rewriter.js?id=data-v-321799d7!./../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./streetViewPanorama.vue");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -34099,7 +34068,7 @@
 	
 	
 	// module
-	exports.push([module.id, "\n.vue-street-view-pano-container {\n  position: relative;\n}\n.vue-street-view-pano-container .vue-street-view-pano {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n", "", {"version":3,"sources":["/./node_modules/vue2-google-maps/dist/components/streetViewPanorama.vue?057993de"],"names":[],"mappings":";AAWA;EACA,mBAAA;CACA;AAEA;EACA,QAAA,CAAA,SAAA,CAAA,OAAA,CAAA,UAAA;EACA,mBAAA;CACA","file":"streetViewPanorama.vue","sourcesContent":["<template>\n  <div class=\"vue-street-view-pano-container\">\n    <div ref=\"vue-street-view-pano\" class=\"vue-street-view-pano\"></div>\n    <slot></slot>\n  </div>\n</template>\n\n<script src=\"./streetViewPanoramaImpl.js\">\n</script>\n\n<style lang=\"css\">\n.vue-street-view-pano-container {\n  position: relative;\n}\n\n.vue-street-view-pano-container .vue-street-view-pano {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n</style>\n"],"sourceRoot":"webpack://"}]);
+	exports.push([module.id, "\n.vue-street-view-pano-container {\n  position: relative;\n}\n.vue-street-view-pano-container .vue-street-view-pano {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n", "", {"version":3,"sources":["/../dist/components/streetViewPanorama.vue?057993de"],"names":[],"mappings":";AAWA;EACA,mBAAA;CACA;AAEA;EACA,QAAA,CAAA,SAAA,CAAA,OAAA,CAAA,UAAA;EACA,mBAAA;CACA","file":"streetViewPanorama.vue","sourcesContent":["<template>\n  <div class=\"vue-street-view-pano-container\">\n    <div ref=\"vue-street-view-pano\" class=\"vue-street-view-pano\"></div>\n    <slot></slot>\n  </div>\n</template>\n\n<script src=\"./streetViewPanoramaImpl.js\">\n</script>\n\n<style lang=\"css\">\n.vue-street-view-pano-container {\n  position: relative;\n}\n\n.vue-street-view-pano-container .vue-street-view-pano {\n  left: 0; right: 0; top: 0; bottom: 0;\n  position: absolute;\n}\n</style>\n"],"sourceRoot":"webpack://"}]);
 	
 	// exports
 
@@ -34262,19 +34231,18 @@
 /* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-	  return _c('div', {
+	module.exports={render:function (){var _vm=this;
+	  return _vm._c('div', {
 	    staticClass: "vue-street-view-pano-container"
-	  }, [_c('div', {
+	  }, [_vm._c('div', {
 	    ref: "vue-street-view-pano",
 	    staticClass: "vue-street-view-pano"
 	  }), _vm._v(" "), _vm._t("default")], 2)
 	},staticRenderFns: []}
-	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-hot-reload-api").rerender("data-v-59e64a34", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-321799d7", module.exports)
 	  }
 	}
 
@@ -34301,20 +34269,20 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\node_modules\\vue2-google-maps\\dist\\components\\placeInput.vue"
+	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\placeInput.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
 	/* hot reload */
 	if (false) {(function () {
-	  var hotAPI = require("vue-hot-reload-api")
+	  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
 	  hotAPI.install(require("vue"), false)
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-3a1eec0c", __vue_options__)
+	    hotAPI.createRecord("data-v-6b27a806", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-3a1eec0c", __vue_options__)
+	    hotAPI.reload("data-v-6b27a806", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] placeInput.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -34480,12 +34448,12 @@
 /* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-	  return _c('label', [_c('span', {
+	module.exports={render:function (){var _vm=this;
+	  return _vm._c('label', [_vm._c('span', {
 	    domProps: {
 	      "textContent": _vm._s(_vm.label)
 	    }
-	  }), _vm._v(" "), _c('input', {
+	  }), _vm._v(" "), _vm._c('input', {
 	    ref: "input",
 	    class: _vm.className,
 	    attrs: {
@@ -34494,11 +34462,10 @@
 	    }
 	  })])
 	},staticRenderFns: []}
-	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-hot-reload-api").rerender("data-v-3a1eec0c", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-6b27a806", module.exports)
 	  }
 	}
 
@@ -34525,20 +34492,20 @@
 	if (typeof __vue_options__ === "function") {
 	  __vue_options__ = __vue_options__.options
 	}
-	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\node_modules\\vue2-google-maps\\dist\\components\\autocomplete.vue"
+	__vue_options__.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\autocomplete.vue"
 	__vue_options__.render = __vue_template__.render
 	__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
 	
 	/* hot reload */
 	if (false) {(function () {
-	  var hotAPI = require("vue-hot-reload-api")
+	  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
 	  hotAPI.install(require("vue"), false)
 	  if (!hotAPI.compatible) return
 	  module.hot.accept()
 	  if (!module.hot.data) {
-	    hotAPI.createRecord("data-v-45cae39e", __vue_options__)
+	    hotAPI.createRecord("data-v-e1d0d43c", __vue_options__)
 	  } else {
-	    hotAPI.reload("data-v-45cae39e", __vue_options__)
+	    hotAPI.reload("data-v-e1d0d43c", __vue_options__)
 	  }
 	})()}
 	if (__vue_options__.functional) {console.error("[vue-loader] autocomplete.vue: functional components are not supported and should be defined in plain js files using render functions.")}
@@ -34660,8 +34627,8 @@
 /* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-	  return _c('input', {
+	module.exports={render:function (){var _vm=this;
+	  return _vm._c('input', {
 	    ref: "input",
 	    attrs: {
 	      "type": "text",
@@ -34672,11 +34639,10 @@
 	    }
 	  })
 	},staticRenderFns: []}
-	module.exports.render._withStripped = true
 	if (false) {
 	  module.hot.accept()
 	  if (module.hot.data) {
-	     require("vue-hot-reload-api").rerender("data-v-45cae39e", module.exports)
+	     require("vue-loader/node_modules/vue-hot-reload-api").rerender("data-v-e1d0d43c", module.exports)
 	  }
 	}
 
