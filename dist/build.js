@@ -29987,10 +29987,11 @@
 	      // manually trigger center and zoom
 	      _this2.$mapObject.addListener('center_changed', function () {
 	        _this2.$emit('center_changed', _this2.$mapObject.getCenter());
-	        _this2.$emit('bounds_changed', _this2.$mapObject.getBounds());
 	      });
 	      _this2.$mapObject.addListener('zoom_changed', function () {
 	        _this2.$emit('zoom_changed', _this2.$mapObject.getZoom());
+	      });
+	      _this2.$mapObject.addListener('bounds_changed', function () {
 	        _this2.$emit('bounds_changed', _this2.$mapObject.getBounds());
 	      });
 	
@@ -33419,10 +33420,6 @@
 	  value: true
 	});
 	
-	var _getIterator2 = __webpack_require__(108);
-	
-	var _getIterator3 = _interopRequireDefault(_getIterator2);
-	
 	var _slicedToArray2 = __webpack_require__(104);
 	
 	var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
@@ -33523,33 +33520,12 @@
 	          var eventListeners = [];
 	
 	          var mvcArray = _this.$polygonObject.getPaths();
-	          var _iteratorNormalCompletion = true;
-	          var _didIteratorError = false;
-	          var _iteratorError = undefined;
-	
-	          try {
-	            for (var _iterator = (0, _getIterator3.default)(mvcArray), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	              var mvcPath = _step.value;
-	
-	              eventListeners.push([mvcPath, mvcPath.addListener('insert_at', updatePaths)]);
-	              eventListeners.push([mvcPath, mvcPath.addListener('remove_at', updatePaths)]);
-	              eventListeners.push([mvcPath, mvcPath.addListener('set_at', updatePaths)]);
-	            }
-	          } catch (err) {
-	            _didIteratorError = true;
-	            _iteratorError = err;
-	          } finally {
-	            try {
-	              if (!_iteratorNormalCompletion && _iterator.return) {
-	                _iterator.return();
-	              }
-	            } finally {
-	              if (_didIteratorError) {
-	                throw _iteratorError;
-	              }
-	            }
+	          for (var i = 0; i < mvcArray.getLength(); i++) {
+	            var mvcPath = mvcArray.getAt(i);
+	            eventListeners.push([mvcPath, mvcPath.addListener('insert_at', updatePaths)]);
+	            eventListeners.push([mvcPath, mvcPath.addListener('remove_at', updatePaths)]);
+	            eventListeners.push([mvcPath, mvcPath.addListener('set_at', updatePaths)]);
 	          }
-	
 	          eventListeners.push([mvcArray, mvcArray.addListener('insert_at', updatePaths)]);
 	          eventListeners.push([mvcArray, mvcArray.addListener('remove_at', updatePaths)]);
 	          eventListeners.push([mvcArray, mvcArray.addListener('set_at', updatePaths)]);
@@ -33566,7 +33542,8 @@
 	        })();
 	      }
 	    }, {
-	      deep: this.deepWatch
+	      deep: this.deepWatch,
+	      immediate: true
 	    });
 	
 	    this.$watch('path', function (path) {
@@ -33599,7 +33576,8 @@
 	        })();
 	      }
 	    }, {
-	      deep: this.deepWatch
+	      deep: this.deepWatch,
+	      immediate: true
 	    });
 	
 	    // Display the map
