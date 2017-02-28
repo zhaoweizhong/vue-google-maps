@@ -146,6 +146,7 @@
         @position_changed="updateChild(m, 'position', $event)"
 
         v-for="m in activeMarkers"
+        :key="m.id"
       >
         <gmap-info-window
         :opened="m.ifw"
@@ -164,6 +165,7 @@
       @dragend="m.dragended++"
       @position_changed="updateChild(m, 'position', $event)"
       v-for="m in activeMarkers"
+      :key="m.id"
       >
         <gmap-info-window
         :opened="m.ifw"
@@ -241,6 +243,7 @@ gmap-map {
 export default {
   data: function data() {
     return {
+      lastId: 1,
       center: { lat: 48.8538302, lng: 2.2982161 },
       reportedCenter: { lat: 48.8538302, lng: 2.2982161 },
       mapBounds: {},
@@ -400,7 +403,10 @@ export default {
       createdMarker.position.lng = mouseArgs.latLng.lng();
     },
     addMarker: function addMarker() {
+      this.lastId++;
+
       this.markers.push({
+        id: this.lastId,
         position: { lat: 48.8538302, lng: 2.2982161 },
         opacity: 1,
         draggable: true,
