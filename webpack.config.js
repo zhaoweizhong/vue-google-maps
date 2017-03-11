@@ -1,10 +1,4 @@
-var webpack = require('webpack')
-var path = require('path');
-
-const babelOptions = {
-  presets: ['es2015', 'stage-0'],
-  plugins: ['transform-runtime']
-};
+var webpack = require('webpack');
 
 module.exports = {
   entry: './src/main.js',
@@ -31,7 +25,7 @@ module.exports = {
       }
     ],
   },
-}
+};
 
 if (process.env.NODE_ENV === 'production') {
   module.exports.plugins = [
@@ -45,7 +39,7 @@ if (process.env.NODE_ENV === 'production') {
         warnings: false
       }
     }),
-  ]
+  ];
 } else {
-  module.exports.devtool = 'source-map'
+  module.exports.devtool = 'source-map';
 }

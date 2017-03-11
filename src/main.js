@@ -1,6 +1,6 @@
-import Vue from 'vue/dist/vue.js'
-import App from './app.vue'
-import * as VueGoogleMaps from '../../dist/main.js'
+import Vue from 'vue/dist/vue.js';
+import App from './app.vue';
+import * as VueGoogleMaps from '../../dist/main.js';
 
 Vue.use(VueGoogleMaps, {
   installComponents: true,
@@ -9,7 +9,7 @@ Vue.use(VueGoogleMaps, {
     v: '3.26',
     libraries: 'places'
   }
-})
+});
 
 // json filter is now not bundled with vue
 Vue.filter('json', x => JSON.stringify(x));
@@ -19,4 +19,4 @@ new Vue({
   components: {
     myApp: App
   }
-})
+});

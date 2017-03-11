@@ -17054,15 +17054,15 @@
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16), __webpack_require__(58)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22), __webpack_require__(130)(module)))
 
 /***/ }),
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var store  = __webpack_require__(44)('wks')
-  , uid    = __webpack_require__(46)
-  , Symbol = __webpack_require__(7).Symbol;
+var store  = __webpack_require__(42)('wks')
+  , uid    = __webpack_require__(44)
+  , Symbol = __webpack_require__(6).Symbol;
 module.exports = function(name){
   return store[name] || (store[name] =
     Symbol && Symbol[name] || (Symbol || uid)('Symbol.' + name));
@@ -17129,6 +17129,7 @@ exports.default = function (vueElement, googleMapsElement, props, options) {
         // This ensures that the event handler will only be fired once
         var attributeTrackerName = '_' + attribute + '_changeTracker';
         var attributeTrackerRoot = '$data._changeIndicators';
+        var attributeValue = vueElement[attribute];
 
         vueElement.$set(vueElement.$data._changeIndicators, attributeTrackerName, 0);
 
@@ -17149,6 +17150,7 @@ exports.default = function (vueElement, googleMapsElement, props, options) {
 
     if (twoWay) {
       googleMapsElement.addListener(eventName, function (ev) {
+        // eslint-disable-line no-unused-vars
         if (timesSet > 0) {
           timesSet--;
           return;
@@ -17204,34 +17206,6 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
-exports.default = function (vueElement, googleMapObject, events) {
-  _lodash2.default.forEach(events, function (eventName) {
-    var exposedName = eventName;
-    googleMapObject.addListener(eventName, function (ev) {
-      vueElement.$emit(exposedName, ev);
-    });
-  });
-}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _lodash = __webpack_require__(0);
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
-
 exports.default = {
   methods: {
     getPropsValues: function getPropsValues() {
@@ -17245,7 +17219,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports) {
 
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
@@ -17254,7 +17228,7 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
 if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17264,17 +17238,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _deferredReady = __webpack_require__(13);
-
-var _deferredReady2 = __webpack_require__(13);
-
-var _map = __webpack_require__(49);
-
-var _map2 = _interopRequireDefault(_map);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
+var _deferredReady = __webpack_require__(15);
 
 /**
  * @class MapElementMixin @mixins DeferredReadyMixin
@@ -17338,10 +17302,38 @@ exports.default = {
 }; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
 
 /***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _lodash = __webpack_require__(0);
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+exports.default = function (vueElement, googleMapObject, events) {
+  _lodash2.default.forEach(events, function (eventName) {
+    var exposedName = eventName;
+    googleMapObject.addListener(eventName, function (ev) {
+      vueElement.$emit(exposedName, ev);
+    });
+  });
+}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
+
+/***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(20);
+var isObject = __webpack_require__(19);
 module.exports = function(it){
   if(!isObject(it))throw TypeError(it + ' is not an object!');
   return it;
@@ -17419,15 +17411,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.load = exports.loaded = undefined;
 
-var _keys = __webpack_require__(71);
+var _keys = __webpack_require__(65);
 
 var _keys2 = _interopRequireDefault(_keys);
 
-var _typeof2 = __webpack_require__(73);
+var _typeof2 = __webpack_require__(67);
 
 var _typeof3 = _interopRequireDefault(_typeof2);
 
-var _promise = __webpack_require__(17);
+var _promise = __webpack_require__(16);
 
 var _promise2 = _interopRequireDefault(_promise);
 
@@ -17440,6 +17432,7 @@ function _interopRequireDefault(obj) {
 var setUp = false;
 
 var loaded = exports.loaded = new _promise2.default(function (resolve, reject) {
+  // eslint-disable-line no-unused-vars
   window['vueGoogleMapsInit'] = resolve;
 });
 
@@ -17492,7 +17485,7 @@ var load = exports.load = function load(apiKey, version, libraries, loadCn) {
     }
 
     // libraries
-    var librariesPath = "";
+    var librariesPath = '';
     if (libraries && libraries.length > 0) {
       librariesPath = libraries.join(',');
       options['libraries'] = librariesPath;
@@ -17526,6 +17519,41 @@ var load = exports.load = function load(apiKey, version, libraries, loadCn) {
 
 /***/ }),
 /* 13 */
+/***/ (function(module, exports) {
+
+var toString = {}.toString;
+
+module.exports = function(it){
+  return toString.call(it).slice(8, -1);
+};
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// optional / simple context binding
+var aFunction = __webpack_require__(24);
+module.exports = function(fn, that, length){
+  aFunction(fn);
+  if(that === undefined)return fn;
+  switch(length){
+    case 1: return function(a){
+      return fn.call(that, a);
+    };
+    case 2: return function(a, b){
+      return fn.call(that, a, b);
+    };
+    case 3: return function(a, b, c){
+      return fn.call(that, a, b, c);
+    };
+  }
+  return function(/* ...args */){
+    return fn.apply(that, arguments);
+  };
+};
+
+/***/ }),
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17536,7 +17564,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.DeferredReadyMixin = exports.DeferredReady = undefined;
 
-var _promise = __webpack_require__(17);
+var _promise = __webpack_require__(16);
 
 var _promise2 = _interopRequireDefault(_promise);
 
@@ -17572,6 +17600,7 @@ function _interopRequireDefault(obj) {
 
 var DeferredReady = exports.DeferredReady = {
   install: function install(Vue, options) {
+    // eslint-disable-line no-unused-vars
     // Use the same merge strategy as regular hooks
     Vue.config.optionMergeStrategies.deferredReady = Vue.config.optionMergeStrategies.created;
     Vue.config.optionMergeStrategies.beforeDeferredReady = Vue.config.optionMergeStrategies.beforeDeferredReady;
@@ -17592,7 +17621,7 @@ function runHooks(vm) {
       try {
         return x.apply(vm);
       } catch (err) {
-        console.error(err.stack);
+        console.error(err.stack); // eslint-disable-line no-console
       }
     }));
     // execute all handlers, expecting them to return promises
@@ -17614,6 +17643,7 @@ var DeferredReadyMixin = exports.DeferredReadyMixin = {
     var _this = this;
 
     this.$deferredReadyPromise = new _promise2.default(function (resolve, reject) {
+      // eslint-disable-line no-unused-vars
       _this.$deferredReadyPromiseResolve = resolve;
     });
 
@@ -17644,89 +17674,27 @@ var DeferredReadyMixin = exports.DeferredReadyMixin = {
 };
 
 /***/ }),
-/* 14 */
-/***/ (function(module, exports) {
-
-var toString = {}.toString;
-
-module.exports = function(it){
-  return toString.call(it).slice(8, -1);
-};
-
-/***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
-// optional / simple context binding
-var aFunction = __webpack_require__(25);
-module.exports = function(fn, that, length){
-  aFunction(fn);
-  if(that === undefined)return fn;
-  switch(length){
-    case 1: return function(a){
-      return fn.call(that, a);
-    };
-    case 2: return function(a, b){
-      return fn.call(that, a, b);
-    };
-    case 3: return function(a, b, c){
-      return fn.call(that, a, b, c);
-    };
-  }
-  return function(/* ...args */){
-    return fn.apply(that, arguments);
-  };
-};
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
+module.exports = { "default": __webpack_require__(72), __esModule: true };
 
 /***/ }),
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(78), __esModule: true };
+// Thank's IE8 for his funny defineProperty
+module.exports = !__webpack_require__(27)(function(){
+  return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
+});
 
 /***/ }),
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-// Thank's IE8 for his funny defineProperty
-module.exports = !__webpack_require__(28)(function(){
-  return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
-});
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var global    = __webpack_require__(7)
+var global    = __webpack_require__(6)
   , core      = __webpack_require__(3)
-  , ctx       = __webpack_require__(15)
+  , ctx       = __webpack_require__(14)
   , PROTOTYPE = 'prototype';
 
 var $export = function(type, name, source){
@@ -17772,7 +17740,7 @@ $export.W = 32; // wrap
 module.exports = $export;
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = function(it){
@@ -17780,11 +17748,11 @@ module.exports = function(it){
 };
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var def = __webpack_require__(4).setDesc
-  , has = __webpack_require__(29)
+  , has = __webpack_require__(28)
   , TAG = __webpack_require__(1)('toStringTag');
 
 module.exports = function(it, tag, stat){
@@ -17792,18 +17760,537 @@ module.exports = function(it, tag, stat){
 };
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // to indexed object, toObject with fallback for non-array-like ES3 strings
-var IObject = __webpack_require__(87)
-  , defined = __webpack_require__(27);
+var IObject = __webpack_require__(81)
+  , defined = __webpack_require__(26);
 module.exports = function(it){
   return IObject(defined(it));
 };
 
 /***/ }),
+/* 22 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
 /* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/*
+Mixin for objects that are mounted by Google Maps
+Javascript API.
+
+These are objects that are sensitive to element resize
+operations so it exposes a property which accepts a bus
+
+*/
+
+exports.default = {
+  props: ['resizeBus'],
+
+  data: function data() {
+    return {
+      // For propsBinder trackProperties
+      _changeIndicators: {},
+      _actualResizeBus: null
+    };
+  },
+  created: function created() {
+    if (typeof this.resizeBus === 'undefined') {
+      this.$data._actualResizeBus = this.$gmapDefaultResizeBus;
+    } else {
+      this.$data._actualResizeBus = this.resizeBus;
+    }
+  },
+
+  methods: {
+    _resizeCallback: function _resizeCallback() {
+      this.resize();
+    },
+    _delayedResizeCallback: function _delayedResizeCallback() {
+      var _this = this;
+
+      this.$nextTick(function () {
+        return _this._resizeCallback();
+      });
+    }
+  },
+
+  watch: {
+    resizeBus: function resizeBus(newVal, oldVal) {
+      // eslint-disable-line no-unused-vars
+      this.$data._actualResizeBus = newVal;
+    },
+    '$data._actualResizeBus': function $data_actualResizeBus(newVal, oldVal) {
+      if (oldVal) {
+        oldVal.$off('resize', this._delayedResizeCallback);
+      }
+      if (newVal) {
+        newVal.$on('resize', this._delayedResizeCallback);
+      }
+    }
+  },
+
+  destroyed: function destroyed() {
+    this.$data._actualResizeBus.$off('resize', this._delayedResizeCallback);
+  }
+};
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports) {
+
+module.exports = function(it){
+  if(typeof it != 'function')throw TypeError(it + ' is not a function!');
+  return it;
+};
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// getting tag from 19.1.3.6 Object.prototype.toString()
+var cof = __webpack_require__(13)
+  , TAG = __webpack_require__(1)('toStringTag')
+  // ES3 wrong here
+  , ARG = cof(function(){ return arguments; }()) == 'Arguments';
+
+module.exports = function(it){
+  var O, T, B;
+  return it === undefined ? 'Undefined' : it === null ? 'Null'
+    // @@toStringTag case
+    : typeof (T = (O = Object(it))[TAG]) == 'string' ? T
+    // builtinTag case
+    : ARG ? cof(O)
+    // ES3 arguments fallback
+    : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+};
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports) {
+
+// 7.2.1 RequireObjectCoercible(argument)
+module.exports = function(it){
+  if(it == undefined)throw TypeError("Can't call method on  " + it);
+  return it;
+};
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports) {
+
+module.exports = function(exec){
+  try {
+    return !!exec();
+  } catch(e){
+    return true;
+  }
+};
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports) {
+
+var hasOwnProperty = {}.hasOwnProperty;
+module.exports = function(it, key){
+  return hasOwnProperty.call(it, key);
+};
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var $          = __webpack_require__(4)
+  , createDesc = __webpack_require__(31);
+module.exports = __webpack_require__(17) ? function(object, key, value){
+  return $.setDesc(object, key, createDesc(1, value));
+} : function(object, key, value){
+  object[key] = value;
+  return object;
+};
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports) {
+
+module.exports = true;
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports) {
+
+module.exports = function(bitmap, value){
+  return {
+    enumerable  : !(bitmap & 1),
+    configurable: !(bitmap & 2),
+    writable    : !(bitmap & 4),
+    value       : value
+  };
+};
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(29);
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $at  = __webpack_require__(97)(true);
+
+// 21.1.3.27 String.prototype[@@iterator]()
+__webpack_require__(41)(String, 'String', function(iterated){
+  this._t = String(iterated); // target
+  this._i = 0;                // next index
+// 21.1.5.2.1 %StringIteratorPrototype%.next()
+}, function(){
+  var O     = this._t
+    , index = this._i
+    , point;
+  if(index >= O.length)return {value: undefined, done: true};
+  point = $at(O, index);
+  this._i += point.length;
+  return {value: point, done: false};
+});
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(103);
+var Iterators = __webpack_require__(10);
+Iterators.NodeList = Iterators.HTMLCollection = Iterators.Array;
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function() {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		var result = [];
+		for(var i = 0; i < this.length; i++) {
+			var item = this[i];
+			if(item[2]) {
+				result.push("@media " + item[2] + "{" + item[1] + "}");
+			} else {
+				result.push(item[1]);
+			}
+		}
+		return result.join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+  MIT License http://www.opensource.org/licenses/mit-license.php
+  Author Tobias Koppers @sokra
+  Modified by Evan You @yyx990803
+*/
+
+var hasDocument = typeof document !== 'undefined'
+
+if (typeof DEBUG !== 'undefined' && DEBUG) {
+  if (!hasDocument) {
+    throw new Error(
+    'vue-style-loader cannot be used in a non-browser environment. ' +
+    "Use { target: 'node' } in your Webpack config to indicate a server-rendering environment."
+  ) }
+}
+
+var listToStyles = __webpack_require__(129)
+
+/*
+type StyleObject = {
+  id: number;
+  parts: Array<StyleObjectPart>
+}
+
+type StyleObjectPart = {
+  css: string;
+  media: string;
+  sourceMap: ?string
+}
+*/
+
+var stylesInDom = {/*
+  [id: number]: {
+    id: number,
+    refs: number,
+    parts: Array<(obj?: StyleObjectPart) => void>
+  }
+*/}
+
+var head = hasDocument && (document.head || document.getElementsByTagName('head')[0])
+var singletonElement = null
+var singletonCounter = 0
+var isProduction = false
+var noop = function () {}
+
+// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+// tags it will allow on a page
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\b/.test(navigator.userAgent.toLowerCase())
+
+module.exports = function (parentId, list, _isProduction) {
+  isProduction = _isProduction
+
+  var styles = listToStyles(parentId, list)
+  addStylesToDom(styles)
+
+  return function update (newList) {
+    var mayRemove = []
+    for (var i = 0; i < styles.length; i++) {
+      var item = styles[i]
+      var domStyle = stylesInDom[item.id]
+      domStyle.refs--
+      mayRemove.push(domStyle)
+    }
+    if (newList) {
+      styles = listToStyles(parentId, newList)
+      addStylesToDom(styles)
+    } else {
+      styles = []
+    }
+    for (var i = 0; i < mayRemove.length; i++) {
+      var domStyle = mayRemove[i]
+      if (domStyle.refs === 0) {
+        for (var j = 0; j < domStyle.parts.length; j++) {
+          domStyle.parts[j]()
+        }
+        delete stylesInDom[domStyle.id]
+      }
+    }
+  }
+}
+
+function addStylesToDom (styles /* Array<StyleObject> */) {
+  for (var i = 0; i < styles.length; i++) {
+    var item = styles[i]
+    var domStyle = stylesInDom[item.id]
+    if (domStyle) {
+      domStyle.refs++
+      for (var j = 0; j < domStyle.parts.length; j++) {
+        domStyle.parts[j](item.parts[j])
+      }
+      for (; j < item.parts.length; j++) {
+        domStyle.parts.push(addStyle(item.parts[j]))
+      }
+      if (domStyle.parts.length > item.parts.length) {
+        domStyle.parts.length = item.parts.length
+      }
+    } else {
+      var parts = []
+      for (var j = 0; j < item.parts.length; j++) {
+        parts.push(addStyle(item.parts[j]))
+      }
+      stylesInDom[item.id] = { id: item.id, refs: 1, parts: parts }
+    }
+  }
+}
+
+function listToStyles (parentId, list) {
+  var styles = []
+  var newStyles = {}
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i]
+    var id = item[0]
+    var css = item[1]
+    var media = item[2]
+    var sourceMap = item[3]
+    var part = { css: css, media: media, sourceMap: sourceMap }
+    if (!newStyles[id]) {
+      part.id = parentId + ':0'
+      styles.push(newStyles[id] = { id: id, parts: [part] })
+    } else {
+      part.id = parentId + ':' + newStyles[id].parts.length
+      newStyles[id].parts.push(part)
+    }
+  }
+  return styles
+}
+
+function createStyleElement () {
+  var styleElement = document.createElement('style')
+  styleElement.type = 'text/css'
+  head.appendChild(styleElement)
+  return styleElement
+}
+
+function addStyle (obj /* StyleObjectPart */) {
+  var update, remove
+  var styleElement = document.querySelector('style[data-vue-ssr-id~="' + obj.id + '"]')
+  var hasSSR = styleElement != null
+
+  // if in production mode and style is already provided by SSR,
+  // simply do nothing.
+  if (hasSSR && isProduction) {
+    return noop
+  }
+
+  if (isOldIE) {
+    // use singleton mode for IE9.
+    var styleIndex = singletonCounter++
+    styleElement = singletonElement || (singletonElement = createStyleElement())
+    update = applyToSingletonTag.bind(null, styleElement, styleIndex, false)
+    remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true)
+  } else {
+    // use multi-style-tag mode in all other cases
+    styleElement = styleElement || createStyleElement()
+    update = applyToTag.bind(null, styleElement)
+    remove = function () {
+      styleElement.parentNode.removeChild(styleElement)
+    }
+  }
+
+  if (!hasSSR) {
+    update(obj)
+  }
+
+  return function updateStyle (newObj /* StyleObjectPart */) {
+    if (newObj) {
+      if (newObj.css === obj.css &&
+          newObj.media === obj.media &&
+          newObj.sourceMap === obj.sourceMap) {
+        return
+      }
+      update(obj = newObj)
+    } else {
+      remove()
+    }
+  }
+}
+
+var replaceText = (function () {
+  var textStore = []
+
+  return function (index, replacement) {
+    textStore[index] = replacement
+    return textStore.filter(Boolean).join('\n')
+  }
+})()
+
+function applyToSingletonTag (styleElement, index, remove, obj) {
+  var css = remove ? '' : obj.css
+
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = replaceText(index, css)
+  } else {
+    var cssNode = document.createTextNode(css)
+    var childNodes = styleElement.childNodes
+    if (childNodes[index]) styleElement.removeChild(childNodes[index])
+    if (childNodes.length) {
+      styleElement.insertBefore(cssNode, childNodes[index])
+    } else {
+      styleElement.appendChild(cssNode)
+    }
+  }
+}
+
+function applyToTag (styleElement, obj) {
+  var css = obj.css
+  var media = obj.media
+  var sourceMap = obj.sourceMap
+
+  if (media) {
+    styleElement.setAttribute('media', media)
+  }
+
+  if (sourceMap) {
+    // https://developer.chrome.com/devtools/docs/javascript-debugging
+    // this makes source maps inside style tags work properly in Chrome
+    css += '\n/*# sourceURL=' + sourceMap.sources[0] + ' */'
+    // http://stackoverflow.com/a/26603875
+    css += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + ' */'
+  }
+
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = css
+  } else {
+    while (styleElement.firstChild) {
+      styleElement.removeChild(styleElement.firstChild)
+    }
+    styleElement.appendChild(document.createTextNode(css))
+  }
+}
+
+
+/***/ }),
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17875,7 +18362,7 @@ function isBuffer(b) {
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var util = __webpack_require__(57);
+var util = __webpack_require__(114);
 var hasOwn = Object.prototype.hasOwnProperty;
 var pSlice = Array.prototype.slice;
 var functionsHaveNames = (function () {
@@ -18298,756 +18785,10 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-/*
-Mixin for objects that are mounted by Google Maps
-Javascript API.
-
-These are objects that are sensitive to element resize
-operations so it exposes a property which accepts a bus
-
-*/
-
-exports.default = {
-  props: ['resizeBus'],
-
-  data: function data() {
-    return {
-      // For propsBinder trackProperties
-      _changeIndicators: {},
-      _actualResizeBus: null
-    };
-  },
-  created: function created() {
-    if (typeof this.resizeBus === 'undefined') {
-      this.$data._actualResizeBus = this.$gmapDefaultResizeBus;
-    } else {
-      this.$data._actualResizeBus = this.resizeBus;
-    }
-  },
-
-  methods: {
-    _resizeCallback: function _resizeCallback() {
-      this.resize();
-    },
-    _delayedResizeCallback: function _delayedResizeCallback() {
-      var _this = this;
-
-      this.$nextTick(function () {
-        return _this._resizeCallback();
-      });
-    }
-  },
-
-  watch: {
-    resizeBus: function resizeBus(newVal, oldVal) {
-      this.$data._actualResizeBus = newVal;
-    },
-    '$data._actualResizeBus': function $data_actualResizeBus(newVal, oldVal) {
-      if (oldVal) {
-        oldVal.$off('resize', this._delayedResizeCallback);
-      }
-      if (newVal) {
-        newVal.$on('resize', this._delayedResizeCallback);
-      }
-    }
-  },
-
-  destroyed: function destroyed() {
-    this.$data._actualResizeBus.$off('resize', this._delayedResizeCallback);
-  }
-};
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports) {
-
-module.exports = function(it){
-  if(typeof it != 'function')throw TypeError(it + ' is not a function!');
-  return it;
-};
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// getting tag from 19.1.3.6 Object.prototype.toString()
-var cof = __webpack_require__(14)
-  , TAG = __webpack_require__(1)('toStringTag')
-  // ES3 wrong here
-  , ARG = cof(function(){ return arguments; }()) == 'Arguments';
-
-module.exports = function(it){
-  var O, T, B;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (T = (O = Object(it))[TAG]) == 'string' ? T
-    // builtinTag case
-    : ARG ? cof(O)
-    // ES3 arguments fallback
-    : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
-};
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports) {
-
-// 7.2.1 RequireObjectCoercible(argument)
-module.exports = function(it){
-  if(it == undefined)throw TypeError("Can't call method on  " + it);
-  return it;
-};
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports) {
-
-module.exports = function(exec){
-  try {
-    return !!exec();
-  } catch(e){
-    return true;
-  }
-};
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports) {
-
-var hasOwnProperty = {}.hasOwnProperty;
-module.exports = function(it, key){
-  return hasOwnProperty.call(it, key);
-};
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var $          = __webpack_require__(4)
-  , createDesc = __webpack_require__(32);
-module.exports = __webpack_require__(18) ? function(object, key, value){
-  return $.setDesc(object, key, createDesc(1, value));
-} : function(object, key, value){
-  object[key] = value;
-  return object;
-};
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports) {
-
-module.exports = true;
-
-/***/ }),
-/* 32 */
-/***/ (function(module, exports) {
-
-module.exports = function(bitmap, value){
-  return {
-    enumerable  : !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable    : !(bitmap & 4),
-    value       : value
-  };
-};
-
-/***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(30);
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var $at  = __webpack_require__(103)(true);
-
-// 21.1.3.27 String.prototype[@@iterator]()
-__webpack_require__(43)(String, 'String', function(iterated){
-  this._t = String(iterated); // target
-  this._i = 0;                // next index
-// 21.1.5.2.1 %StringIteratorPrototype%.next()
-}, function(){
-  var O     = this._t
-    , index = this._i
-    , point;
-  if(index >= O.length)return {value: undefined, done: true};
-  point = $at(O, index);
-  this._i += point.length;
-  return {value: point, done: false};
-});
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-__webpack_require__(109);
-var Iterators = __webpack_require__(10);
-Iterators.NodeList = Iterators.HTMLCollection = Iterators.Array;
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports) {
-
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-// css base code, injected by the css-loader
-module.exports = function() {
-	var list = [];
-
-	// return the list of modules as css string
-	list.toString = function toString() {
-		var result = [];
-		for(var i = 0; i < this.length; i++) {
-			var item = this[i];
-			if(item[2]) {
-				result.push("@media " + item[2] + "{" + item[1] + "}");
-			} else {
-				result.push(item[1]);
-			}
-		}
-		return result.join("");
-	};
-
-	// import a list of modules into the list
-	list.i = function(modules, mediaQuery) {
-		if(typeof modules === "string")
-			modules = [[null, modules, ""]];
-		var alreadyImportedModules = {};
-		for(var i = 0; i < this.length; i++) {
-			var id = this[i][0];
-			if(typeof id === "number")
-				alreadyImportedModules[id] = true;
-		}
-		for(i = 0; i < modules.length; i++) {
-			var item = modules[i];
-			// skip already imported module
-			// this implementation is not 100% perfect for weird media query combinations
-			//  when a module is imported multiple times with different media queries.
-			//  I hope this will never occur (Hey this way we have smaller bundles)
-			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-				if(mediaQuery && !item[2]) {
-					item[2] = mediaQuery;
-				} else if(mediaQuery) {
-					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-				}
-				list.push(item);
-			}
-		}
-	};
-	return list;
-};
-
-
-/***/ }),
-/* 37 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/*
-  MIT License http://www.opensource.org/licenses/mit-license.php
-  Author Tobias Koppers @sokra
-  Modified by Evan You @yyx990803
-*/
-
-var hasDocument = typeof document !== 'undefined'
-
-if (typeof DEBUG !== 'undefined' && DEBUG) {
-  if (!hasDocument) {
-    throw new Error(
-    'vue-style-loader cannot be used in a non-browser environment. ' +
-    "Use { target: 'node' } in your Webpack config to indicate a server-rendering environment."
-  ) }
-}
-
-var listToStyles = __webpack_require__(130)
-
-/*
-type StyleObject = {
-  id: number;
-  parts: Array<StyleObjectPart>
-}
-
-type StyleObjectPart = {
-  css: string;
-  media: string;
-  sourceMap: ?string
-}
-*/
-
-var stylesInDom = {/*
-  [id: number]: {
-    id: number,
-    refs: number,
-    parts: Array<(obj?: StyleObjectPart) => void>
-  }
-*/}
-
-var head = hasDocument && (document.head || document.getElementsByTagName('head')[0])
-var singletonElement = null
-var singletonCounter = 0
-var isProduction = false
-var noop = function () {}
-
-// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-// tags it will allow on a page
-var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\b/.test(navigator.userAgent.toLowerCase())
-
-module.exports = function (parentId, list, _isProduction) {
-  isProduction = _isProduction
-
-  var styles = listToStyles(parentId, list)
-  addStylesToDom(styles)
-
-  return function update (newList) {
-    var mayRemove = []
-    for (var i = 0; i < styles.length; i++) {
-      var item = styles[i]
-      var domStyle = stylesInDom[item.id]
-      domStyle.refs--
-      mayRemove.push(domStyle)
-    }
-    if (newList) {
-      styles = listToStyles(parentId, newList)
-      addStylesToDom(styles)
-    } else {
-      styles = []
-    }
-    for (var i = 0; i < mayRemove.length; i++) {
-      var domStyle = mayRemove[i]
-      if (domStyle.refs === 0) {
-        for (var j = 0; j < domStyle.parts.length; j++) {
-          domStyle.parts[j]()
-        }
-        delete stylesInDom[domStyle.id]
-      }
-    }
-  }
-}
-
-function addStylesToDom (styles /* Array<StyleObject> */) {
-  for (var i = 0; i < styles.length; i++) {
-    var item = styles[i]
-    var domStyle = stylesInDom[item.id]
-    if (domStyle) {
-      domStyle.refs++
-      for (var j = 0; j < domStyle.parts.length; j++) {
-        domStyle.parts[j](item.parts[j])
-      }
-      for (; j < item.parts.length; j++) {
-        domStyle.parts.push(addStyle(item.parts[j]))
-      }
-      if (domStyle.parts.length > item.parts.length) {
-        domStyle.parts.length = item.parts.length
-      }
-    } else {
-      var parts = []
-      for (var j = 0; j < item.parts.length; j++) {
-        parts.push(addStyle(item.parts[j]))
-      }
-      stylesInDom[item.id] = { id: item.id, refs: 1, parts: parts }
-    }
-  }
-}
-
-function listToStyles (parentId, list) {
-  var styles = []
-  var newStyles = {}
-  for (var i = 0; i < list.length; i++) {
-    var item = list[i]
-    var id = item[0]
-    var css = item[1]
-    var media = item[2]
-    var sourceMap = item[3]
-    var part = { css: css, media: media, sourceMap: sourceMap }
-    if (!newStyles[id]) {
-      part.id = parentId + ':0'
-      styles.push(newStyles[id] = { id: id, parts: [part] })
-    } else {
-      part.id = parentId + ':' + newStyles[id].parts.length
-      newStyles[id].parts.push(part)
-    }
-  }
-  return styles
-}
-
-function createStyleElement () {
-  var styleElement = document.createElement('style')
-  styleElement.type = 'text/css'
-  head.appendChild(styleElement)
-  return styleElement
-}
-
-function addStyle (obj /* StyleObjectPart */) {
-  var update, remove
-  var styleElement = document.querySelector('style[data-vue-ssr-id~="' + obj.id + '"]')
-  var hasSSR = styleElement != null
-
-  // if in production mode and style is already provided by SSR,
-  // simply do nothing.
-  if (hasSSR && isProduction) {
-    return noop
-  }
-
-  if (isOldIE) {
-    // use singleton mode for IE9.
-    var styleIndex = singletonCounter++
-    styleElement = singletonElement || (singletonElement = createStyleElement())
-    update = applyToSingletonTag.bind(null, styleElement, styleIndex, false)
-    remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true)
-  } else {
-    // use multi-style-tag mode in all other cases
-    styleElement = styleElement || createStyleElement()
-    update = applyToTag.bind(null, styleElement)
-    remove = function () {
-      styleElement.parentNode.removeChild(styleElement)
-    }
-  }
-
-  if (!hasSSR) {
-    update(obj)
-  }
-
-  return function updateStyle (newObj /* StyleObjectPart */) {
-    if (newObj) {
-      if (newObj.css === obj.css &&
-          newObj.media === obj.media &&
-          newObj.sourceMap === obj.sourceMap) {
-        return
-      }
-      update(obj = newObj)
-    } else {
-      remove()
-    }
-  }
-}
-
-var replaceText = (function () {
-  var textStore = []
-
-  return function (index, replacement) {
-    textStore[index] = replacement
-    return textStore.filter(Boolean).join('\n')
-  }
-})()
-
-function applyToSingletonTag (styleElement, index, remove, obj) {
-  var css = remove ? '' : obj.css
-
-  if (styleElement.styleSheet) {
-    styleElement.styleSheet.cssText = replaceText(index, css)
-  } else {
-    var cssNode = document.createTextNode(css)
-    var childNodes = styleElement.childNodes
-    if (childNodes[index]) styleElement.removeChild(childNodes[index])
-    if (childNodes.length) {
-      styleElement.insertBefore(cssNode, childNodes[index])
-    } else {
-      styleElement.appendChild(cssNode)
-    }
-  }
-}
-
-function applyToTag (styleElement, obj) {
-  var css = obj.css
-  var media = obj.media
-  var sourceMap = obj.sourceMap
-
-  if (media) {
-    styleElement.setAttribute('media', media)
-  }
-
-  if (sourceMap) {
-    // https://developer.chrome.com/devtools/docs/javascript-debugging
-    // this makes source maps inside style tags work properly in Chrome
-    css += '\n/*# sourceURL=' + sourceMap.sources[0] + ' */'
-    // http://stackoverflow.com/a/26603875
-    css += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + ' */'
-  }
-
-  if (styleElement.styleSheet) {
-    styleElement.styleSheet.cssText = css
-  } else {
-    while (styleElement.firstChild) {
-      styleElement.removeChild(styleElement.firstChild)
-    }
-    styleElement.appendChild(document.createTextNode(css))
-  }
-}
-
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22)))
 
 /***/ }),
 /* 38 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _lodash = __webpack_require__(0);
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-var _propsBinder = __webpack_require__(2);
-
-var _propsBinder2 = _interopRequireDefault(_propsBinder);
-
-var _mapElementMixin = __webpack_require__(8);
-
-var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
-
-var _getPropsValuesMixin = __webpack_require__(6);
-
-var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
-
-var _markerClustererPlus = __webpack_require__(116);
-
-var _markerClustererPlus2 = _interopRequireDefault(_markerClustererPlus);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
-
-var props = {
-  maxZoom: {
-    type: Number,
-    twoWay: false
-  },
-  calculator: {
-    type: Function,
-    twoWay: false
-  },
-  gridSize: {
-    type: Number,
-    twoWay: false
-  },
-  styles: {
-    type: Array,
-    twoWay: false
-  }
-}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
-
-/**
-  * @class Cluster
-  * @prop $clusterObject -- Exposes the marker clusterer to
-        descendent Marker classes. Override this if you area
-        extending the class
-**/
-
-exports.default = {
-  mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
-  props: props,
-
-  render: function render(h) {
-    // <div><slot></slot></div>
-    return h('div', this.$slots.default);
-  },
-  deferredReady: function deferredReady() {
-    var _this = this;
-
-    var options = _lodash2.default.clone(this.getPropsValues());
-
-    if (typeof _markerClustererPlus2.default === 'undefined') {
-      console.error("MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js");
-      throw new Error("MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js");
-    }
-
-    this.$clusterObject = new _markerClustererPlus2.default(this.$map, [], options);
-
-    (0, _propsBinder2.default)(this, this.$clusterObject, props, {
-      afterModelChanged: function afterModelChanged(a, v) {
-        var oldMarkers = _this.$clusterObject.getMarkers();
-        _this.$clusterObject.clearMarkers();
-        _this.$clusterObject.addMarkers(oldMarkers);
-      }
-    });
-  },
-  detached: function detached() {
-    this.$clusterObject.clearMarkers();
-  }
-};
-
-/***/ }),
-/* 39 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _lodash = __webpack_require__(0);
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-var _eventsBinder = __webpack_require__(5);
-
-var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
-
-var _propsBinder = __webpack_require__(2);
-
-var _propsBinder2 = _interopRequireDefault(_propsBinder);
-
-var _getPropsValuesMixin = __webpack_require__(6);
-
-var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
-
-var _mapElementMixin = __webpack_require__(8);
-
-var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
-
-var _cluster = __webpack_require__(38);
-
-var _cluster2 = _interopRequireDefault(_cluster);
-
-var _assert = __webpack_require__(23);
-
-var _assert2 = _interopRequireDefault(_assert);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
-
-var props = {
-  animation: {
-    twoWay: true,
-    type: Number
-  },
-  attribution: {
-    type: Object
-  },
-  clickable: {
-    type: Boolean,
-    twoWay: true,
-    default: true
-  },
-  cursor: {
-    type: String,
-    twoWay: true
-  },
-  draggable: {
-    type: Boolean,
-    twoWay: true,
-    default: false
-  },
-  icon: {
-    twoWay: true
-  },
-  label: {},
-  opacity: {
-    type: Number,
-    default: 1
-  },
-  place: {
-    type: Object
-  },
-  position: {
-    type: Object,
-    twoWay: true
-  },
-  shape: {
-    type: Object,
-    twoWay: true
-  },
-  title: {
-    type: String,
-    twoWay: true
-  },
-  zIndex: {
-    type: Number,
-    twoWay: true
-  },
-  visible: {
-    twoWay: true,
-    default: true
-  }
-};
-
-var events = ['click', 'rightclick', 'dblclick', 'drag', 'dragstart', 'dragend', 'mouseup', 'mousedown', 'mouseover', 'mouseout'];
-
-var container;
-
-/**
- * @class Marker
- *
- * Marker class with extra support for
- *
- * - Embedded info windows
- * - Clustered markers
- *
- * Support for clustered markers is for backward-compatability
- * reasons. Otherwise we should use a cluster-marker mixin or
- * subclass.
- */
-exports.default = {
-  mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
-  props: props,
-
-  render: function render(h) {
-    return h( // So that infowindows can have a marker parent
-    'div', this.$slots.default);
-  },
-  destroyed: function destroyed() {
-    if (!this.$markerObject) return;
-
-    if (this.$clusterObject) {
-      this.$clusterObject.removeMarker(this.$markerObject);
-    } else {
-      this.$markerObject.setMap(null);
-    }
-  },
-  deferredReady: function deferredReady() {
-    var _this = this;
-
-    var options = _lodash2.default.mapValues(props, function (value, prop) {
-      return _this[prop];
-    });
-    options.map = this.$map;
-
-    // search ancestors for cluster object
-    var search = this.$findAncestor(function (ans) {
-      return ans.$clusterObject;
-    });
-
-    this.$clusterObject = search ? search.$clusterObject : null;
-    this.createMarker(options, this.$map);
-  },
-
-  methods: {
-    createMarker: function createMarker(options, map) {
-      this.$markerObject = new google.maps.Marker(options);
-      (0, _propsBinder2.default)(this, this.$markerObject, props);
-      (0, _eventsBinder2.default)(this, this.$markerObject, events);
-
-      if (this.$clusterObject) {
-        this.$clusterObject.addMarker(this.$markerObject);
-      }
-    }
-  }
-};
-
-/***/ }),
-/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19076,7 +18817,7 @@ function handler(action) {
 }
 
 /***/ }),
-/* 41 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19095,7 +18836,7 @@ exports.default = function (input) {
   function addEventListenerWrapper(type, listener) {
     // Simulate a 'down arrow' keypress on hitting 'return' when no pac suggestion is selected,
     // and then trigger the original listener.
-    if (type == "keydown") {
+    if (type == 'keydown') {
       var orig_listener = listener;
       listener = function listener(event) {
         var suggestion_selected = document.getElementsByClassName('pac-item-selected').length > 0;
@@ -19116,7 +18857,7 @@ exports.default = function (input) {
 };
 
 /***/ }),
-/* 42 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19124,11 +18865,11 @@ exports.default = function (input) {
 
 exports.__esModule = true;
 
-var _isIterable2 = __webpack_require__(70);
+var _isIterable2 = __webpack_require__(64);
 
 var _isIterable3 = _interopRequireDefault(_isIterable2);
 
-var _getIterator2 = __webpack_require__(69);
+var _getIterator2 = __webpack_require__(63);
 
 var _getIterator3 = _interopRequireDefault(_getIterator2);
 
@@ -19173,19 +18914,19 @@ exports.default = function () {
 }();
 
 /***/ }),
-/* 43 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var LIBRARY        = __webpack_require__(31)
-  , $export        = __webpack_require__(19)
-  , redefine       = __webpack_require__(33)
-  , hide           = __webpack_require__(30)
-  , has            = __webpack_require__(29)
+var LIBRARY        = __webpack_require__(30)
+  , $export        = __webpack_require__(18)
+  , redefine       = __webpack_require__(32)
+  , hide           = __webpack_require__(29)
+  , has            = __webpack_require__(28)
   , Iterators      = __webpack_require__(10)
-  , $iterCreate    = __webpack_require__(91)
-  , setToStringTag = __webpack_require__(21)
+  , $iterCreate    = __webpack_require__(85)
+  , setToStringTag = __webpack_require__(20)
   , getProto       = __webpack_require__(4).getProto
   , ITERATOR       = __webpack_require__(1)('iterator')
   , BUGGY          = !([].keys && 'next' in [].keys()) // Safari has buggy iterators w/o `next`
@@ -19245,10 +18986,10 @@ module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED
 };
 
 /***/ }),
-/* 44 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global = __webpack_require__(7)
+var global = __webpack_require__(6)
   , SHARED = '__core-js_shared__'
   , store  = global[SHARED] || (global[SHARED] = {});
 module.exports = function(key){
@@ -19256,7 +18997,7 @@ module.exports = function(key){
 };
 
 /***/ }),
-/* 45 */
+/* 43 */
 /***/ (function(module, exports) {
 
 // 7.1.4 ToInteger
@@ -19267,7 +19008,7 @@ module.exports = function(it){
 };
 
 /***/ }),
-/* 46 */
+/* 44 */
 /***/ (function(module, exports) {
 
 var id = 0
@@ -19277,10 +19018,10 @@ module.exports = function(key){
 };
 
 /***/ }),
-/* 47 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var classof   = __webpack_require__(26)
+var classof   = __webpack_require__(25)
   , ITERATOR  = __webpack_require__(1)('iterator')
   , Iterators = __webpack_require__(10);
 module.exports = __webpack_require__(3).getIteratorMethod = function(it){
@@ -19290,51 +19031,13 @@ module.exports = __webpack_require__(3).getIteratorMethod = function(it){
 };
 
 /***/ }),
-/* 48 */
+/* 46 */
 /***/ (function(module, exports) {
 
 
 
 /***/ }),
-/* 49 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-/* styles */
-__webpack_require__(129)
-
-var Component = __webpack_require__(11)(
-  /* script */
-  __webpack_require__(62),
-  /* template */
-  __webpack_require__(126),
-  /* scopeId */
-  null,
-  /* cssModules */
-  null
-)
-Component.options.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\map.vue"
-if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
-if (Component.options.functional) {console.error("[vue-loader] map.vue: functional components are not supported with templates, they should use render functions.")}
-
-/* hot reload */
-if (false) {(function () {
-  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
-  hotAPI.install(require("vue"), false)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-eb44a4f6", Component.options)
-  } else {
-    hotAPI.reload("data-v-eb44a4f6", Component.options)
-  }
-})()}
-
-module.exports = Component.exports
-
-
-/***/ }),
-/* 50 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19348,27 +19051,27 @@ exports.install = install;
 
 var _manager = __webpack_require__(12);
 
-var _marker = __webpack_require__(39);
+var _marker = __webpack_require__(56);
 
 var _marker2 = _interopRequireDefault(_marker);
 
-var _cluster = __webpack_require__(38);
+var _cluster = __webpack_require__(53);
 
 var _cluster2 = _interopRequireDefault(_cluster);
 
-var _polyline = __webpack_require__(65);
+var _polyline = __webpack_require__(59);
 
 var _polyline2 = _interopRequireDefault(_polyline);
 
-var _polygon = __webpack_require__(64);
+var _polygon = __webpack_require__(58);
 
 var _polygon2 = _interopRequireDefault(_polygon);
 
-var _circle = __webpack_require__(60);
+var _circle = __webpack_require__(52);
 
 var _circle2 = _interopRequireDefault(_circle);
 
-var _rectangle = __webpack_require__(66);
+var _rectangle = __webpack_require__(60);
 
 var _rectangle2 = _interopRequireDefault(_rectangle);
 
@@ -19376,35 +19079,35 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _infoWindow = __webpack_require__(118);
+var _infoWindow = __webpack_require__(116);
 
 var _infoWindow2 = _interopRequireDefault(_infoWindow);
 
-var _map = __webpack_require__(49);
+var _map = __webpack_require__(117);
 
 var _map2 = _interopRequireDefault(_map);
 
-var _streetViewPanorama = __webpack_require__(120);
+var _streetViewPanorama = __webpack_require__(119);
 
 var _streetViewPanorama2 = _interopRequireDefault(_streetViewPanorama);
 
-var _placeInput = __webpack_require__(119);
+var _placeInput = __webpack_require__(118);
 
 var _placeInput2 = _interopRequireDefault(_placeInput);
 
-var _autocomplete = __webpack_require__(117);
+var _autocomplete = __webpack_require__(115);
 
 var _autocomplete2 = _interopRequireDefault(_autocomplete);
 
-var _mapElementMixin = __webpack_require__(8);
+var _mapElementMixin = __webpack_require__(7);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
-var _mountableMixin = __webpack_require__(24);
+var _mountableMixin = __webpack_require__(23);
 
 var _mountableMixin2 = _interopRequireDefault(_mountableMixin);
 
-var _deferredReady = __webpack_require__(13);
+var _deferredReady = __webpack_require__(15);
 
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
@@ -19463,24 +19166,24 @@ function install(Vue, options) {
 }
 
 /***/ }),
-/* 51 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(76), __esModule: true };
+module.exports = { "default": __webpack_require__(70), __esModule: true };
 
 /***/ }),
-/* 52 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
 /* styles */
-__webpack_require__(128)
+__webpack_require__(127)
 
 var Component = __webpack_require__(11)(
   /* script */
-  __webpack_require__(68),
+  __webpack_require__(62),
   /* template */
-  __webpack_require__(123),
+  __webpack_require__(122),
   /* scopeId */
   null,
   /* cssModules */
@@ -19507,7 +19210,7 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 53 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*!
@@ -28686,857 +28389,10 @@ return Vue$3;
 
 })));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22)))
 
 /***/ }),
-/* 54 */
-/***/ (function(module, exports) {
-
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-
-/***/ }),
-/* 55 */
-/***/ (function(module, exports) {
-
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
-
-
-/***/ }),
-/* 56 */
-/***/ (function(module, exports) {
-
-module.exports = function isBuffer(arg) {
-  return arg && typeof arg === 'object'
-    && typeof arg.copy === 'function'
-    && typeof arg.fill === 'function'
-    && typeof arg.readUInt8 === 'function';
-}
-
-/***/ }),
-/* 57 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-var formatRegExp = /%[sdj%]/g;
-exports.format = function(f) {
-  if (!isString(f)) {
-    var objects = [];
-    for (var i = 0; i < arguments.length; i++) {
-      objects.push(inspect(arguments[i]));
-    }
-    return objects.join(' ');
-  }
-
-  var i = 1;
-  var args = arguments;
-  var len = args.length;
-  var str = String(f).replace(formatRegExp, function(x) {
-    if (x === '%%') return '%';
-    if (i >= len) return x;
-    switch (x) {
-      case '%s': return String(args[i++]);
-      case '%d': return Number(args[i++]);
-      case '%j':
-        try {
-          return JSON.stringify(args[i++]);
-        } catch (_) {
-          return '[Circular]';
-        }
-      default:
-        return x;
-    }
-  });
-  for (var x = args[i]; i < len; x = args[++i]) {
-    if (isNull(x) || !isObject(x)) {
-      str += ' ' + x;
-    } else {
-      str += ' ' + inspect(x);
-    }
-  }
-  return str;
-};
-
-
-// Mark that a method should not be used.
-// Returns a modified function which warns once by default.
-// If --no-deprecation is set, then it is a no-op.
-exports.deprecate = function(fn, msg) {
-  // Allow for deprecating things in the process of starting up.
-  if (isUndefined(global.process)) {
-    return function() {
-      return exports.deprecate(fn, msg).apply(this, arguments);
-    };
-  }
-
-  if (process.noDeprecation === true) {
-    return fn;
-  }
-
-  var warned = false;
-  function deprecated() {
-    if (!warned) {
-      if (process.throwDeprecation) {
-        throw new Error(msg);
-      } else if (process.traceDeprecation) {
-        console.trace(msg);
-      } else {
-        console.error(msg);
-      }
-      warned = true;
-    }
-    return fn.apply(this, arguments);
-  }
-
-  return deprecated;
-};
-
-
-var debugs = {};
-var debugEnviron;
-exports.debuglog = function(set) {
-  if (isUndefined(debugEnviron))
-    debugEnviron = process.env.NODE_DEBUG || '';
-  set = set.toUpperCase();
-  if (!debugs[set]) {
-    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
-      var pid = process.pid;
-      debugs[set] = function() {
-        var msg = exports.format.apply(exports, arguments);
-        console.error('%s %d: %s', set, pid, msg);
-      };
-    } else {
-      debugs[set] = function() {};
-    }
-  }
-  return debugs[set];
-};
-
-
-/**
- * Echos the value of a value. Trys to print the value out
- * in the best way possible given the different types.
- *
- * @param {Object} obj The object to print out.
- * @param {Object} opts Optional options object that alters the output.
- */
-/* legacy: obj, showHidden, depth, colors*/
-function inspect(obj, opts) {
-  // default options
-  var ctx = {
-    seen: [],
-    stylize: stylizeNoColor
-  };
-  // legacy...
-  if (arguments.length >= 3) ctx.depth = arguments[2];
-  if (arguments.length >= 4) ctx.colors = arguments[3];
-  if (isBoolean(opts)) {
-    // legacy...
-    ctx.showHidden = opts;
-  } else if (opts) {
-    // got an "options" object
-    exports._extend(ctx, opts);
-  }
-  // set default options
-  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
-  if (isUndefined(ctx.depth)) ctx.depth = 2;
-  if (isUndefined(ctx.colors)) ctx.colors = false;
-  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
-  if (ctx.colors) ctx.stylize = stylizeWithColor;
-  return formatValue(ctx, obj, ctx.depth);
-}
-exports.inspect = inspect;
-
-
-// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-inspect.colors = {
-  'bold' : [1, 22],
-  'italic' : [3, 23],
-  'underline' : [4, 24],
-  'inverse' : [7, 27],
-  'white' : [37, 39],
-  'grey' : [90, 39],
-  'black' : [30, 39],
-  'blue' : [34, 39],
-  'cyan' : [36, 39],
-  'green' : [32, 39],
-  'magenta' : [35, 39],
-  'red' : [31, 39],
-  'yellow' : [33, 39]
-};
-
-// Don't use 'blue' not visible on cmd.exe
-inspect.styles = {
-  'special': 'cyan',
-  'number': 'yellow',
-  'boolean': 'yellow',
-  'undefined': 'grey',
-  'null': 'bold',
-  'string': 'green',
-  'date': 'magenta',
-  // "name": intentionally not styling
-  'regexp': 'red'
-};
-
-
-function stylizeWithColor(str, styleType) {
-  var style = inspect.styles[styleType];
-
-  if (style) {
-    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
-           '\u001b[' + inspect.colors[style][1] + 'm';
-  } else {
-    return str;
-  }
-}
-
-
-function stylizeNoColor(str, styleType) {
-  return str;
-}
-
-
-function arrayToHash(array) {
-  var hash = {};
-
-  array.forEach(function(val, idx) {
-    hash[val] = true;
-  });
-
-  return hash;
-}
-
-
-function formatValue(ctx, value, recurseTimes) {
-  // Provide a hook for user-specified inspect functions.
-  // Check that value is an object with an inspect function on it
-  if (ctx.customInspect &&
-      value &&
-      isFunction(value.inspect) &&
-      // Filter out the util module, it's inspect function is special
-      value.inspect !== exports.inspect &&
-      // Also filter out any prototype objects using the circular check.
-      !(value.constructor && value.constructor.prototype === value)) {
-    var ret = value.inspect(recurseTimes, ctx);
-    if (!isString(ret)) {
-      ret = formatValue(ctx, ret, recurseTimes);
-    }
-    return ret;
-  }
-
-  // Primitive types cannot have properties
-  var primitive = formatPrimitive(ctx, value);
-  if (primitive) {
-    return primitive;
-  }
-
-  // Look up the keys of the object.
-  var keys = Object.keys(value);
-  var visibleKeys = arrayToHash(keys);
-
-  if (ctx.showHidden) {
-    keys = Object.getOwnPropertyNames(value);
-  }
-
-  // IE doesn't make error fields non-enumerable
-  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
-  if (isError(value)
-      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
-    return formatError(value);
-  }
-
-  // Some type of object without properties can be shortcutted.
-  if (keys.length === 0) {
-    if (isFunction(value)) {
-      var name = value.name ? ': ' + value.name : '';
-      return ctx.stylize('[Function' + name + ']', 'special');
-    }
-    if (isRegExp(value)) {
-      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-    }
-    if (isDate(value)) {
-      return ctx.stylize(Date.prototype.toString.call(value), 'date');
-    }
-    if (isError(value)) {
-      return formatError(value);
-    }
-  }
-
-  var base = '', array = false, braces = ['{', '}'];
-
-  // Make Array say that they are Array
-  if (isArray(value)) {
-    array = true;
-    braces = ['[', ']'];
-  }
-
-  // Make functions say that they are functions
-  if (isFunction(value)) {
-    var n = value.name ? ': ' + value.name : '';
-    base = ' [Function' + n + ']';
-  }
-
-  // Make RegExps say that they are RegExps
-  if (isRegExp(value)) {
-    base = ' ' + RegExp.prototype.toString.call(value);
-  }
-
-  // Make dates with properties first say the date
-  if (isDate(value)) {
-    base = ' ' + Date.prototype.toUTCString.call(value);
-  }
-
-  // Make error with message first say the error
-  if (isError(value)) {
-    base = ' ' + formatError(value);
-  }
-
-  if (keys.length === 0 && (!array || value.length == 0)) {
-    return braces[0] + base + braces[1];
-  }
-
-  if (recurseTimes < 0) {
-    if (isRegExp(value)) {
-      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-    } else {
-      return ctx.stylize('[Object]', 'special');
-    }
-  }
-
-  ctx.seen.push(value);
-
-  var output;
-  if (array) {
-    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
-  } else {
-    output = keys.map(function(key) {
-      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
-    });
-  }
-
-  ctx.seen.pop();
-
-  return reduceToSingleString(output, base, braces);
-}
-
-
-function formatPrimitive(ctx, value) {
-  if (isUndefined(value))
-    return ctx.stylize('undefined', 'undefined');
-  if (isString(value)) {
-    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-                                             .replace(/'/g, "\\'")
-                                             .replace(/\\"/g, '"') + '\'';
-    return ctx.stylize(simple, 'string');
-  }
-  if (isNumber(value))
-    return ctx.stylize('' + value, 'number');
-  if (isBoolean(value))
-    return ctx.stylize('' + value, 'boolean');
-  // For some reason typeof null is "object", so special case here.
-  if (isNull(value))
-    return ctx.stylize('null', 'null');
-}
-
-
-function formatError(value) {
-  return '[' + Error.prototype.toString.call(value) + ']';
-}
-
-
-function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
-  var output = [];
-  for (var i = 0, l = value.length; i < l; ++i) {
-    if (hasOwnProperty(value, String(i))) {
-      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-          String(i), true));
-    } else {
-      output.push('');
-    }
-  }
-  keys.forEach(function(key) {
-    if (!key.match(/^\d+$/)) {
-      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-          key, true));
-    }
-  });
-  return output;
-}
-
-
-function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
-  var name, str, desc;
-  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
-  if (desc.get) {
-    if (desc.set) {
-      str = ctx.stylize('[Getter/Setter]', 'special');
-    } else {
-      str = ctx.stylize('[Getter]', 'special');
-    }
-  } else {
-    if (desc.set) {
-      str = ctx.stylize('[Setter]', 'special');
-    }
-  }
-  if (!hasOwnProperty(visibleKeys, key)) {
-    name = '[' + key + ']';
-  }
-  if (!str) {
-    if (ctx.seen.indexOf(desc.value) < 0) {
-      if (isNull(recurseTimes)) {
-        str = formatValue(ctx, desc.value, null);
-      } else {
-        str = formatValue(ctx, desc.value, recurseTimes - 1);
-      }
-      if (str.indexOf('\n') > -1) {
-        if (array) {
-          str = str.split('\n').map(function(line) {
-            return '  ' + line;
-          }).join('\n').substr(2);
-        } else {
-          str = '\n' + str.split('\n').map(function(line) {
-            return '   ' + line;
-          }).join('\n');
-        }
-      }
-    } else {
-      str = ctx.stylize('[Circular]', 'special');
-    }
-  }
-  if (isUndefined(name)) {
-    if (array && key.match(/^\d+$/)) {
-      return str;
-    }
-    name = JSON.stringify('' + key);
-    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-      name = name.substr(1, name.length - 2);
-      name = ctx.stylize(name, 'name');
-    } else {
-      name = name.replace(/'/g, "\\'")
-                 .replace(/\\"/g, '"')
-                 .replace(/(^"|"$)/g, "'");
-      name = ctx.stylize(name, 'string');
-    }
-  }
-
-  return name + ': ' + str;
-}
-
-
-function reduceToSingleString(output, base, braces) {
-  var numLinesEst = 0;
-  var length = output.reduce(function(prev, cur) {
-    numLinesEst++;
-    if (cur.indexOf('\n') >= 0) numLinesEst++;
-    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
-  }, 0);
-
-  if (length > 60) {
-    return braces[0] +
-           (base === '' ? '' : base + '\n ') +
-           ' ' +
-           output.join(',\n  ') +
-           ' ' +
-           braces[1];
-  }
-
-  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-}
-
-
-// NOTE: These type checking functions intentionally don't use `instanceof`
-// because it is fragile and can be easily faked with `Object.create()`.
-function isArray(ar) {
-  return Array.isArray(ar);
-}
-exports.isArray = isArray;
-
-function isBoolean(arg) {
-  return typeof arg === 'boolean';
-}
-exports.isBoolean = isBoolean;
-
-function isNull(arg) {
-  return arg === null;
-}
-exports.isNull = isNull;
-
-function isNullOrUndefined(arg) {
-  return arg == null;
-}
-exports.isNullOrUndefined = isNullOrUndefined;
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-exports.isNumber = isNumber;
-
-function isString(arg) {
-  return typeof arg === 'string';
-}
-exports.isString = isString;
-
-function isSymbol(arg) {
-  return typeof arg === 'symbol';
-}
-exports.isSymbol = isSymbol;
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-exports.isUndefined = isUndefined;
-
-function isRegExp(re) {
-  return isObject(re) && objectToString(re) === '[object RegExp]';
-}
-exports.isRegExp = isRegExp;
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-exports.isObject = isObject;
-
-function isDate(d) {
-  return isObject(d) && objectToString(d) === '[object Date]';
-}
-exports.isDate = isDate;
-
-function isError(e) {
-  return isObject(e) &&
-      (objectToString(e) === '[object Error]' || e instanceof Error);
-}
-exports.isError = isError;
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-exports.isFunction = isFunction;
-
-function isPrimitive(arg) {
-  return arg === null ||
-         typeof arg === 'boolean' ||
-         typeof arg === 'number' ||
-         typeof arg === 'string' ||
-         typeof arg === 'symbol' ||  // ES6 symbol
-         typeof arg === 'undefined';
-}
-exports.isPrimitive = isPrimitive;
-
-exports.isBuffer = __webpack_require__(56);
-
-function objectToString(o) {
-  return Object.prototype.toString.call(o);
-}
-
-
-function pad(n) {
-  return n < 10 ? '0' + n.toString(10) : n.toString(10);
-}
-
-
-var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-              'Oct', 'Nov', 'Dec'];
-
-// 26 Feb 16:19:34
-function timestamp() {
-  var d = new Date();
-  var time = [pad(d.getHours()),
-              pad(d.getMinutes()),
-              pad(d.getSeconds())].join(':');
-  return [d.getDate(), months[d.getMonth()], time].join(' ');
-}
-
-
-// log is just a thin wrapper to console.log that prepends a timestamp
-exports.log = function() {
-  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
-};
-
-
-/**
- * Inherit the prototype methods from one constructor into another.
- *
- * The Function.prototype.inherits from lang.js rewritten as a standalone
- * function (not on Function.prototype). NOTE: If this file is to be loaded
- * during bootstrapping this function needs to be rewritten using some native
- * functions as prototype setup using normal JavaScript does not work as
- * expected during bootstrapping (see mirror.js in r114903).
- *
- * @param {function} ctor Constructor function which needs to inherit the
- *     prototype.
- * @param {function} superCtor Constructor function to inherit prototype from.
- */
-exports.inherits = __webpack_require__(55);
-
-exports._extend = function(origin, add) {
-  // Don't do anything if add isn't an object
-  if (!add || !isObject(add)) return origin;
-
-  var keys = Object.keys(add);
-  var i = keys.length;
-  while (i--) {
-    origin[keys[i]] = add[keys[i]];
-  }
-  return origin;
-};
-
-function hasOwnProperty(obj, prop) {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16), __webpack_require__(54)))
-
-/***/ }),
-/* 58 */
-/***/ (function(module, exports) {
-
-module.exports = function(module) {
-	if(!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if(!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
-
-
-/***/ }),
-/* 59 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29550,25 +28406,21 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(5);
-
-var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
-
 var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _simulateArrowDown = __webpack_require__(41);
+var _simulateArrowDown = __webpack_require__(39);
 
 var _simulateArrowDown2 = _interopRequireDefault(_simulateArrowDown);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
 var _manager = __webpack_require__(12);
 
-var _assert = __webpack_require__(23);
+var _assert = __webpack_require__(37);
 
 var _assert2 = _interopRequireDefault(_assert);
 
@@ -29613,16 +28465,15 @@ exports.default = {
   mounted: function mounted() {
     var _this = this;
 
-    var input = this.$refs.input;
-
     _manager.loaded.then(function () {
       var options = _lodash2.default.clone(_this.getPropsValues());
       if (_this.selectFirstOnEnter) {
         (0, _simulateArrowDown2.default)(_this.$refs.input);
       }
 
-      (0, _assert2.default)(typeof google.maps.places.Autocomplete === 'function', "google.maps.places.Autocomplete is undefined. Did you add 'places' to libraries when loading Google Maps?");
+      (0, _assert2.default)(typeof google.maps.places.Autocomplete === 'function', 'google.maps.places.Autocomplete is undefined. Did you add \'places\' to libraries when loading Google Maps?');
 
+      /* eslint-disable no-unused-vars */
       var finalOptions = _lodash2.default.pickBy(_lodash2.default.defaults({}, options.options, _lodash2.default.omit(options, ['options', 'selectFirstOnEnter', 'value', 'place', 'placeholder'])), function (v, k) {
         return v !== undefined;
       });
@@ -29647,21 +28498,21 @@ exports.default = {
 };
 
 /***/ }),
-/* 60 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(5);
+var _eventsBinder = __webpack_require__(8);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -29669,90 +28520,90 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(8);
+var _mapElementMixin = __webpack_require__(7);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
 function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { default: obj };
+  return obj && obj.__esModule ? obj : { default: obj };
 }
 
 var props = {
-    center: {
-        type: Object,
-        twoWay: true,
-        required: true
-    },
-    radius: {
-        type: Number,
-        default: 1000,
-        twoWay: true
-    },
-    draggable: {
-        type: Boolean,
-        default: false
-    },
-    editable: {
-        type: Boolean,
-        default: false
-    },
-    options: {
-        type: Object,
-        twoWay: false
-    }
+  center: {
+    type: Object,
+    twoWay: true,
+    required: true
+  },
+  radius: {
+    type: Number,
+    default: 1000,
+    twoWay: true
+  },
+  draggable: {
+    type: Boolean,
+    default: false
+  },
+  editable: {
+    type: Boolean,
+    default: false
+  },
+  options: {
+    type: Object,
+    twoWay: false
+  }
 };
 
 var events = ['click', 'dblclick', 'drag', 'dragend', 'dragstart', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
 
 exports.default = {
-    mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
-    props: props,
-    version: 2,
+  mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
+  props: props,
+  version: 2,
 
-    render: function render() {
-        return '';
-    },
-    deferredReady: function deferredReady() {
-        var options = _lodash2.default.clone(this.getPropsValues());
-        options.map = this.$map;
-        delete options.bounds;
-        this.createCircle(options, this.$map);
-    },
+  render: function render() {
+    return '';
+  },
+  deferredReady: function deferredReady() {
+    var options = _lodash2.default.clone(this.getPropsValues());
+    options.map = this.$map;
+    delete options.bounds;
+    this.createCircle(options);
+  },
 
-    methods: {
-        createCircle: function createCircle(options, map) {
-            var _this = this;
+  methods: {
+    createCircle: function createCircle(options) {
+      var _this = this;
 
-            this.$circleObject = new google.maps.Circle(options);
-            // we cant bind bounds because there is no `setBounds` method
-            // on the Circle object
-            var boundProps = _lodash2.default.clone(props);
-            delete boundProps.bounds;
-            (0, _propsBinder2.default)(this, this.$circleObject, boundProps);
-            (0, _eventsBinder2.default)(this, this.$circleObject, events);
+      this.$circleObject = new google.maps.Circle(options);
+      // we cant bind bounds because there is no `setBounds` method
+      // on the Circle object
+      var boundProps = _lodash2.default.clone(props);
+      delete boundProps.bounds;
+      (0, _propsBinder2.default)(this, this.$circleObject, boundProps);
+      (0, _eventsBinder2.default)(this, this.$circleObject, events);
 
-            var updateBounds = function updateBounds() {
-                _this.$emit('bounds_changed', _this.$circleObject.getBounds());
-            };
+      var updateBounds = function updateBounds() {
+        _this.$emit('bounds_changed', _this.$circleObject.getBounds());
+      };
 
-            this.$on('radius_changed', updateBounds);
-            this.$on('center_changed', updateBounds);
-        }
-    },
-
-    destroyed: function destroyed() {
-        if (this.$circleObject) {
-            this.$circleObject.setMap(null);
-        }
+      this.$on('radius_changed', updateBounds);
+      this.$on('center_changed', updateBounds);
     }
+  },
+
+  destroyed: function destroyed() {
+    if (this.$circleObject) {
+      this.$circleObject.setMap(null);
+    }
+  }
 };
 
 /***/ }),
-/* 61 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29770,17 +28621,109 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _eventsBinder = __webpack_require__(5);
-
-var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
-
-var _mapElementMixin = __webpack_require__(8);
+var _mapElementMixin = __webpack_require__(7);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
-var _marker = __webpack_require__(39);
+var _getPropsValuesMixin = __webpack_require__(5);
 
-var _marker2 = _interopRequireDefault(_marker);
+var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
+
+var _markerClustererPlus = __webpack_require__(110);
+
+var _markerClustererPlus2 = _interopRequireDefault(_markerClustererPlus);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+var props = {
+  maxZoom: {
+    type: Number,
+    twoWay: false
+  },
+  calculator: {
+    type: Function,
+    twoWay: false
+  },
+  gridSize: {
+    type: Number,
+    twoWay: false
+  },
+  styles: {
+    type: Array,
+    twoWay: false
+  }
+}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
+
+/**
+  * @class Cluster
+  * @prop $clusterObject -- Exposes the marker clusterer to
+        descendent Marker classes. Override this if you area
+        extending the class
+**/
+
+exports.default = {
+  mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
+  props: props,
+
+  render: function render(h) {
+    // <div><slot></slot></div>
+    return h('div', this.$slots.default);
+  },
+  deferredReady: function deferredReady() {
+    var _this = this;
+
+    var options = _lodash2.default.clone(this.getPropsValues());
+
+    if (typeof _markerClustererPlus2.default === 'undefined') {
+      /* eslint-disable no-console */
+      console.error('MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js');
+      throw new Error('MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js');
+    }
+
+    this.$clusterObject = new _markerClustererPlus2.default(this.$map, [], options);
+
+    (0, _propsBinder2.default)(this, this.$clusterObject, props, {
+      afterModelChanged: function afterModelChanged(a, v) {
+        // eslint-disable-line no-unused-vars
+        var oldMarkers = _this.$clusterObject.getMarkers();
+        _this.$clusterObject.clearMarkers();
+        _this.$clusterObject.addMarkers(oldMarkers);
+      }
+    });
+  },
+  detached: function detached() {
+    this.$clusterObject.clearMarkers();
+  }
+};
+
+/***/ }),
+/* 54 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _lodash = __webpack_require__(0);
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _propsBinder = __webpack_require__(2);
+
+var _propsBinder2 = _interopRequireDefault(_propsBinder);
+
+var _eventsBinder = __webpack_require__(8);
+
+var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
+
+var _mapElementMixin = __webpack_require__(7);
+
+var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
@@ -29831,7 +28774,7 @@ exports.default = {
     if (this.$markerComponent) {
       this.$markerObject = this.$markerComponent.$markerObject;
     }
-    this.createInfoWindow(this.$map);
+    this.createInfoWindow();
   },
   destroyed: function destroyed() {
     if (this.disconnect) {
@@ -29854,7 +28797,7 @@ exports.default = {
         this.$infoWindow.close();
       }
     },
-    createInfoWindow: function createInfoWindow(map) {
+    createInfoWindow: function createInfoWindow() {
       var _this = this;
 
       // setting options
@@ -29881,7 +28824,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 62 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29891,7 +28834,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _promise = __webpack_require__(17);
+var _promise = __webpack_require__(16);
 
 var _promise2 = _interopRequireDefault(_promise);
 
@@ -29901,9 +28844,9 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 var _manager = __webpack_require__(12);
 
-var _deferredReady = __webpack_require__(13);
+var _deferredReady = __webpack_require__(15);
 
-var _eventsBinder = __webpack_require__(5);
+var _eventsBinder = __webpack_require__(8);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -29911,15 +28854,15 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
-var _mountableMixin = __webpack_require__(24);
+var _mountableMixin = __webpack_require__(23);
 
 var _mountableMixin2 = _interopRequireDefault(_mountableMixin);
 
-var _latlngChangedHandler = __webpack_require__(40);
+var _latlngChangedHandler = __webpack_require__(38);
 
 var _latlngChangedHandler2 = _interopRequireDefault(_latlngChangedHandler);
 
@@ -30018,6 +28961,7 @@ exports.default = {
     center: {
       deep: true,
       handler: (0, _latlngChangedHandler2.default)(function (val, oldVal) {
+        // eslint-disable-line no-unused-vars
         if (this.$mapObject) {
           this.$mapObject.setCenter(val);
         }
@@ -30073,7 +29017,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 63 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30087,7 +29031,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(5);
+var _eventsBinder = __webpack_require__(8);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -30095,17 +29039,164 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _simulateArrowDown = __webpack_require__(41);
+var _getPropsValuesMixin = __webpack_require__(5);
+
+var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
+
+var _mapElementMixin = __webpack_require__(7);
+
+var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+var props = {
+  animation: {
+    twoWay: true,
+    type: Number
+  },
+  attribution: {
+    type: Object
+  },
+  clickable: {
+    type: Boolean,
+    twoWay: true,
+    default: true
+  },
+  cursor: {
+    type: String,
+    twoWay: true
+  },
+  draggable: {
+    type: Boolean,
+    twoWay: true,
+    default: false
+  },
+  icon: {
+    twoWay: true
+  },
+  label: {},
+  opacity: {
+    type: Number,
+    default: 1
+  },
+  place: {
+    type: Object
+  },
+  position: {
+    type: Object,
+    twoWay: true
+  },
+  shape: {
+    type: Object,
+    twoWay: true
+  },
+  title: {
+    type: String,
+    twoWay: true
+  },
+  zIndex: {
+    type: Number,
+    twoWay: true
+  },
+  visible: {
+    twoWay: true,
+    default: true
+  }
+};
+
+var events = ['click', 'rightclick', 'dblclick', 'drag', 'dragstart', 'dragend', 'mouseup', 'mousedown', 'mouseover', 'mouseout'];
+
+/**
+ * @class Marker
+ *
+ * Marker class with extra support for
+ *
+ * - Embedded info windows
+ * - Clustered markers
+ *
+ * Support for clustered markers is for backward-compatability
+ * reasons. Otherwise we should use a cluster-marker mixin or
+ * subclass.
+ */
+exports.default = {
+  mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
+  props: props,
+
+  render: function render(h) {
+    return h( // So that infowindows can have a marker parent
+    'div', this.$slots.default);
+  },
+  destroyed: function destroyed() {
+    if (!this.$markerObject) return;
+
+    if (this.$clusterObject) {
+      this.$clusterObject.removeMarker(this.$markerObject);
+    } else {
+      this.$markerObject.setMap(null);
+    }
+  },
+  deferredReady: function deferredReady() {
+    var _this = this;
+
+    var options = _lodash2.default.mapValues(props, function (value, prop) {
+      return _this[prop];
+    });
+    options.map = this.$map;
+
+    // search ancestors for cluster object
+    var search = this.$findAncestor(function (ans) {
+      return ans.$clusterObject;
+    });
+
+    this.$clusterObject = search ? search.$clusterObject : null;
+    this.createMarker(options);
+  },
+
+  methods: {
+    createMarker: function createMarker(options) {
+      this.$markerObject = new google.maps.Marker(options);
+      (0, _propsBinder2.default)(this, this.$markerObject, props);
+      (0, _eventsBinder2.default)(this, this.$markerObject, events);
+
+      if (this.$clusterObject) {
+        this.$clusterObject.addMarker(this.$markerObject);
+      }
+    }
+  }
+};
+
+/***/ }),
+/* 57 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _lodash = __webpack_require__(0);
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _propsBinder = __webpack_require__(2);
+
+var _propsBinder2 = _interopRequireDefault(_propsBinder);
+
+var _simulateArrowDown = __webpack_require__(39);
 
 var _simulateArrowDown2 = _interopRequireDefault(_simulateArrowDown);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
 var _manager = __webpack_require__(12);
 
-var _assert = __webpack_require__(23);
+var _assert = __webpack_require__(37);
 
 var _assert2 = _interopRequireDefault(_assert);
 
@@ -30171,7 +29262,7 @@ exports.default = {
         (0, _simulateArrowDown2.default)(_this.$refs.input);
       }
 
-      (0, _assert2.default)(typeof google.maps.places.Autocomplete === 'function', "google.maps.places.Autocomplete is undefined. Did you add 'places' to libraries when loading Google Maps?");
+      (0, _assert2.default)(typeof google.maps.places.Autocomplete === 'function', 'google.maps.places.Autocomplete is undefined. Did you add \'places\' to libraries when loading Google Maps?');
 
       _this.autoCompleter = new google.maps.places.Autocomplete(_this.$refs.input, options);
       (0, _propsBinder2.default)(_this, _this.autoCompleter, _lodash2.default.omit(props, ['placeholder', 'place', 'selectFirstOnEnter', 'defaultPlace']));
@@ -30182,14 +29273,14 @@ exports.default = {
     });
   },
   created: function created() {
-    console.warn('The PlaceInput class is deprecated! Please consider using the Autocomplete input instead');
+    console.warn('The PlaceInput class is deprecated! Please consider using the Autocomplete input instead'); //eslint-disable-line no-console
   },
 
   props: props
 };
 
 /***/ }),
-/* 64 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30199,7 +29290,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _slicedToArray2 = __webpack_require__(42);
+var _slicedToArray2 = __webpack_require__(40);
 
 var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
 
@@ -30207,7 +29298,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(5);
+var _eventsBinder = __webpack_require__(8);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -30215,11 +29306,11 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(8);
+var _mapElementMixin = __webpack_require__(7);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
@@ -30315,7 +29406,9 @@ exports.default = {
                   obj = _ref2[0],
                   listenerHandle = _ref2[1];
 
-              return google.maps.event.removeListener(listenerHandle);
+              return (// eslint-disable-line no-unused-vars
+                google.maps.event.removeListener(listenerHandle)
+              );
             });
           };
         })();
@@ -30349,7 +29442,9 @@ exports.default = {
                   obj = _ref4[0],
                   listenerHandle = _ref4[1];
 
-              return google.maps.event.removeListener(listenerHandle);
+              return (// eslint-disable-line no-unused-vars
+                google.maps.event.removeListener(listenerHandle)
+              );
             });
           };
         })();
@@ -30365,7 +29460,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 65 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30375,7 +29470,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _slicedToArray2 = __webpack_require__(42);
+var _slicedToArray2 = __webpack_require__(40);
 
 var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
 
@@ -30383,7 +29478,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(5);
+var _eventsBinder = __webpack_require__(8);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -30391,11 +29486,11 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(8);
+var _mapElementMixin = __webpack_require__(7);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
@@ -30476,7 +29571,9 @@ exports.default = {
                   obj = _ref2[0],
                   listenerHandle = _ref2[1];
 
-              return google.maps.event.removeListener(listenerHandle);
+              return (// eslint-disable-line no-unused-vars
+                google.maps.event.removeListener(listenerHandle)
+              );
             });
           };
         })();
@@ -30491,7 +29588,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 66 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30505,7 +29602,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(5);
+var _eventsBinder = __webpack_require__(8);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -30513,11 +29610,11 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(8);
+var _mapElementMixin = __webpack_require__(7);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
@@ -30556,11 +29653,11 @@ exports.default = {
   deferredReady: function deferredReady() {
     var options = _lodash2.default.clone(this.getPropsValues());
     options.map = this.$map;
-    this.createRectangle(options, this.$map);
+    this.createRectangle(options);
   },
 
   methods: {
-    createRectangle: function createRectangle(options, map) {
+    createRectangle: function createRectangle(options) {
       this.$rectangleObject = new google.maps.Rectangle(options);
       (0, _propsBinder2.default)(this, this.$rectangleObject, props);
       (0, _eventsBinder2.default)(this, this.$rectangleObject, events);
@@ -30575,7 +29672,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 67 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30585,7 +29682,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _promise = __webpack_require__(17);
+var _promise = __webpack_require__(16);
 
 var _promise2 = _interopRequireDefault(_promise);
 
@@ -30595,9 +29692,9 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 var _manager = __webpack_require__(12);
 
-var _deferredReady = __webpack_require__(13);
+var _deferredReady = __webpack_require__(15);
 
-var _eventsBinder = __webpack_require__(5);
+var _eventsBinder = __webpack_require__(8);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -30605,15 +29702,15 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _getPropsValuesMixin = __webpack_require__(6);
+var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
-var _mountableMixin = __webpack_require__(24);
+var _mountableMixin = __webpack_require__(23);
 
 var _mountableMixin2 = _interopRequireDefault(_mountableMixin);
 
-var _latlngChangedHandler = __webpack_require__(40);
+var _latlngChangedHandler = __webpack_require__(38);
 
 var _latlngChangedHandler2 = _interopRequireDefault(_latlngChangedHandler);
 
@@ -30689,8 +29786,9 @@ exports.default = {
     position: {
       deep: true,
       handler: (0, _latlngChangedHandler2.default)(function (val, oldVal) {
-        if (undefined.$panoObject) {
-          undefined.$panoObject.setCenter(val);
+        // eslint-disable-line no-unused-vars
+        if (this.$panoObject) {
+          this.$panoObject.setPosition(val);
         }
       })
     },
@@ -30710,7 +29808,6 @@ exports.default = {
 
       // creating the map
       var options = _lodash2.default.defaults({}, _lodash2.default.omit(_this2.getPropsValues(), ['options']), _this2.options);
-      console.log(options);
 
       _this2.$panoObject = new google.maps.StreetViewPanorama(element, options);
 
@@ -30730,7 +29827,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 68 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30889,104 +29986,21 @@ Object.defineProperty(exports, "__esModule", {
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
+var _ = __webpack_require__(0);
 
 exports.default = {
   data: function data() {
     return {
       lastId: 1,
-      center: { lat: 48.8538302, lng: 2.2982161 },
-      reportedCenter: { lat: 48.8538302, lng: 2.2982161 },
+      center: {
+        lat: 48.8538302,
+        lng: 2.2982161
+      },
+      reportedCenter: {
+        lat: 48.8538302,
+        lng: 2.2982161
+      },
       mapBounds: {},
       clustering: true,
       zoom: 7,
@@ -31009,13 +30023,97 @@ exports.default = {
         east: -70.234,
         west: -116.251
       },
-      originalPlPath: [{ lat: 37.772, lng: -122.214 }, { lat: 21.291, lng: -157.821 }, { lat: -18.142, lng: 178.431 }, { lat: -27.467, lng: 153.027 }],
-      plPath: [{ lat: 37.772, lng: -122.214 }, { lat: 21.291, lng: -157.821 }, { lat: -18.142, lng: 178.431 }, { lat: -27.467, lng: 153.027 }],
+      originalPlPath: [{
+        lat: 37.772,
+        lng: -122.214
+      }, {
+        lat: 21.291,
+        lng: -157.821
+      }, {
+        lat: -18.142,
+        lng: 178.431
+      }, {
+        lat: -27.467,
+        lng: 153.027
+      }],
+      plPath: [{
+        lat: 37.772,
+        lng: -122.214
+      }, {
+        lat: 21.291,
+        lng: -157.821
+      }, {
+        lat: -18.142,
+        lng: 178.431
+      }, {
+        lat: -27.467,
+        lng: 153.027
+      }],
       pleditable: true,
       plvisible: false,
       pgvisible: false,
-      pgPath: [[{ lat: 38.872886, lng: -77.054720 }, { lat: 38.872602, lng: -77.058046 }, { lat: 38.870080, lng: -77.058604 }, { lat: 38.868894, lng: -77.055664 }, { lat: 38.870598, lng: -77.053346 }], [{ lat: 38.871684, lng: -77.056780 }, { lat: 38.871867, lng: -77.055449 }, { lat: 38.870915, lng: -77.054891 }, { lat: 38.870113, lng: -77.055836 }, { lat: 38.870581, lng: -77.057037 }]],
-      opgPath: [[{ lat: 38.872886, lng: -77.054720 }, { lat: 38.872602, lng: -77.058046 }, { lat: 38.870080, lng: -77.058604 }, { lat: 38.868894, lng: -77.055664 }, { lat: 38.870598, lng: -77.053346 }], [{ lat: 38.871684, lng: -77.056780 }, { lat: 38.871867, lng: -77.055449 }, { lat: 38.870915, lng: -77.054891 }, { lat: 38.870113, lng: -77.055836 }, { lat: 38.870581, lng: -77.057037 }]],
+      pgPath: [[{
+        lat: 38.872886,
+        lng: -77.054720
+      }, {
+        lat: 38.872602,
+        lng: -77.058046
+      }, {
+        lat: 38.870080,
+        lng: -77.058604
+      }, {
+        lat: 38.868894,
+        lng: -77.055664
+      }, {
+        lat: 38.870598,
+        lng: -77.053346
+      }], [{
+        lat: 38.871684,
+        lng: -77.056780
+      }, {
+        lat: 38.871867,
+        lng: -77.055449
+      }, {
+        lat: 38.870915,
+        lng: -77.054891
+      }, {
+        lat: 38.870113,
+        lng: -77.055836
+      }, {
+        lat: 38.870581,
+        lng: -77.057037
+      }]],
+      opgPath: [[{
+        lat: 38.872886,
+        lng: -77.054720
+      }, {
+        lat: 38.872602,
+        lng: -77.058046
+      }, {
+        lat: 38.870080,
+        lng: -77.058604
+      }, {
+        lat: 38.868894,
+        lng: -77.055664
+      }, {
+        lat: 38.870598,
+        lng: -77.053346
+      }], [{
+        lat: 38.871684,
+        lng: -77.056780
+      }, {
+        lat: 38.871867,
+        lng: -77.055449
+      }, {
+        lat: 38.870915,
+        lng: -77.054891
+      }, {
+        lat: 38.870113,
+        lng: -77.055836
+      }, {
+        lat: 38.870581,
+        lng: -77.057037
+      }]],
       scrollwheel: true
     };
   },
@@ -31034,34 +30132,64 @@ exports.default = {
       switch (this.mapStyle) {
         case 'normal':
           return [];
-          break;
         case 'red':
           return [{
-            stylers: [{ hue: '#890000' }, { visibility: 'simplified' }, { gamma: 0.5 }, { weight: 0.5 }]
+            stylers: [{
+              hue: '#890000'
+            }, {
+              visibility: 'simplified'
+            }, {
+              gamma: 0.5
+            }, {
+              weight: 0.5
+            }]
           }, {
             elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
+            stylers: [{
+              visibility: 'off'
+            }]
           }, {
             featureType: 'water',
-            stylers: [{ color: '#890000' }]
+            stylers: [{
+              color: '#890000'
+            }]
           }];
-          break;
         default:
           return [{
-            stylers: [{ hue: '#899999' }, { visibility: 'on' }, { gamma: 0.5 }, { weight: 0.5 }]
+            stylers: [{
+              hue: '#899999'
+            }, {
+              visibility: 'on'
+            }, {
+              gamma: 0.5
+            }, {
+              weight: 0.5
+            }]
           }, {
             featureType: 'road',
-            stylers: [{ visibility: 'off' }]
+            stylers: [{
+              visibility: 'off'
+            }]
           }, {
             featureType: 'transit.line',
-            stylers: [{ color: '#FF0000' }]
+            stylers: [{
+              color: '#FF0000'
+            }]
           }, {
             featureType: 'poi',
             elementType: 'labels.icon',
-            stylers: [{ visibility: 'on' }, { weight: 10 }]
+            stylers: [{
+              visibility: 'on'
+            }, {
+              weight: 10
+            }]
           }, {
             featureType: 'water',
-            stylers: [{ color: '#8900FF' }, { weight: 9999900000 }]
+            stylers: [{
+              color: '#8900FF'
+            }, {
+              weight: 9999900000
+            }]
           }];
       }
     }
@@ -31069,10 +30197,11 @@ exports.default = {
 
   methods: {
     updateMapCenter: function updateMapCenter(which, value) {
+      // eslint-disable-line no-unused-vars
       this.center = _.clone(this.reportedCenter);
     },
     mapClicked: function mapClicked(mouseArgs) {
-      console.log('map clicked', mouseArgs);
+      console.log('map clicked', mouseArgs); // eslint-disable-line no-console
     },
     mapRclicked: function mapRclicked(mouseArgs) {
       var createdMarker = this.addMarker();
@@ -31085,7 +30214,10 @@ exports.default = {
 
       this.markers.push({
         id: this.lastId,
-        position: { lat: 48.8538302, lng: 2.2982161 },
+        position: {
+          lat: 48.8538302,
+          lng: 2.2982161
+        },
         opacity: 1,
         draggable: true,
         enabled: true,
@@ -31093,7 +30225,7 @@ exports.default = {
         rightClicked: 0,
         dragended: 0,
         ifw: true,
-        ifw2text: "This text is bad please change me :( "
+        ifw2text: 'This text is bad please change me :( '
       });
       return this.markers[this.markers.length - 1];
     },
@@ -31107,7 +30239,6 @@ exports.default = {
         // the same as the center you pass it.
         // Instead we update this.center only when the input field is changed.
 
-        console.log('CENTER REPORTED', event);
         this.reportedCenter = {
           lat: event.lat(),
           lng: event.lng()
@@ -31130,10 +30261,10 @@ exports.default = {
         };
       }
     },
-    updatePolygonPaths: function updatePolygonPaths(paths) {
+    updatePolygonPaths: function updatePolygonPaths(paths) {//eslint-disable-line no-unused-vars
       // TODO
     },
-    updatePolylinePath: function updatePolylinePath(paths) {
+    updatePolylinePath: function updatePolylinePath(paths) {//eslint-disable-line no-unused-vars
       // TODO:
     },
     updateCircle: function updateCircle(prop, value) {
@@ -31159,37 +30290,37 @@ exports.default = {
 };
 
 /***/ }),
-/* 69 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(74), __esModule: true };
+module.exports = { "default": __webpack_require__(68), __esModule: true };
 
 /***/ }),
-/* 70 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(75), __esModule: true };
+module.exports = { "default": __webpack_require__(69), __esModule: true };
 
 /***/ }),
-/* 71 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(77), __esModule: true };
+module.exports = { "default": __webpack_require__(71), __esModule: true };
 
 /***/ }),
-/* 72 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(79), __esModule: true };
+module.exports = { "default": __webpack_require__(73), __esModule: true };
 
 /***/ }),
-/* 73 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _Symbol = __webpack_require__(72)["default"];
+var _Symbol = __webpack_require__(66)["default"];
 
 exports["default"] = function (obj) {
   return obj && obj.constructor === _Symbol ? "symbol" : typeof obj;
@@ -31198,23 +30329,23 @@ exports["default"] = function (obj) {
 exports.__esModule = true;
 
 /***/ }),
-/* 74 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(35);
 __webpack_require__(34);
-module.exports = __webpack_require__(107);
+__webpack_require__(33);
+module.exports = __webpack_require__(101);
 
 /***/ }),
-/* 75 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(35);
 __webpack_require__(34);
-module.exports = __webpack_require__(108);
+__webpack_require__(33);
+module.exports = __webpack_require__(102);
 
 /***/ }),
-/* 76 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var core = __webpack_require__(3);
@@ -31223,42 +30354,42 @@ module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
 };
 
 /***/ }),
-/* 77 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(110);
+__webpack_require__(104);
 module.exports = __webpack_require__(3).Object.keys;
 
 /***/ }),
-/* 78 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(48);
+__webpack_require__(46);
+__webpack_require__(33);
 __webpack_require__(34);
-__webpack_require__(35);
-__webpack_require__(111);
+__webpack_require__(105);
 module.exports = __webpack_require__(3).Promise;
 
 /***/ }),
-/* 79 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(112);
-__webpack_require__(48);
+__webpack_require__(106);
+__webpack_require__(46);
 module.exports = __webpack_require__(3).Symbol;
 
 /***/ }),
-/* 80 */
+/* 74 */
 /***/ (function(module, exports) {
 
 module.exports = function(){ /* empty */ };
 
 /***/ }),
-/* 81 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(20)
-  , document = __webpack_require__(7).document
+var isObject = __webpack_require__(19)
+  , document = __webpack_require__(6).document
   // in old IE typeof document.createElement is 'object'
   , is = isObject(document) && isObject(document.createElement);
 module.exports = function(it){
@@ -31266,7 +30397,7 @@ module.exports = function(it){
 };
 
 /***/ }),
-/* 82 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // all enumerable object keys, includes symbols
@@ -31285,15 +30416,15 @@ module.exports = function(it){
 };
 
 /***/ }),
-/* 83 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ctx         = __webpack_require__(15)
-  , call        = __webpack_require__(90)
-  , isArrayIter = __webpack_require__(88)
+var ctx         = __webpack_require__(14)
+  , call        = __webpack_require__(84)
+  , isArrayIter = __webpack_require__(82)
   , anObject    = __webpack_require__(9)
-  , toLength    = __webpack_require__(105)
-  , getIterFn   = __webpack_require__(47);
+  , toLength    = __webpack_require__(99)
+  , getIterFn   = __webpack_require__(45);
 module.exports = function(iterable, entries, fn, that){
   var iterFn = getIterFn(iterable)
     , f      = ctx(fn, that, entries ? 2 : 1)
@@ -31309,11 +30440,11 @@ module.exports = function(iterable, entries, fn, that){
 };
 
 /***/ }),
-/* 84 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-var toIObject = __webpack_require__(22)
+var toIObject = __webpack_require__(21)
   , getNames  = __webpack_require__(4).getNames
   , toString  = {}.toString;
 
@@ -31334,13 +30465,13 @@ module.exports.get = function getOwnPropertyNames(it){
 };
 
 /***/ }),
-/* 85 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(7).document && document.documentElement;
+module.exports = __webpack_require__(6).document && document.documentElement;
 
 /***/ }),
-/* 86 */
+/* 80 */
 /***/ (function(module, exports) {
 
 // fast apply, http://jsperf.lnkit.com/fast-apply/5
@@ -31361,17 +30492,17 @@ module.exports = function(fn, args, that){
 };
 
 /***/ }),
-/* 87 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
-var cof = __webpack_require__(14);
+var cof = __webpack_require__(13);
 module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
 
 /***/ }),
-/* 88 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // check on default Array iterator
@@ -31384,17 +30515,17 @@ module.exports = function(it){
 };
 
 /***/ }),
-/* 89 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.2.2 IsArray(argument)
-var cof = __webpack_require__(14);
+var cof = __webpack_require__(13);
 module.exports = Array.isArray || function(arg){
   return cof(arg) == 'Array';
 };
 
 /***/ }),
-/* 90 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // call something on iterator step with safe closing on error
@@ -31411,18 +30542,18 @@ module.exports = function(iterator, fn, value, entries){
 };
 
 /***/ }),
-/* 91 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var $              = __webpack_require__(4)
-  , descriptor     = __webpack_require__(32)
-  , setToStringTag = __webpack_require__(21)
+  , descriptor     = __webpack_require__(31)
+  , setToStringTag = __webpack_require__(20)
   , IteratorPrototype = {};
 
 // 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-__webpack_require__(30)(IteratorPrototype, __webpack_require__(1)('iterator'), function(){ return this; });
+__webpack_require__(29)(IteratorPrototype, __webpack_require__(1)('iterator'), function(){ return this; });
 
 module.exports = function(Constructor, NAME, next){
   Constructor.prototype = $.create(IteratorPrototype, {next: descriptor(1, next)});
@@ -31430,7 +30561,7 @@ module.exports = function(Constructor, NAME, next){
 };
 
 /***/ }),
-/* 92 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var ITERATOR     = __webpack_require__(1)('iterator')
@@ -31456,7 +30587,7 @@ module.exports = function(exec, skipClosing){
 };
 
 /***/ }),
-/* 93 */
+/* 87 */
 /***/ (function(module, exports) {
 
 module.exports = function(done, value){
@@ -31464,11 +30595,11 @@ module.exports = function(done, value){
 };
 
 /***/ }),
-/* 94 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var $         = __webpack_require__(4)
-  , toIObject = __webpack_require__(22);
+  , toIObject = __webpack_require__(21);
 module.exports = function(object, el){
   var O      = toIObject(object)
     , keys   = $.getKeys(O)
@@ -31479,15 +30610,15 @@ module.exports = function(object, el){
 };
 
 /***/ }),
-/* 95 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global    = __webpack_require__(7)
-  , macrotask = __webpack_require__(104).set
+var global    = __webpack_require__(6)
+  , macrotask = __webpack_require__(98).set
   , Observer  = global.MutationObserver || global.WebKitMutationObserver
   , process   = global.process
   , Promise   = global.Promise
-  , isNode    = __webpack_require__(14)(process) == 'process'
+  , isNode    = __webpack_require__(13)(process) == 'process'
   , head, last, notify;
 
 var flush = function(){
@@ -31548,13 +30679,13 @@ module.exports = function asap(fn){
 };
 
 /***/ }),
-/* 96 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // most Object methods by ES6 should accept primitives
-var $export = __webpack_require__(19)
+var $export = __webpack_require__(18)
   , core    = __webpack_require__(3)
-  , fails   = __webpack_require__(28);
+  , fails   = __webpack_require__(27);
 module.exports = function(KEY, exec){
   var fn  = (core.Object || {})[KEY] || Object[KEY]
     , exp = {};
@@ -31563,17 +30694,17 @@ module.exports = function(KEY, exec){
 };
 
 /***/ }),
-/* 97 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var redefine = __webpack_require__(33);
+var redefine = __webpack_require__(32);
 module.exports = function(target, src){
   for(var key in src)redefine(target, key, src[key]);
   return target;
 };
 
 /***/ }),
-/* 98 */
+/* 92 */
 /***/ (function(module, exports) {
 
 // 7.2.9 SameValue(x, y)
@@ -31582,13 +30713,13 @@ module.exports = Object.is || function is(x, y){
 };
 
 /***/ }),
-/* 99 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Works with __proto__ only. Old v8 can't work with null proto objects.
 /* eslint-disable no-proto */
 var getDesc  = __webpack_require__(4).getDesc
-  , isObject = __webpack_require__(20)
+  , isObject = __webpack_require__(19)
   , anObject = __webpack_require__(9);
 var check = function(O, proto){
   anObject(O);
@@ -31598,7 +30729,7 @@ module.exports = {
   set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
     function(test, buggy, set){
       try {
-        set = __webpack_require__(15)(Function.call, getDesc(Object.prototype, '__proto__').set, 2);
+        set = __webpack_require__(14)(Function.call, getDesc(Object.prototype, '__proto__').set, 2);
         set(test, []);
         buggy = !(test instanceof Array);
       } catch(e){ buggy = true; }
@@ -31613,14 +30744,14 @@ module.exports = {
 };
 
 /***/ }),
-/* 100 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var core        = __webpack_require__(3)
   , $           = __webpack_require__(4)
-  , DESCRIPTORS = __webpack_require__(18)
+  , DESCRIPTORS = __webpack_require__(17)
   , SPECIES     = __webpack_require__(1)('species');
 
 module.exports = function(KEY){
@@ -31632,12 +30763,12 @@ module.exports = function(KEY){
 };
 
 /***/ }),
-/* 101 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.3.20 SpeciesConstructor(O, defaultConstructor)
 var anObject  = __webpack_require__(9)
-  , aFunction = __webpack_require__(25)
+  , aFunction = __webpack_require__(24)
   , SPECIES   = __webpack_require__(1)('species');
 module.exports = function(O, D){
   var C = anObject(O).constructor, S;
@@ -31645,7 +30776,7 @@ module.exports = function(O, D){
 };
 
 /***/ }),
-/* 102 */
+/* 96 */
 /***/ (function(module, exports) {
 
 module.exports = function(it, Constructor, name){
@@ -31654,11 +30785,11 @@ module.exports = function(it, Constructor, name){
 };
 
 /***/ }),
-/* 103 */
+/* 97 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var toInteger = __webpack_require__(45)
-  , defined   = __webpack_require__(27);
+var toInteger = __webpack_require__(43)
+  , defined   = __webpack_require__(26);
 // true  -> String#at
 // false -> String#codePointAt
 module.exports = function(TO_STRING){
@@ -31676,14 +30807,14 @@ module.exports = function(TO_STRING){
 };
 
 /***/ }),
-/* 104 */
+/* 98 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ctx                = __webpack_require__(15)
-  , invoke             = __webpack_require__(86)
-  , html               = __webpack_require__(85)
-  , cel                = __webpack_require__(81)
-  , global             = __webpack_require__(7)
+var ctx                = __webpack_require__(14)
+  , invoke             = __webpack_require__(80)
+  , html               = __webpack_require__(79)
+  , cel                = __webpack_require__(75)
+  , global             = __webpack_require__(6)
   , process            = global.process
   , setTask            = global.setImmediate
   , clearTask          = global.clearImmediate
@@ -31718,7 +30849,7 @@ if(!setTask || !clearTask){
     delete queue[id];
   };
   // Node.js 0.8-
-  if(__webpack_require__(14)(process) == 'process'){
+  if(__webpack_require__(13)(process) == 'process'){
     defer = function(id){
       process.nextTick(ctx(run, id, 1));
     };
@@ -31756,32 +30887,32 @@ module.exports = {
 };
 
 /***/ }),
-/* 105 */
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.1.15 ToLength
-var toInteger = __webpack_require__(45)
+var toInteger = __webpack_require__(43)
   , min       = Math.min;
 module.exports = function(it){
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
 
 /***/ }),
-/* 106 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.1.13 ToObject(argument)
-var defined = __webpack_require__(27);
+var defined = __webpack_require__(26);
 module.exports = function(it){
   return Object(defined(it));
 };
 
 /***/ }),
-/* 107 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var anObject = __webpack_require__(9)
-  , get      = __webpack_require__(47);
+  , get      = __webpack_require__(45);
 module.exports = __webpack_require__(3).getIterator = function(it){
   var iterFn = get(it);
   if(typeof iterFn != 'function')throw TypeError(it + ' is not iterable!');
@@ -31789,10 +30920,10 @@ module.exports = __webpack_require__(3).getIterator = function(it){
 };
 
 /***/ }),
-/* 108 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var classof   = __webpack_require__(26)
+var classof   = __webpack_require__(25)
   , ITERATOR  = __webpack_require__(1)('iterator')
   , Iterators = __webpack_require__(10);
 module.exports = __webpack_require__(3).isIterable = function(it){
@@ -31803,21 +30934,21 @@ module.exports = __webpack_require__(3).isIterable = function(it){
 };
 
 /***/ }),
-/* 109 */
+/* 103 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var addToUnscopables = __webpack_require__(80)
-  , step             = __webpack_require__(93)
+var addToUnscopables = __webpack_require__(74)
+  , step             = __webpack_require__(87)
   , Iterators        = __webpack_require__(10)
-  , toIObject        = __webpack_require__(22);
+  , toIObject        = __webpack_require__(21);
 
 // 22.1.3.4 Array.prototype.entries()
 // 22.1.3.13 Array.prototype.keys()
 // 22.1.3.29 Array.prototype.values()
 // 22.1.3.30 Array.prototype[@@iterator]()
-module.exports = __webpack_require__(43)(Array, 'Array', function(iterated, kind){
+module.exports = __webpack_require__(41)(Array, 'Array', function(iterated, kind){
   this._t = toIObject(iterated); // target
   this._i = 0;                   // next index
   this._k = kind;                // kind
@@ -31843,40 +30974,40 @@ addToUnscopables('values');
 addToUnscopables('entries');
 
 /***/ }),
-/* 110 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.14 Object.keys(O)
-var toObject = __webpack_require__(106);
+var toObject = __webpack_require__(100);
 
-__webpack_require__(96)('keys', function($keys){
+__webpack_require__(90)('keys', function($keys){
   return function keys(it){
     return $keys(toObject(it));
   };
 });
 
 /***/ }),
-/* 111 */
+/* 105 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var $          = __webpack_require__(4)
-  , LIBRARY    = __webpack_require__(31)
-  , global     = __webpack_require__(7)
-  , ctx        = __webpack_require__(15)
-  , classof    = __webpack_require__(26)
-  , $export    = __webpack_require__(19)
-  , isObject   = __webpack_require__(20)
+  , LIBRARY    = __webpack_require__(30)
+  , global     = __webpack_require__(6)
+  , ctx        = __webpack_require__(14)
+  , classof    = __webpack_require__(25)
+  , $export    = __webpack_require__(18)
+  , isObject   = __webpack_require__(19)
   , anObject   = __webpack_require__(9)
-  , aFunction  = __webpack_require__(25)
-  , strictNew  = __webpack_require__(102)
-  , forOf      = __webpack_require__(83)
-  , setProto   = __webpack_require__(99).set
-  , same       = __webpack_require__(98)
+  , aFunction  = __webpack_require__(24)
+  , strictNew  = __webpack_require__(96)
+  , forOf      = __webpack_require__(77)
+  , setProto   = __webpack_require__(93).set
+  , same       = __webpack_require__(92)
   , SPECIES    = __webpack_require__(1)('species')
-  , speciesConstructor = __webpack_require__(101)
-  , asap       = __webpack_require__(95)
+  , speciesConstructor = __webpack_require__(95)
+  , asap       = __webpack_require__(89)
   , PROMISE    = 'Promise'
   , process    = global.process
   , isNode     = classof(process) == 'process'
@@ -31909,7 +31040,7 @@ var USE_NATIVE = function(){
       works = false;
     }
     // actual V8 bug, https://code.google.com/p/v8/issues/detail?id=4162
-    if(works && __webpack_require__(18)){
+    if(works && __webpack_require__(17)){
       var thenableThenGotten = false;
       P.resolve($.setDesc({}, 'then', {
         get: function(){ thenableThenGotten = true; }
@@ -32065,7 +31196,7 @@ if(!USE_NATIVE){
       $reject.call(record, err);
     }
   };
-  __webpack_require__(97)(P.prototype, {
+  __webpack_require__(91)(P.prototype, {
     // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
     then: function then(onFulfilled, onRejected){
       var reaction = new PromiseCapability(speciesConstructor(this, P))
@@ -32086,8 +31217,8 @@ if(!USE_NATIVE){
 }
 
 $export($export.G + $export.W + $export.F * !USE_NATIVE, {Promise: P});
-__webpack_require__(21)(P, PROMISE);
-__webpack_require__(100)(PROMISE);
+__webpack_require__(20)(P, PROMISE);
+__webpack_require__(94)(PROMISE);
 Wrapper = __webpack_require__(3)[PROMISE];
 
 // statics
@@ -32111,7 +31242,7 @@ $export($export.S + $export.F * (!USE_NATIVE || testResolve(true)), PROMISE, {
     return capability.promise;
   }
 });
-$export($export.S + $export.F * !(USE_NATIVE && __webpack_require__(92)(function(iter){
+$export($export.S + $export.F * !(USE_NATIVE && __webpack_require__(86)(function(iter){
   P.all(iter)['catch'](function(){});
 })), PROMISE, {
   // 25.4.4.1 Promise.all(iterable)
@@ -32155,30 +31286,30 @@ $export($export.S + $export.F * !(USE_NATIVE && __webpack_require__(92)(function
 });
 
 /***/ }),
-/* 112 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 // ECMAScript 6 symbols shim
 var $              = __webpack_require__(4)
-  , global         = __webpack_require__(7)
-  , has            = __webpack_require__(29)
-  , DESCRIPTORS    = __webpack_require__(18)
-  , $export        = __webpack_require__(19)
-  , redefine       = __webpack_require__(33)
-  , $fails         = __webpack_require__(28)
-  , shared         = __webpack_require__(44)
-  , setToStringTag = __webpack_require__(21)
-  , uid            = __webpack_require__(46)
+  , global         = __webpack_require__(6)
+  , has            = __webpack_require__(28)
+  , DESCRIPTORS    = __webpack_require__(17)
+  , $export        = __webpack_require__(18)
+  , redefine       = __webpack_require__(32)
+  , $fails         = __webpack_require__(27)
+  , shared         = __webpack_require__(42)
+  , setToStringTag = __webpack_require__(20)
+  , uid            = __webpack_require__(44)
   , wks            = __webpack_require__(1)
-  , keyOf          = __webpack_require__(94)
-  , $names         = __webpack_require__(84)
-  , enumKeys       = __webpack_require__(82)
-  , isArray        = __webpack_require__(89)
+  , keyOf          = __webpack_require__(88)
+  , $names         = __webpack_require__(78)
+  , enumKeys       = __webpack_require__(76)
+  , isArray        = __webpack_require__(83)
   , anObject       = __webpack_require__(9)
-  , toIObject      = __webpack_require__(22)
-  , createDesc     = __webpack_require__(32)
+  , toIObject      = __webpack_require__(21)
+  , createDesc     = __webpack_require__(31)
   , getDesc        = $.getDesc
   , setDesc        = $.setDesc
   , _create        = $.create
@@ -32318,7 +31449,7 @@ if(!useNative){
   $.getNames   = $names.get = $getOwnPropertyNames;
   $.getSymbols = $getOwnPropertySymbols;
 
-  if(DESCRIPTORS && !__webpack_require__(31)){
+  if(DESCRIPTORS && !__webpack_require__(30)){
     redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
   }
 }
@@ -32388,10 +31519,10 @@ setToStringTag(Math, 'Math', true);
 setToStringTag(global.JSON, 'JSON', true);
 
 /***/ }),
-/* 113 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(36)();
+exports = module.exports = __webpack_require__(35)();
 // imports
 
 
@@ -32402,24 +31533,24 @@ exports.push([module.i, "\n.vue-street-view-pano-container {\n  position: relati
 
 
 /***/ }),
-/* 114 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(36)();
+exports = module.exports = __webpack_require__(35)();
 // imports
 
 
 // module
-exports.push([module.i, "\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n", "", {"version":3,"sources":["/./src/app.vue?17c009c8"],"names":[],"mappings":";AAuNA;EACA,YAAA;EACA,aAAA;EACA,gBAAA;EACA,OAAA;EACA,QAAA;EACA,cAAA;EACA,oBAAA;CACA;AAEA;EACA,cAAA;CACA;AACA;EACA,mBAAA;EACA,gBAAA;CACA;AAEA;EACA,WAAA;EACA,cAAA;EACA,eAAA;CACA","file":"app.vue","sourcesContent":["/* vim: set softtabstop=2 shiftwidth=2 expandtab : */\n<template>\n<div class=\"app-panel\">\n<div class=\"settings-panel\">\n  <h1>Map information</h1>\n  Map center latitude:\n    <input type=\"number\" v-model=\"reportedCenter.lat\" number\n      @change=\"updateMapCenter\" />\n  <br>\n  Map center longitude:\n    <input type=\"number\" v-model=\"reportedCenter.lng\" number\n      @change=\"updateMapCenter\">\n  <br>\n  Map bounds: {{mapBounds | json}}\n  <br>\n  Map zoom: <input type=\"number\" v-model=\"zoom\" number>\n  <br>\n  Dragged {{drag}} times\n  <br>\n  Left clicked {{mapClickedCount}} times\n  <br>\n  Map type: <select id=\"\" name=\"\" v-model=\"mapType\">\n    <option value=\"roadmap\">roadmap</option>\n    <option value=\"hybrid\">hybrid</option>\n    <option value=\"satellite\">satellite</option>\n    <option value=\"terrain\">terrain</option>\n  </select>\n  <br>\n  Map style: <select id=\"\" name=\"\" v-model=\"mapStyle\">\n    <option value=\"red\">red</option>\n    <option value=\"green\">green</option>\n    <option value=\"normal\">normal</option>\n  </select>\n  <br>\n  Enable scrollwheel zooming on the map: <input type=\"checkbox\" v-model=\"scrollwheel\">\n  <br>\n  <button @click=\"addMarker\"> Add a new Marker</button> (or right click on the map :) )\n  <h1>Clusters</h1>\n  enabled: <input type=\"checkbox\" v-model=\"clustering\" number>\n  </br>\n  Grid size: <input type=\"number\" v-model=\"gridSize\" number>\n  <br>\n  <h1>Polyline</h1>\n  Editable: <input type=\"checkbox\" number v-model=\"pleditable\">\n  <button @click=\"resetPlPath\">Reset path</button>\n  <br>\n  Visible: <input type=\"checkbox\" number v-model=\"plvisible\">\n  <br>\n  <h1>Polygon</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"pgvisible\"> <br>\n  <button @click=\"pgPath = opgPath\">Reset Polygon to pentagon</button><br>\n  <button @click=\"pgPath = originalPlPath\">Reset Polygon to a simple polygon</button><br>\n  Path: {{pgPath | json}}\n  <br>\n  <h1>Circle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayCircle\"><br>\n  {{circleBounds | json}}\n  <br>\n  <h1>Rectangle</h1>\n  Visible: <input type=\"checkbox\" number v-model=\"displayRectangle\"><br>\n  {{rectangleBounds | json}}\n  <br>\n  <h1>PlaceInput</h1>\n  <gmap-place-input\n    label=\"Add a marker at this place\"\n    :select-first-on-enter=\"true\"\n    @place_changed=\"updatePlace($event)\"\n  ></gmap-place-input>\n  <br>\n  <h1> Standalone infoWindow </h1>\n  modal 1 : <input type=\"checkbox\" number v-model=\"ifw\"><br>\n  modal 2: <input type=\"checkbox\" number v-model=\"ifw2\"> <input type=\"text\" v-model=\"ifw2text\">\n  <h1>Markers</h1>\n  Display only markers with even ID (to test filters) <input type=\"checkbox\" number v-model=\"markersEven\"><br>\n  <table>\n    <tr>\n      <th>lat</th>\n      <th>lng</th>\n      <th>opacity</th>\n      <th>enabled</th>\n      <th>draggable</th>\n      <th>clicked</th>\n      <th>right clicked</th>\n      <th>Drag-ended</th>\n      <th>Open info window</th>\n      <th>infoWIndow text</th>\n      <th>Delete me</th>\n    </tr>\n    <tr v-for=\"m in markers\">\n      <td>\n        <input type=\"number\" v-model=\"m.position.lat\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.position.lng\" number>\n      </td>\n      <td>\n        <input type=\"number\" v-model=\"m.opacity\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.enabled\" number>\n      </td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.draggable\" number>\n      </td>\n      <td>{{m.clicked}}</td>\n      <td>{{m.rightClicked}}</td>\n      <td>{{m.dragended}}</td>\n      <td>\n        <input type=\"checkbox\" v-model=\"m.ifw\" number>\n      </td>\n      <td>\n        <input type=\"text\" v-model=\"m.ifw2text\">\n      </td>\n      <td><button @click=\"markers.splice(markers.indexOf(m), 1)\">Delete me </button></td>\n    </tr>\n  </table>\n</div>\n<gmap-map\n    :center=\"center\"\n    :zoom=\"zoom\"\n    :map-type-id=\"mapType\"\n    :options=\"{styles: mapStyles, scrollwheel: scrollwheel}\"\n    @rightclick=\"mapRclicked\"\n    @drag=\"drag++\"\n    @click=\"mapClickedCount++\"\n    class=\"map-panel\"\n\n    @zoom_changed=\"update('zoom', $event)\"\n    @center_changed=\"update('reportedCenter', $event)\"\n    @maptypeid_changed=\"update('mapType', $event)\"\n    @bounds_changed=\"update('bounds', $event)\"\n    >\n    <gmap-cluster\n    :grid-size=\"gridSize\"\n    v-if=\"clustering\"\n    >\n      <gmap-marker\n        v-if=\"m.enabled\"\n        :position=\"m.position\"\n        :opacity=\"m.opacity\"\n        :draggable=\"m.draggable\"\n        @click=\"m.clicked++\"\n        @rightclick=\"m.rightClicked++\"\n        @dragend=\"m.dragended++\"\n\n        @position_changed=\"updateChild(m, 'position', $event)\"\n\n        v-for=\"m in activeMarkers\"\n        :key=\"m.id\"\n      >\n        <gmap-info-window\n        :opened=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </gmap-cluster>\n    <div v-if=\"!clustering\">\n      <gmap-marker\n      v-if=\"m.enabled\"\n      :position=\"m.position\"\n      :opacity=\"m.opacity\"\n      :draggable=\"m.draggable\"\n      @click=\"m.clicked++\"\n      @rightclick=\"m.rightClicked++\"\n      @dragend=\"m.dragended++\"\n      @position_changed=\"updateChild(m, 'position', $event)\"\n      v-for=\"m in activeMarkers\"\n      :key=\"m.id\"\n      >\n        <gmap-info-window\n        :opened=\"m.ifw\"\n        :content=\"m.ifw2text\"\n        ></gmap-info-window>\n      </gmap-marker>\n    </div>\n\n    <gmap-info-window\n    :position=\"reportedCenter\"\n    :opened=\"ifw\"\n    >\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    <br/>\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    <b>{{mapClickedCount}}</b>\n    </gmap-info-window>\n\n    <gmap-info-window\n    :position=\"reportedCenter\"\n    :opened=\"ifw2\"\n    :content=\"ifw2text\"\n    ></gmap-info-window>\n\n    <gmap-polyline v-if=\"plvisible\" :path=\"plPath\" :editable=\"pleditable\" :draggable=\"true\" :options=\"{geodesic:true, strokeColor:'#FF0000'}\"\n      @path_changed=\"updatePolylinePath($event)\">\n    </gmap-polyline>\n    <gmap-polygon v-if=\"pgvisible\" :paths=\"pgPath\" :editable=\"true\"\n      :options=\"{geodesic:true, strokeColor:'#FF0000', fillColor:'#000000'}\"\n      @paths_changed=\"updatePolygonPaths($event)\">\n    </gmap-polygon>\n    <gmap-circle v-if=\"displayCircle\" :bounds=\"circleBounds\"\n      :center=\"reportedCenter\" :radius=\"100000\"\n      :options=\"{editable: true}\"\n\n      @radius_changed=\"updateCircle('radius', $event)\"\n      @bounds_changed=\"updateCircle('bounds', $event)\"\n\n      ></gmap-circle>\n    <gmap-rectangle v-if=\"displayRectangle\" :bounds=\"rectangleBounds\"\n    :options=\"{editable: true}\"\n    @bounds_changed=\"updateRectangle('bounds', $event)\"></gmap-rectangle>\n</gmap-map>\n</div>\n</template>\n\n<style>\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\n\ngmap-map {\n  width:100%;\n  height: 600px;\n  display: block;\n}\n</style>\n\n<script>\n\nexport default {\n  data: function data() {\n    return {\n      lastId: 1,\n      center: { lat: 48.8538302, lng: 2.2982161 },\n      reportedCenter: { lat: 48.8538302, lng: 2.2982161 },\n      mapBounds: {},\n      clustering: true,\n      zoom: 7,\n      gridSize: 50,\n      mapType: 'terrain',\n      markers: [],\n      markersEven: false,\n      drag: 0,\n      mapClickedCount: 0,\n      ifw: true,\n      ifw2: false,\n      ifw2text: 'You can also use the content prop to set your modal',\n      mapStyle: 'green',\n      circleBounds: {},\n      displayCircle: false,\n      displayRectangle: false,\n      rectangleBounds: {\n        north: 33.685,\n        south: 50.671,\n        east: -70.234,\n        west: -116.251\n      },\n      originalPlPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      plPath: [\n        {lat: 37.772, lng: -122.214},\n        {lat: 21.291, lng: -157.821},\n        {lat: -18.142, lng: 178.431},\n        {lat: -27.467, lng: 153.027}\n      ],\n      pleditable: true,\n      plvisible: false,\n      pgvisible: false,\n      pgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n      opgPath: [[\n          {lat: 38.872886, lng:-77.054720},\n          {lat: 38.872602, lng:-77.058046},\n          {lat: 38.870080, lng:-77.058604},\n          {lat: 38.868894, lng:-77.055664},\n          {lat: 38.870598, lng:-77.053346}\n        ], [\n          {lat: 38.871684, lng:-77.056780},\n          {lat: 38.871867, lng:-77.055449},\n          {lat: 38.870915, lng:-77.054891},\n          {lat: 38.870113, lng:-77.055836},\n          {lat: 38.870581, lng:-77.057037}\n        ]],\n        scrollwheel: true\n    };\n  },\n\n  computed: {\n    activeMarkers() {\n      if (this.markersEven) {\n        return this.markers.filter(\n          (v, k) => k % 2 == 0\n        )\n      } else {\n        return this.markers\n      }\n    },\n    mapStyles () {\n      switch(this.mapStyle) {\n        case 'normal':\n          return [];\n          break;\n        case 'red':\n          return [\n              {\n                stylers: [\n                  {hue: '#890000'},\n                  {visibility: 'simplified'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                elementType: 'labels',\n                stylers: [{visibility: 'off'}]\n              },\n              {\n                featureType: 'water',\n                stylers: [{color: '#890000'}]\n              }\n            ]\n          break;\n        default:\n          return [\n              {\n                stylers: [\n                  {hue: '#899999'},\n                  {visibility: 'on'},\n                  {gamma: 0.5},\n                  {weight: 0.5}\n                ]\n              },\n              {\n                featureType: 'road',\n                stylers: [\n                  {visibility: 'off'}\n                ]\n              },\n              {\n                featureType: 'transit.line',\n                stylers: [\n                  {color: '#FF0000'}\n                ]\n              },\n              {\n                featureType: 'poi',\n                elementType: 'labels.icon',\n                stylers: [\n                  {visibility: 'on'},\n                  {weight: 10}\n                ]\n              },\n              {\n                featureType: 'water',\n                stylers: [\n                  { color: '#8900FF' },\n                  { weight:  9999900000},\n                ]\n              }\n            ];\n      }\n    }\n  },\n\n  methods: {\n    updateMapCenter(which, value) {\n      this.center = _.clone(this.reportedCenter)\n    },\n    mapClicked (mouseArgs) {\n      console.log('map clicked', mouseArgs);\n    },\n    mapRclicked (mouseArgs) {\n      const createdMarker = this.addMarker();\n      createdMarker.position.lat = mouseArgs.latLng.lat();\n      createdMarker.position.lng = mouseArgs.latLng.lng();\n    },\n    addMarker: function addMarker() {\n      this.lastId++;\n\n      this.markers.push({\n        id: this.lastId,\n        position: { lat: 48.8538302, lng: 2.2982161 },\n        opacity: 1,\n        draggable: true,\n        enabled: true,\n        clicked: 0,\n        rightClicked: 0,\n        dragended: 0,\n        ifw: true,\n        ifw2text: \"This text is bad please change me :( \"\n      });\n      return this.markers[this.markers.length - 1];\n    },\n    resetPlPath () {\n      this.plPath = this.originalPlPath;\n    },\n\n    update(field, event) {\n      if (field === 'reportedCenter') {\n        // N.B. It is dangerous to update this.center\n        // Because the center reported by Google Maps is not exactly\n        // the same as the center you pass it.\n        // Instead we update this.center only when the input field is changed.\n\n        console.log('CENTER REPORTED', event);\n        this.reportedCenter = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n\n        // If you wish to test the problem out for yourself, uncomment the following\n        // and see how your browser begins to hang:\n        // this.center = _.clone(this.reportedCenter)\n      } else if (field === 'bounds') {\n        this.mapBounds = event;\n      } else {\n        this.$set(this, field, event)\n      }\n    },\n\n    updateChild(object, field, event) {\n      if (field === 'position') {\n        object.position = {\n          lat: event.lat(),\n          lng: event.lng(),\n        }\n      }\n    },\n\n    updatePolygonPaths(paths) {\n      // TODO\n    },\n\n    updatePolylinePath(paths) {\n      // TODO:\n    },\n\n    updateCircle(prop, value) {\n      if (prop === 'radius') {\n        this.radius = value;\n      } else if (prop === 'bounds') {\n        this.circleBounds = value;\n      }\n    },\n\n    updateRectangle(prop, value) {\n      if (prop === 'bounds') {\n        this.rectangleBounds = value;\n      }\n    },\n\n    updatePlace(place) {\n      if (place && place.geometry && place.geometry.location) {\n        var marker = this.addMarker();\n        marker.position.lat = place.geometry.location.lat();\n        marker.position.lng = place.geometry.location.lng();\n      }\n    }\n\n  },\n};\n</script>\n"],"sourceRoot":"webpack://"}]);
+exports.push([module.i, "\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n.map-panel {\n  flex: 4 1 80%;\n}\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\ngmap-map {\n  width: 100%;\n  height: 600px;\n  display: block;\n}\n", "", {"version":3,"sources":["/./src/app.vue?50db5d96"],"names":[],"mappings":";AA4HA;EACA,YAAA;EACA,aAAA;EACA,gBAAA;EACA,OAAA;EACA,QAAA;EACA,cAAA;EACA,oBAAA;CACA;AAEA;EACA,cAAA;CACA;AAEA;EACA,mBAAA;EACA,gBAAA;CACA;AAEA;EACA,YAAA;EACA,cAAA;EACA,eAAA;CACA","file":"app.vue","sourcesContent":["/* vim: set softtabstop=2 shiftwidth=2 expandtab : */\n<template>\n<div class=\"app-panel\">\n  <div class=\"settings-panel\">\n    <h1>Map information</h1> Map center latitude:\n    <input type=\"number\" v-model=\"reportedCenter.lat\" number @change=\"updateMapCenter\" />\n    <br> Map center longitude:\n    <input type=\"number\" v-model=\"reportedCenter.lng\" number @change=\"updateMapCenter\">\n    <br> Map bounds: {{mapBounds | json}}\n    <br> Map zoom: <input type=\"number\" v-model=\"zoom\" number>\n    <br> Dragged {{drag}} times\n    <br> Left clicked {{mapClickedCount}} times\n    <br> Map type: <select id=\"\" name=\"\" v-model=\"mapType\">\n    <option value=\"roadmap\">roadmap</option>\n    <option value=\"hybrid\">hybrid</option>\n    <option value=\"satellite\">satellite</option>\n    <option value=\"terrain\">terrain</option>\n  </select>\n    <br> Map style: <select id=\"\" name=\"\" v-model=\"mapStyle\">\n    <option value=\"red\">red</option>\n    <option value=\"green\">green</option>\n    <option value=\"normal\">normal</option>\n  </select>\n    <br> Enable scrollwheel zooming on the map: <input type=\"checkbox\" v-model=\"scrollwheel\">\n    <br>\n    <button @click=\"addMarker\"> Add a new Marker</button> (or right click on the map :) )\n    <h1>Clusters</h1> enabled: <input type=\"checkbox\" v-model=\"clustering\" number>\n    </br>\n    Grid size: <input type=\"number\" v-model=\"gridSize\" number>\n    <br>\n    <h1>Polyline</h1> Editable: <input type=\"checkbox\" number v-model=\"pleditable\">\n    <button @click=\"resetPlPath\">Reset path</button>\n    <br> Visible: <input type=\"checkbox\" number v-model=\"plvisible\">\n    <br>\n    <h1>Polygon</h1> Visible: <input type=\"checkbox\" number v-model=\"pgvisible\"> <br>\n    <button @click=\"pgPath = opgPath\">Reset Polygon to pentagon</button><br>\n    <button @click=\"pgPath = originalPlPath\">Reset Polygon to a simple polygon</button><br> Path: {{pgPath | json}}\n    <br>\n    <h1>Circle</h1> Visible: <input type=\"checkbox\" number v-model=\"displayCircle\"><br> {{circleBounds | json}}\n    <br>\n    <h1>Rectangle</h1> Visible: <input type=\"checkbox\" number v-model=\"displayRectangle\"><br> {{rectangleBounds | json}}\n    <br>\n    <h1>PlaceInput</h1>\n    <gmap-place-input label=\"Add a marker at this place\" :select-first-on-enter=\"true\" @place_changed=\"updatePlace($event)\"></gmap-place-input>\n    <br>\n    <h1> Standalone infoWindow </h1> modal 1 : <input type=\"checkbox\" number v-model=\"ifw\"><br> modal 2: <input type=\"checkbox\" number v-model=\"ifw2\"> <input type=\"text\" v-model=\"ifw2text\">\n    <h1>Markers</h1> Display only markers with even ID (to test filters) <input type=\"checkbox\" number v-model=\"markersEven\"><br>\n    <table>\n      <tr>\n        <th>lat</th>\n        <th>lng</th>\n        <th>opacity</th>\n        <th>enabled</th>\n        <th>draggable</th>\n        <th>clicked</th>\n        <th>right clicked</th>\n        <th>Drag-ended</th>\n        <th>Open info window</th>\n        <th>infoWIndow text</th>\n        <th>Delete me</th>\n      </tr>\n      <tr v-for=\"m in markers\">\n        <td>\n          <input type=\"number\" v-model=\"m.position.lat\" number>\n        </td>\n        <td>\n          <input type=\"number\" v-model=\"m.position.lng\" number>\n        </td>\n        <td>\n          <input type=\"number\" v-model=\"m.opacity\" number>\n        </td>\n        <td>\n          <input type=\"checkbox\" v-model=\"m.enabled\" number>\n        </td>\n        <td>\n          <input type=\"checkbox\" v-model=\"m.draggable\" number>\n        </td>\n        <td>{{m.clicked}}</td>\n        <td>{{m.rightClicked}}</td>\n        <td>{{m.dragended}}</td>\n        <td>\n          <input type=\"checkbox\" v-model=\"m.ifw\" number>\n        </td>\n        <td>\n          <input type=\"text\" v-model=\"m.ifw2text\">\n        </td>\n        <td><button @click=\"markers.splice(markers.indexOf(m), 1)\">Delete me </button></td>\n      </tr>\n    </table>\n  </div>\n  <gmap-map :center=\"center\" :zoom=\"zoom\" :map-type-id=\"mapType\" :options=\"{styles: mapStyles, scrollwheel: scrollwheel}\" @rightclick=\"mapRclicked\" @drag=\"drag++\" @click=\"mapClickedCount++\" class=\"map-panel\" @zoom_changed=\"update('zoom', $event)\" @center_changed=\"update('reportedCenter', $event)\"\n      @maptypeid_changed=\"update('mapType', $event)\" @bounds_changed=\"update('bounds', $event)\">\n    <gmap-cluster :grid-size=\"gridSize\" v-if=\"clustering\">\n      <gmap-marker v-if=\"m.enabled\" :position=\"m.position\" :opacity=\"m.opacity\" :draggable=\"m.draggable\" @click=\"m.clicked++\" @rightclick=\"m.rightClicked++\" @dragend=\"m.dragended++\" @position_changed=\"updateChild(m, 'position', $event)\" v-for=\"m in activeMarkers\"\n          :key=\"m.id\">\n        <gmap-info-window :opened=\"m.ifw\" :content=\"m.ifw2text\"></gmap-info-window>\n      </gmap-marker>\n    </gmap-cluster>\n    <div v-if=\"!clustering\">\n      <gmap-marker v-if=\"m.enabled\" :position=\"m.position\" :opacity=\"m.opacity\" :draggable=\"m.draggable\" @click=\"m.clicked++\" @rightclick=\"m.rightClicked++\" @dragend=\"m.dragended++\" @position_changed=\"updateChild(m, 'position', $event)\" v-for=\"m in activeMarkers\"\n          :key=\"m.id\">\n        <gmap-info-window :opened=\"m.ifw\" :content=\"m.ifw2text\"></gmap-info-window>\n      </gmap-marker>\n    </div>\n\n    <gmap-info-window :position=\"reportedCenter\" :opened=\"ifw\">\n      To show you the bindings are working I will stay on the center of the screen whatever you do :)\n      <br/> To show you that even my content is bound to vue here is the number of time you clicked on the map\n      <b>{{mapClickedCount}}</b>\n    </gmap-info-window>\n\n    <gmap-info-window :position=\"reportedCenter\" :opened=\"ifw2\" :content=\"ifw2text\"></gmap-info-window>\n\n    <gmap-polyline v-if=\"plvisible\" :path=\"plPath\" :editable=\"pleditable\" :draggable=\"true\" :options=\"{geodesic:true, strokeColor:'#FF0000'}\" @path_changed=\"updatePolylinePath($event)\">\n    </gmap-polyline>\n    <gmap-polygon v-if=\"pgvisible\" :paths=\"pgPath\" :editable=\"true\" :options=\"{geodesic:true, strokeColor:'#FF0000', fillColor:'#000000'}\" @paths_changed=\"updatePolygonPaths($event)\">\n    </gmap-polygon>\n    <gmap-circle v-if=\"displayCircle\" :bounds=\"circleBounds\" :center=\"reportedCenter\" :radius=\"100000\" :options=\"{editable: true}\" @radius_changed=\"updateCircle('radius', $event)\" @bounds_changed=\"updateCircle('bounds', $event)\"></gmap-circle>\n    <gmap-rectangle v-if=\"displayRectangle\" :bounds=\"rectangleBounds\" :options=\"{editable: true}\" @bounds_changed=\"updateRectangle('bounds', $event)\"></gmap-rectangle>\n  </gmap-map>\n</div>\n</template>\n\n<style>\n.app-panel {\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: row;\n}\n\n.map-panel {\n  flex: 4 1 80%;\n}\n\n.settings-panel {\n  overflow-y: scroll;\n  flex: 1 0 500px;\n}\n\ngmap-map {\n  width: 100%;\n  height: 600px;\n  display: block;\n}\n</style>\n\n<script>\nconst _ = require('lodash');\n\nexport default {\n  data: function data() {\n    return {\n      lastId: 1,\n      center: {\n        lat: 48.8538302,\n        lng: 2.2982161\n      },\n      reportedCenter: {\n        lat: 48.8538302,\n        lng: 2.2982161\n      },\n      mapBounds: {},\n      clustering: true,\n      zoom: 7,\n      gridSize: 50,\n      mapType: 'terrain',\n      markers: [],\n      markersEven: false,\n      drag: 0,\n      mapClickedCount: 0,\n      ifw: true,\n      ifw2: false,\n      ifw2text: 'You can also use the content prop to set your modal',\n      mapStyle: 'green',\n      circleBounds: {},\n      displayCircle: false,\n      displayRectangle: false,\n      rectangleBounds: {\n        north: 33.685,\n        south: 50.671,\n        east: -70.234,\n        west: -116.251\n      },\n      originalPlPath: [{\n        lat: 37.772,\n        lng: -122.214\n      }, {\n        lat: 21.291,\n        lng: -157.821\n      }, {\n        lat: -18.142,\n        lng: 178.431\n      }, {\n        lat: -27.467,\n        lng: 153.027\n      }],\n      plPath: [{\n        lat: 37.772,\n        lng: -122.214\n      }, {\n        lat: 21.291,\n        lng: -157.821\n      }, {\n        lat: -18.142,\n        lng: 178.431\n      }, {\n        lat: -27.467,\n        lng: 153.027\n      }],\n      pleditable: true,\n      plvisible: false,\n      pgvisible: false,\n      pgPath: [\n        [{\n          lat: 38.872886,\n          lng: -77.054720\n        }, {\n          lat: 38.872602,\n          lng: -77.058046\n        }, {\n          lat: 38.870080,\n          lng: -77.058604\n        }, {\n          lat: 38.868894,\n          lng: -77.055664\n        }, {\n          lat: 38.870598,\n          lng: -77.053346\n        }],\n        [{\n          lat: 38.871684,\n          lng: -77.056780\n        }, {\n          lat: 38.871867,\n          lng: -77.055449\n        }, {\n          lat: 38.870915,\n          lng: -77.054891\n        }, {\n          lat: 38.870113,\n          lng: -77.055836\n        }, {\n          lat: 38.870581,\n          lng: -77.057037\n        }]\n      ],\n      opgPath: [\n        [{\n          lat: 38.872886,\n          lng: -77.054720\n        }, {\n          lat: 38.872602,\n          lng: -77.058046\n        }, {\n          lat: 38.870080,\n          lng: -77.058604\n        }, {\n          lat: 38.868894,\n          lng: -77.055664\n        }, {\n          lat: 38.870598,\n          lng: -77.053346\n        }],\n        [{\n          lat: 38.871684,\n          lng: -77.056780\n        }, {\n          lat: 38.871867,\n          lng: -77.055449\n        }, {\n          lat: 38.870915,\n          lng: -77.054891\n        }, {\n          lat: 38.870113,\n          lng: -77.055836\n        }, {\n          lat: 38.870581,\n          lng: -77.057037\n        }]\n      ],\n      scrollwheel: true\n    };\n  },\n\n  computed: {\n    activeMarkers() {\n      if (this.markersEven) {\n        return this.markers.filter(\n          (v, k) => k % 2 == 0\n        );\n      } else {\n        return this.markers;\n      }\n    },\n    mapStyles() {\n      switch (this.mapStyle) {\n      case 'normal':\n        return [];\n      case 'red':\n        return [{\n          stylers: [{\n            hue: '#890000'\n          }, {\n            visibility: 'simplified'\n          }, {\n            gamma: 0.5\n          }, {\n            weight: 0.5\n          }]\n        }, {\n          elementType: 'labels',\n          stylers: [{\n            visibility: 'off'\n          }]\n        }, {\n          featureType: 'water',\n          stylers: [{\n            color: '#890000'\n          }]\n        }];\n      default:\n        return [{\n          stylers: [{\n            hue: '#899999'\n          }, {\n            visibility: 'on'\n          }, {\n            gamma: 0.5\n          }, {\n            weight: 0.5\n          }]\n        }, {\n          featureType: 'road',\n          stylers: [{\n            visibility: 'off'\n          }]\n        }, {\n          featureType: 'transit.line',\n          stylers: [{\n            color: '#FF0000'\n          }]\n        }, {\n          featureType: 'poi',\n          elementType: 'labels.icon',\n          stylers: [{\n            visibility: 'on'\n          }, {\n            weight: 10\n          }]\n        }, {\n          featureType: 'water',\n          stylers: [{\n            color: '#8900FF'\n          }, {\n            weight: 9999900000\n          }, ]\n        }];\n      }\n    }\n  },\n\n  methods: {\n    updateMapCenter(which, value) { // eslint-disable-line no-unused-vars\n      this.center = _.clone(this.reportedCenter);\n    },\n    mapClicked(mouseArgs) {\n      console.log('map clicked', mouseArgs); // eslint-disable-line no-console\n    },\n    mapRclicked(mouseArgs) {\n      const createdMarker = this.addMarker();\n      createdMarker.position.lat = mouseArgs.latLng.lat();\n      createdMarker.position.lng = mouseArgs.latLng.lng();\n    },\n    addMarker: function addMarker() {\n      this.lastId++;\n\n      this.markers.push({\n        id: this.lastId,\n        position: {\n          lat: 48.8538302,\n          lng: 2.2982161\n        },\n        opacity: 1,\n        draggable: true,\n        enabled: true,\n        clicked: 0,\n        rightClicked: 0,\n        dragended: 0,\n        ifw: true,\n        ifw2text: 'This text is bad please change me :( '\n      });\n      return this.markers[this.markers.length - 1];\n    },\n    resetPlPath() {\n      this.plPath = this.originalPlPath;\n    },\n\n    update(field, event) {\n      if (field === 'reportedCenter') {\n        // N.B. It is dangerous to update this.center\n        // Because the center reported by Google Maps is not exactly\n        // the same as the center you pass it.\n        // Instead we update this.center only when the input field is changed.\n\n        this.reportedCenter = {\n          lat: event.lat(),\n          lng: event.lng(),\n        };\n\n        // If you wish to test the problem out for yourself, uncomment the following\n        // and see how your browser begins to hang:\n        // this.center = _.clone(this.reportedCenter)\n      } else if (field === 'bounds') {\n        this.mapBounds = event;\n      } else {\n        this.$set(this, field, event);\n      }\n    },\n\n    updateChild(object, field, event) {\n      if (field === 'position') {\n        object.position = {\n          lat: event.lat(),\n          lng: event.lng(),\n        };\n      }\n    },\n\n    updatePolygonPaths(paths) { //eslint-disable-line no-unused-vars\n      // TODO\n    },\n\n    updatePolylinePath(paths) { //eslint-disable-line no-unused-vars\n      // TODO:\n    },\n\n    updateCircle(prop, value) {\n      if (prop === 'radius') {\n        this.radius = value;\n      } else if (prop === 'bounds') {\n        this.circleBounds = value;\n      }\n    },\n\n    updateRectangle(prop, value) {\n      if (prop === 'bounds') {\n        this.rectangleBounds = value;\n      }\n    },\n\n    updatePlace(place) {\n      if (place && place.geometry && place.geometry.location) {\n        var marker = this.addMarker();\n        marker.position.lat = place.geometry.location.lat();\n        marker.position.lng = place.geometry.location.lng();\n      }\n    }\n\n  },\n};\n</script>\n"],"sourceRoot":"webpack://"}]);
 
 // exports
 
 
 /***/ }),
-/* 115 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(36)();
+exports = module.exports = __webpack_require__(35)();
 // imports
 
 
@@ -32430,7 +31561,7 @@ exports.push([module.i, "\n.vue-map-container {\n  position: relative;\n}\n.vue-
 
 
 /***/ }),
-/* 116 */
+/* 110 */
 /***/ (function(module, exports) {
 
 /**
@@ -34070,14 +33201,833 @@ module.exports = MarkerClusterer
 
 
 /***/ }),
-/* 117 */
+/* 111 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 112 */
+/***/ (function(module, exports) {
+
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+
+/***/ }),
+/* 113 */
+/***/ (function(module, exports) {
+
+module.exports = function isBuffer(arg) {
+  return arg && typeof arg === 'object'
+    && typeof arg.copy === 'function'
+    && typeof arg.fill === 'function'
+    && typeof arg.readUInt8 === 'function';
+}
+
+/***/ }),
+/* 114 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+var formatRegExp = /%[sdj%]/g;
+exports.format = function(f) {
+  if (!isString(f)) {
+    var objects = [];
+    for (var i = 0; i < arguments.length; i++) {
+      objects.push(inspect(arguments[i]));
+    }
+    return objects.join(' ');
+  }
+
+  var i = 1;
+  var args = arguments;
+  var len = args.length;
+  var str = String(f).replace(formatRegExp, function(x) {
+    if (x === '%%') return '%';
+    if (i >= len) return x;
+    switch (x) {
+      case '%s': return String(args[i++]);
+      case '%d': return Number(args[i++]);
+      case '%j':
+        try {
+          return JSON.stringify(args[i++]);
+        } catch (_) {
+          return '[Circular]';
+        }
+      default:
+        return x;
+    }
+  });
+  for (var x = args[i]; i < len; x = args[++i]) {
+    if (isNull(x) || !isObject(x)) {
+      str += ' ' + x;
+    } else {
+      str += ' ' + inspect(x);
+    }
+  }
+  return str;
+};
+
+
+// Mark that a method should not be used.
+// Returns a modified function which warns once by default.
+// If --no-deprecation is set, then it is a no-op.
+exports.deprecate = function(fn, msg) {
+  // Allow for deprecating things in the process of starting up.
+  if (isUndefined(global.process)) {
+    return function() {
+      return exports.deprecate(fn, msg).apply(this, arguments);
+    };
+  }
+
+  if (process.noDeprecation === true) {
+    return fn;
+  }
+
+  var warned = false;
+  function deprecated() {
+    if (!warned) {
+      if (process.throwDeprecation) {
+        throw new Error(msg);
+      } else if (process.traceDeprecation) {
+        console.trace(msg);
+      } else {
+        console.error(msg);
+      }
+      warned = true;
+    }
+    return fn.apply(this, arguments);
+  }
+
+  return deprecated;
+};
+
+
+var debugs = {};
+var debugEnviron;
+exports.debuglog = function(set) {
+  if (isUndefined(debugEnviron))
+    debugEnviron = process.env.NODE_DEBUG || '';
+  set = set.toUpperCase();
+  if (!debugs[set]) {
+    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
+      var pid = process.pid;
+      debugs[set] = function() {
+        var msg = exports.format.apply(exports, arguments);
+        console.error('%s %d: %s', set, pid, msg);
+      };
+    } else {
+      debugs[set] = function() {};
+    }
+  }
+  return debugs[set];
+};
+
+
+/**
+ * Echos the value of a value. Trys to print the value out
+ * in the best way possible given the different types.
+ *
+ * @param {Object} obj The object to print out.
+ * @param {Object} opts Optional options object that alters the output.
+ */
+/* legacy: obj, showHidden, depth, colors*/
+function inspect(obj, opts) {
+  // default options
+  var ctx = {
+    seen: [],
+    stylize: stylizeNoColor
+  };
+  // legacy...
+  if (arguments.length >= 3) ctx.depth = arguments[2];
+  if (arguments.length >= 4) ctx.colors = arguments[3];
+  if (isBoolean(opts)) {
+    // legacy...
+    ctx.showHidden = opts;
+  } else if (opts) {
+    // got an "options" object
+    exports._extend(ctx, opts);
+  }
+  // set default options
+  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
+  if (isUndefined(ctx.depth)) ctx.depth = 2;
+  if (isUndefined(ctx.colors)) ctx.colors = false;
+  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
+  if (ctx.colors) ctx.stylize = stylizeWithColor;
+  return formatValue(ctx, obj, ctx.depth);
+}
+exports.inspect = inspect;
+
+
+// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+inspect.colors = {
+  'bold' : [1, 22],
+  'italic' : [3, 23],
+  'underline' : [4, 24],
+  'inverse' : [7, 27],
+  'white' : [37, 39],
+  'grey' : [90, 39],
+  'black' : [30, 39],
+  'blue' : [34, 39],
+  'cyan' : [36, 39],
+  'green' : [32, 39],
+  'magenta' : [35, 39],
+  'red' : [31, 39],
+  'yellow' : [33, 39]
+};
+
+// Don't use 'blue' not visible on cmd.exe
+inspect.styles = {
+  'special': 'cyan',
+  'number': 'yellow',
+  'boolean': 'yellow',
+  'undefined': 'grey',
+  'null': 'bold',
+  'string': 'green',
+  'date': 'magenta',
+  // "name": intentionally not styling
+  'regexp': 'red'
+};
+
+
+function stylizeWithColor(str, styleType) {
+  var style = inspect.styles[styleType];
+
+  if (style) {
+    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
+           '\u001b[' + inspect.colors[style][1] + 'm';
+  } else {
+    return str;
+  }
+}
+
+
+function stylizeNoColor(str, styleType) {
+  return str;
+}
+
+
+function arrayToHash(array) {
+  var hash = {};
+
+  array.forEach(function(val, idx) {
+    hash[val] = true;
+  });
+
+  return hash;
+}
+
+
+function formatValue(ctx, value, recurseTimes) {
+  // Provide a hook for user-specified inspect functions.
+  // Check that value is an object with an inspect function on it
+  if (ctx.customInspect &&
+      value &&
+      isFunction(value.inspect) &&
+      // Filter out the util module, it's inspect function is special
+      value.inspect !== exports.inspect &&
+      // Also filter out any prototype objects using the circular check.
+      !(value.constructor && value.constructor.prototype === value)) {
+    var ret = value.inspect(recurseTimes, ctx);
+    if (!isString(ret)) {
+      ret = formatValue(ctx, ret, recurseTimes);
+    }
+    return ret;
+  }
+
+  // Primitive types cannot have properties
+  var primitive = formatPrimitive(ctx, value);
+  if (primitive) {
+    return primitive;
+  }
+
+  // Look up the keys of the object.
+  var keys = Object.keys(value);
+  var visibleKeys = arrayToHash(keys);
+
+  if (ctx.showHidden) {
+    keys = Object.getOwnPropertyNames(value);
+  }
+
+  // IE doesn't make error fields non-enumerable
+  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
+  if (isError(value)
+      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
+    return formatError(value);
+  }
+
+  // Some type of object without properties can be shortcutted.
+  if (keys.length === 0) {
+    if (isFunction(value)) {
+      var name = value.name ? ': ' + value.name : '';
+      return ctx.stylize('[Function' + name + ']', 'special');
+    }
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    }
+    if (isDate(value)) {
+      return ctx.stylize(Date.prototype.toString.call(value), 'date');
+    }
+    if (isError(value)) {
+      return formatError(value);
+    }
+  }
+
+  var base = '', array = false, braces = ['{', '}'];
+
+  // Make Array say that they are Array
+  if (isArray(value)) {
+    array = true;
+    braces = ['[', ']'];
+  }
+
+  // Make functions say that they are functions
+  if (isFunction(value)) {
+    var n = value.name ? ': ' + value.name : '';
+    base = ' [Function' + n + ']';
+  }
+
+  // Make RegExps say that they are RegExps
+  if (isRegExp(value)) {
+    base = ' ' + RegExp.prototype.toString.call(value);
+  }
+
+  // Make dates with properties first say the date
+  if (isDate(value)) {
+    base = ' ' + Date.prototype.toUTCString.call(value);
+  }
+
+  // Make error with message first say the error
+  if (isError(value)) {
+    base = ' ' + formatError(value);
+  }
+
+  if (keys.length === 0 && (!array || value.length == 0)) {
+    return braces[0] + base + braces[1];
+  }
+
+  if (recurseTimes < 0) {
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    } else {
+      return ctx.stylize('[Object]', 'special');
+    }
+  }
+
+  ctx.seen.push(value);
+
+  var output;
+  if (array) {
+    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+  } else {
+    output = keys.map(function(key) {
+      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+    });
+  }
+
+  ctx.seen.pop();
+
+  return reduceToSingleString(output, base, braces);
+}
+
+
+function formatPrimitive(ctx, value) {
+  if (isUndefined(value))
+    return ctx.stylize('undefined', 'undefined');
+  if (isString(value)) {
+    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+                                             .replace(/'/g, "\\'")
+                                             .replace(/\\"/g, '"') + '\'';
+    return ctx.stylize(simple, 'string');
+  }
+  if (isNumber(value))
+    return ctx.stylize('' + value, 'number');
+  if (isBoolean(value))
+    return ctx.stylize('' + value, 'boolean');
+  // For some reason typeof null is "object", so special case here.
+  if (isNull(value))
+    return ctx.stylize('null', 'null');
+}
+
+
+function formatError(value) {
+  return '[' + Error.prototype.toString.call(value) + ']';
+}
+
+
+function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+  var output = [];
+  for (var i = 0, l = value.length; i < l; ++i) {
+    if (hasOwnProperty(value, String(i))) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          String(i), true));
+    } else {
+      output.push('');
+    }
+  }
+  keys.forEach(function(key) {
+    if (!key.match(/^\d+$/)) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          key, true));
+    }
+  });
+  return output;
+}
+
+
+function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+  var name, str, desc;
+  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+  if (desc.get) {
+    if (desc.set) {
+      str = ctx.stylize('[Getter/Setter]', 'special');
+    } else {
+      str = ctx.stylize('[Getter]', 'special');
+    }
+  } else {
+    if (desc.set) {
+      str = ctx.stylize('[Setter]', 'special');
+    }
+  }
+  if (!hasOwnProperty(visibleKeys, key)) {
+    name = '[' + key + ']';
+  }
+  if (!str) {
+    if (ctx.seen.indexOf(desc.value) < 0) {
+      if (isNull(recurseTimes)) {
+        str = formatValue(ctx, desc.value, null);
+      } else {
+        str = formatValue(ctx, desc.value, recurseTimes - 1);
+      }
+      if (str.indexOf('\n') > -1) {
+        if (array) {
+          str = str.split('\n').map(function(line) {
+            return '  ' + line;
+          }).join('\n').substr(2);
+        } else {
+          str = '\n' + str.split('\n').map(function(line) {
+            return '   ' + line;
+          }).join('\n');
+        }
+      }
+    } else {
+      str = ctx.stylize('[Circular]', 'special');
+    }
+  }
+  if (isUndefined(name)) {
+    if (array && key.match(/^\d+$/)) {
+      return str;
+    }
+    name = JSON.stringify('' + key);
+    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+      name = name.substr(1, name.length - 2);
+      name = ctx.stylize(name, 'name');
+    } else {
+      name = name.replace(/'/g, "\\'")
+                 .replace(/\\"/g, '"')
+                 .replace(/(^"|"$)/g, "'");
+      name = ctx.stylize(name, 'string');
+    }
+  }
+
+  return name + ': ' + str;
+}
+
+
+function reduceToSingleString(output, base, braces) {
+  var numLinesEst = 0;
+  var length = output.reduce(function(prev, cur) {
+    numLinesEst++;
+    if (cur.indexOf('\n') >= 0) numLinesEst++;
+    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
+  }, 0);
+
+  if (length > 60) {
+    return braces[0] +
+           (base === '' ? '' : base + '\n ') +
+           ' ' +
+           output.join(',\n  ') +
+           ' ' +
+           braces[1];
+  }
+
+  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+}
+
+
+// NOTE: These type checking functions intentionally don't use `instanceof`
+// because it is fragile and can be easily faked with `Object.create()`.
+function isArray(ar) {
+  return Array.isArray(ar);
+}
+exports.isArray = isArray;
+
+function isBoolean(arg) {
+  return typeof arg === 'boolean';
+}
+exports.isBoolean = isBoolean;
+
+function isNull(arg) {
+  return arg === null;
+}
+exports.isNull = isNull;
+
+function isNullOrUndefined(arg) {
+  return arg == null;
+}
+exports.isNullOrUndefined = isNullOrUndefined;
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+exports.isNumber = isNumber;
+
+function isString(arg) {
+  return typeof arg === 'string';
+}
+exports.isString = isString;
+
+function isSymbol(arg) {
+  return typeof arg === 'symbol';
+}
+exports.isSymbol = isSymbol;
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+exports.isUndefined = isUndefined;
+
+function isRegExp(re) {
+  return isObject(re) && objectToString(re) === '[object RegExp]';
+}
+exports.isRegExp = isRegExp;
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+exports.isObject = isObject;
+
+function isDate(d) {
+  return isObject(d) && objectToString(d) === '[object Date]';
+}
+exports.isDate = isDate;
+
+function isError(e) {
+  return isObject(e) &&
+      (objectToString(e) === '[object Error]' || e instanceof Error);
+}
+exports.isError = isError;
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+exports.isFunction = isFunction;
+
+function isPrimitive(arg) {
+  return arg === null ||
+         typeof arg === 'boolean' ||
+         typeof arg === 'number' ||
+         typeof arg === 'string' ||
+         typeof arg === 'symbol' ||  // ES6 symbol
+         typeof arg === 'undefined';
+}
+exports.isPrimitive = isPrimitive;
+
+exports.isBuffer = __webpack_require__(113);
+
+function objectToString(o) {
+  return Object.prototype.toString.call(o);
+}
+
+
+function pad(n) {
+  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+}
+
+
+var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+              'Oct', 'Nov', 'Dec'];
+
+// 26 Feb 16:19:34
+function timestamp() {
+  var d = new Date();
+  var time = [pad(d.getHours()),
+              pad(d.getMinutes()),
+              pad(d.getSeconds())].join(':');
+  return [d.getDate(), months[d.getMonth()], time].join(' ');
+}
+
+
+// log is just a thin wrapper to console.log that prepends a timestamp
+exports.log = function() {
+  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
+};
+
+
+/**
+ * Inherit the prototype methods from one constructor into another.
+ *
+ * The Function.prototype.inherits from lang.js rewritten as a standalone
+ * function (not on Function.prototype). NOTE: If this file is to be loaded
+ * during bootstrapping this function needs to be rewritten using some native
+ * functions as prototype setup using normal JavaScript does not work as
+ * expected during bootstrapping (see mirror.js in r114903).
+ *
+ * @param {function} ctor Constructor function which needs to inherit the
+ *     prototype.
+ * @param {function} superCtor Constructor function to inherit prototype from.
+ */
+exports.inherits = __webpack_require__(112);
+
+exports._extend = function(origin, add) {
+  // Don't do anything if add isn't an object
+  if (!add || !isObject(add)) return origin;
+
+  var keys = Object.keys(add);
+  var i = keys.length;
+  while (i--) {
+    origin[keys[i]] = add[keys[i]];
+  }
+  return origin;
+};
+
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22), __webpack_require__(111)))
+
+/***/ }),
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Component = __webpack_require__(11)(
   /* script */
-  __webpack_require__(59),
+  __webpack_require__(51),
   /* template */
-  __webpack_require__(124),
+  __webpack_require__(123),
   /* scopeId */
   null,
   /* cssModules */
@@ -34104,14 +34054,14 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 118 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Component = __webpack_require__(11)(
   /* script */
-  __webpack_require__(61),
+  __webpack_require__(54),
   /* template */
-  __webpack_require__(122),
+  __webpack_require__(121),
   /* scopeId */
   null,
   /* cssModules */
@@ -34138,14 +34088,52 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 119 */
+/* 117 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+/* styles */
+__webpack_require__(128)
+
+var Component = __webpack_require__(11)(
+  /* script */
+  __webpack_require__(55),
+  /* template */
+  __webpack_require__(125),
+  /* scopeId */
+  null,
+  /* cssModules */
+  null
+)
+Component.options.__file = "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\dist\\components\\map.vue"
+if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
+if (Component.options.functional) {console.error("[vue-loader] map.vue: functional components are not supported with templates, they should use render functions.")}
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-loader/node_modules/vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-eb44a4f6", Component.options)
+  } else {
+    hotAPI.reload("data-v-eb44a4f6", Component.options)
+  }
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Component = __webpack_require__(11)(
   /* script */
-  __webpack_require__(63),
+  __webpack_require__(57),
   /* template */
-  __webpack_require__(125),
+  __webpack_require__(124),
   /* scopeId */
   null,
   /* cssModules */
@@ -34172,18 +34160,18 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 120 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
 /* styles */
-__webpack_require__(127)
+__webpack_require__(126)
 
 var Component = __webpack_require__(11)(
   /* script */
-  __webpack_require__(67),
+  __webpack_require__(61),
   /* template */
-  __webpack_require__(121),
+  __webpack_require__(120),
   /* scopeId */
   null,
   /* cssModules */
@@ -34210,7 +34198,7 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 121 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
@@ -34230,7 +34218,7 @@ if (false) {
 }
 
 /***/ }),
-/* 122 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
@@ -34251,7 +34239,7 @@ if (false) {
 }
 
 /***/ }),
-/* 123 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
@@ -34259,7 +34247,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "app-panel"
   }, [_c('div', {
     staticClass: "settings-panel"
-  }, [_c('h1', [_vm._v("Map information")]), _vm._v("\n  Map center latitude:\n    "), _c('input', {
+  }, [_c('h1', [_vm._v("Map information")]), _vm._v(" Map center latitude:\n    "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34283,7 +34271,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.$forceUpdate()
       }
     }
-  }), _vm._v(" "), _c('br'), _vm._v("\n  Map center longitude:\n    "), _c('input', {
+  }), _vm._v(" "), _c('br'), _vm._v(" Map center longitude:\n    "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34307,7 +34295,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.$forceUpdate()
       }
     }
-  }), _vm._v(" "), _c('br'), _vm._v("\n  Map bounds: " + _vm._s(_vm._f("json")(_vm.mapBounds)) + "\n  "), _c('br'), _vm._v("\n  Map zoom: "), _c('input', {
+  }), _vm._v(" "), _c('br'), _vm._v(" Map bounds: " + _vm._s(_vm._f("json")(_vm.mapBounds)) + "\n    "), _c('br'), _vm._v(" Map zoom: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34330,7 +34318,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.$forceUpdate()
       }
     }
-  }), _vm._v(" "), _c('br'), _vm._v("\n  Dragged " + _vm._s(_vm.drag) + " times\n  "), _c('br'), _vm._v("\n  Left clicked " + _vm._s(_vm.mapClickedCount) + " times\n  "), _c('br'), _vm._v("\n  Map type: "), _c('select', {
+  }), _vm._v(" "), _c('br'), _vm._v(" Dragged " + _vm._s(_vm.drag) + " times\n    "), _c('br'), _vm._v(" Left clicked " + _vm._s(_vm.mapClickedCount) + " times\n    "), _c('br'), _vm._v(" Map type: "), _c('select', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34368,7 +34356,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "value": "terrain"
     }
-  }, [_vm._v("terrain")])]), _vm._v(" "), _c('br'), _vm._v("\n  Map style: "), _c('select', {
+  }, [_vm._v("terrain")])]), _vm._v(" "), _c('br'), _vm._v(" Map style: "), _c('select', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34402,7 +34390,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "value": "normal"
     }
-  }, [_vm._v("normal")])]), _vm._v(" "), _c('br'), _vm._v("\n  Enable scrollwheel zooming on the map: "), _c('input', {
+  }, [_vm._v("normal")])]), _vm._v(" "), _c('br'), _vm._v(" Enable scrollwheel zooming on the map: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34437,7 +34425,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     on: {
       "click": _vm.addMarker
     }
-  }, [_vm._v(" Add a new Marker")]), _vm._v(" (or right click on the map :) )\n  "), _c('h1', [_vm._v("Clusters")]), _vm._v("\n  enabled: "), _c('input', {
+  }, [_vm._v(" Add a new Marker")]), _vm._v(" (or right click on the map :) )\n    "), _c('h1', [_vm._v("Clusters")]), _vm._v(" enabled: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34469,7 +34457,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         }
       }
     }
-  }), _vm._v(" "), _c('br'), _vm._v("\n  Grid size: "), _c('input', {
+  }), _vm._v(" "), _c('br'), _vm._v("\n    Grid size: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34492,7 +34480,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.$forceUpdate()
       }
     }
-  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Polyline")]), _vm._v("\n  Editable: "), _c('input', {
+  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Polyline")]), _vm._v(" Editable: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34528,7 +34516,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     on: {
       "click": _vm.resetPlPath
     }
-  }, [_vm._v("Reset path")]), _vm._v(" "), _c('br'), _vm._v("\n  Visible: "), _c('input', {
+  }, [_vm._v("Reset path")]), _vm._v(" "), _c('br'), _vm._v(" Visible: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34560,7 +34548,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         }
       }
     }
-  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Polygon")]), _vm._v("\n  Visible: "), _c('input', {
+  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Polygon")]), _vm._v(" Visible: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34604,7 +34592,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.pgPath = _vm.originalPlPath
       }
     }
-  }, [_vm._v("Reset Polygon to a simple polygon")]), _c('br'), _vm._v("\n  Path: " + _vm._s(_vm._f("json")(_vm.pgPath)) + "\n  "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Circle")]), _vm._v("\n  Visible: "), _c('input', {
+  }, [_vm._v("Reset Polygon to a simple polygon")]), _c('br'), _vm._v(" Path: " + _vm._s(_vm._f("json")(_vm.pgPath)) + "\n    "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Circle")]), _vm._v(" Visible: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34636,7 +34624,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         }
       }
     }
-  }), _c('br'), _vm._v("\n  " + _vm._s(_vm._f("json")(_vm.circleBounds)) + "\n  "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Rectangle")]), _vm._v("\n  Visible: "), _c('input', {
+  }), _c('br'), _vm._v(" " + _vm._s(_vm._f("json")(_vm.circleBounds)) + "\n    "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("Rectangle")]), _vm._v(" Visible: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34668,7 +34656,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         }
       }
     }
-  }), _c('br'), _vm._v("\n  " + _vm._s(_vm._f("json")(_vm.rectangleBounds)) + "\n  "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("PlaceInput")]), _vm._v(" "), _c('gmap-place-input', {
+  }), _c('br'), _vm._v(" " + _vm._s(_vm._f("json")(_vm.rectangleBounds)) + "\n    "), _c('br'), _vm._v(" "), _c('h1', [_vm._v("PlaceInput")]), _vm._v(" "), _c('gmap-place-input', {
     attrs: {
       "label": "Add a marker at this place",
       "select-first-on-enter": true
@@ -34678,7 +34666,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.updatePlace($event)
       }
     }
-  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v(" Standalone infoWindow ")]), _vm._v("\n  modal 1 : "), _c('input', {
+  }), _vm._v(" "), _c('br'), _vm._v(" "), _c('h1', [_vm._v(" Standalone infoWindow ")]), _vm._v(" modal 1 : "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34710,7 +34698,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         }
       }
     }
-  }), _c('br'), _vm._v("\n  modal 2: "), _c('input', {
+  }), _c('br'), _vm._v(" modal 2: "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -34761,7 +34749,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.ifw2text = $event.target.value
       }
     }
-  }), _vm._v(" "), _c('h1', [_vm._v("Markers")]), _vm._v("\n  Display only markers with even ID (to test filters) "), _c('input', {
+  }), _vm._v(" "), _c('h1', [_vm._v("Markers")]), _vm._v(" Display only markers with even ID (to test filters) "), _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -35082,7 +35070,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "position": _vm.reportedCenter,
       "opened": _vm.ifw
     }
-  }, [_vm._v("\n    To show you the bindings are working I will stay on the center of the screen whatever you do :)\n    "), _c('br'), _vm._v("\n    To show you that even my content is bound to vue here is the number of time you clicked on the map\n    "), _c('b', [_vm._v(_vm._s(_vm.mapClickedCount))])]), _vm._v(" "), _c('gmap-info-window', {
+  }, [_vm._v("\n      To show you the bindings are working I will stay on the center of the screen whatever you do :)\n      "), _c('br'), _vm._v(" To show you that even my content is bound to vue here is the number of time you clicked on the map\n      "), _c('b', [_vm._v(_vm._s(_vm.mapClickedCount))])]), _vm._v(" "), _c('gmap-info-window', {
     attrs: {
       "position": _vm.reportedCenter,
       "opened": _vm.ifw2,
@@ -35160,7 +35148,7 @@ if (false) {
 }
 
 /***/ }),
-/* 124 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
@@ -35184,7 +35172,7 @@ if (false) {
 }
 
 /***/ }),
-/* 125 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
@@ -35210,7 +35198,7 @@ if (false) {
 }
 
 /***/ }),
-/* 126 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
@@ -35232,17 +35220,17 @@ if (false) {
 }
 
 /***/ }),
-/* 127 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(113);
+var content = __webpack_require__(107);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(37)("69fc426c", content, false);
+var update = __webpack_require__(36)("69fc426c", content, false);
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -35258,17 +35246,17 @@ if(false) {
 }
 
 /***/ }),
-/* 128 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(114);
+var content = __webpack_require__(108);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(37)("7fced8b5", content, false);
+var update = __webpack_require__(36)("7fced8b5", content, false);
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -35284,17 +35272,17 @@ if(false) {
 }
 
 /***/ }),
-/* 129 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(115);
+var content = __webpack_require__(109);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(37)("c930be12", content, false);
+var update = __webpack_require__(36)("c930be12", content, false);
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -35310,7 +35298,7 @@ if(false) {
 }
 
 /***/ }),
-/* 130 */
+/* 129 */
 /***/ (function(module, exports) {
 
 /**
@@ -35343,25 +35331,53 @@ module.exports = function listToStyles (parentId, list) {
 
 
 /***/ }),
+/* 130 */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if(!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if(!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
+
+/***/ }),
 /* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _stringify = __webpack_require__(51);
+var _stringify = __webpack_require__(48);
 
 var _stringify2 = _interopRequireDefault(_stringify);
 
-var _vue = __webpack_require__(53);
+var _vue = __webpack_require__(50);
 
 var _vue2 = _interopRequireDefault(_vue);
 
-var _app = __webpack_require__(52);
+var _app = __webpack_require__(49);
 
 var _app2 = _interopRequireDefault(_app);
 
-var _main = __webpack_require__(50);
+var _main = __webpack_require__(47);
 
 var VueGoogleMaps = _interopRequireWildcard(_main);
 

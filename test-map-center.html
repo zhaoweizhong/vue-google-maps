@@ -23,7 +23,7 @@
     tests.push(() => {
       new Vue({
         el: '#test1',
-      })
+      });
     });
   </script>
 
@@ -49,13 +49,13 @@
             this.changingCenter = {
               lat: 1.38 + Math.random() * 0.3,
               lng: 103.8 + Math.random() * 0.1
-            }
+            };
           },
           changeZoom() {
-            this.changingZoom = Math.floor(5 + Math.random() * 10)
+            this.changingZoom = Math.floor(5 + Math.random() * 10);
           },
         }
-      })
+      });
     });
   </script>
 
@@ -86,7 +86,7 @@
           return {
             width: this.changingWidth + 'px',
             height: this.changingHeight + 'px',
-          }
+          };
         }
       },
       methods: {
@@ -94,10 +94,10 @@
           this.changingCenter = {
             lat: 1.38 + Math.random() * 0.3,
             lng: 103.8 + Math.random() * 0.1
-          }
+          };
         },
         changeZoom() {
-          this.changingZoom = Math.floor(5 + Math.random() * 10)
+          this.changingZoom = Math.floor(5 + Math.random() * 10);
         },
         changeSize() {
           this.i = (this.i + 1) % 2;
@@ -106,7 +106,7 @@
           this.$nextTick(() => {
             this.$refs.resizeMap1.resize();
             this.$refs.resizeMap2.resizePreserveCenter();
-          })
+          });
         }
       }
     }));

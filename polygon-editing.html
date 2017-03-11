@@ -44,8 +44,7 @@
               let path = [];
               for (let j=0; j<mvcArray.getAt(i).getLength(); j++) {
                 let point = mvcArray.getAt(i).getAt(j);
-                console.log(point.lat)
-                path.push({lat: point.lat(), lng: point.lng()})
+                path.push({lat: point.lat(), lng: point.lng()});
               }
               paths.push(path);
             }
