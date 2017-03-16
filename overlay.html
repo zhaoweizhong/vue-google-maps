@@ -16,7 +16,7 @@
   <script src="vue-google-maps.js"></script>
 
   <script>
-    Vue.use(VueGoogleMap, {
+    Vue.use(VueGoogleMaps, {
       load: {
         key: 'AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw',
         v: '3.26',
@@ -26,12 +26,12 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-      Vue.component('google-map', VueGoogleMap.Map);
+      Vue.component('google-map', VueGoogleMaps.Map);
       Vue.component('ground-overlay', Vue.extend({
         render() {
           return '';
         },
-        mixins: [VueGoogleMap.MapElementMixin],
+        mixins: [VueGoogleMaps.MapElementMixin],
         props: ['source', 'bounds', 'opacity'],
         created() {},
         deferredReady: function() {

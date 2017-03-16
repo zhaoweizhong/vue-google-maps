@@ -48,7 +48,7 @@
 
 	var _vue2GoogleMaps = __webpack_require__(1);
 
-	var VueGoogleMap = _interopRequireWildcard(_vue2GoogleMaps);
+	var VueGoogleMaps = _interopRequireWildcard(_vue2GoogleMaps);
 
 	var _vue = __webpack_require__(111);
 
@@ -58,7 +58,7 @@
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-	_vue2.default.use(VueGoogleMap, {
+	_vue2.default.use(VueGoogleMaps, {
 	  load: {
 	    key: 'AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw'
 	  },
@@ -67,9 +67,9 @@
 	});
 
 	document.addEventListener('DOMContentLoaded', function () {
-	  _vue2.default.component('google-map', VueGoogleMap.Map);
-	  _vue2.default.component('google-marker', VueGoogleMap.Marker);
-	  _vue2.default.component('google-cluster', VueGoogleMap.Cluster);
+	  _vue2.default.component('google-map', VueGoogleMaps.Map);
+	  _vue2.default.component('google-marker', VueGoogleMaps.Marker);
+	  _vue2.default.component('google-cluster', VueGoogleMaps.Cluster);
 
 	  new _vue2.default({
 	    el: '#root',

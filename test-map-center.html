@@ -117,13 +117,13 @@
   <script src="vue-google-maps.js"></script>
 
   <script>
-    VueGoogleMap.load({
+    VueGoogleMaps.load({
       key: 'AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw',
       v: '3.26',
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-      Vue.component('google-map', VueGoogleMap.Map);
+      Vue.component('google-map', VueGoogleMaps.Map);
 
       for (let test of tests) {
         test();

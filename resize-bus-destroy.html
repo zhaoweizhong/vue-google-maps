@@ -37,7 +37,7 @@
 
 <script>
 
-Vue.use(VueGoogleMap, {
+Vue.use(VueGoogleMaps, {
   load: {
     key: 'AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw',
   },
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     methods: {
       updateStyle() {
-        this.showElements = !this.showElements
+        this.showElements = !this.showElements;
         Vue.$gmapDefaultResizeBus.$emit('resize');
       },
       updateBus() {

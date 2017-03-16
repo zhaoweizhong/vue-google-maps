@@ -13,7 +13,7 @@
   <script src="vue-google-maps.js"></script>
 
   <script>
-    Vue.use(VueGoogleMap, {
+    Vue.use(VueGoogleMaps, {
       load: {
         key: 'AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw'
       },
@@ -22,9 +22,9 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-      Vue.component('google-map', VueGoogleMap.Map);
-      Vue.component('google-marker', VueGoogleMap.Marker);
-      Vue.component('google-cluster', VueGoogleMap.Cluster);
+      Vue.component('google-map', VueGoogleMaps.Map);
+      Vue.component('google-marker', VueGoogleMaps.Marker);
+      Vue.component('google-cluster', VueGoogleMaps.Cluster);
 
       new Vue({
         el: '#root',

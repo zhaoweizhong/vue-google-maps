@@ -17062,7 +17062,7 @@
 
 var store  = __webpack_require__(42)('wks')
   , uid    = __webpack_require__(44)
-  , Symbol = __webpack_require__(6).Symbol;
+  , Symbol = __webpack_require__(7).Symbol;
 module.exports = function(name){
   return store[name] || (store[name] =
     Symbol && Symbol[name] || (Symbol || uid)('Symbol.' + name));
@@ -17223,6 +17223,34 @@ exports.default = {
 
 /***/ }),
 /* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _lodash = __webpack_require__(0);
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+exports.default = function (vueElement, googleMapObject, events) {
+  _lodash2.default.forEach(events, function (eventName) {
+    var exposedName = eventName;
+    googleMapObject.addListener(eventName, function (ev) {
+      vueElement.$emit(exposedName, ev);
+    });
+  });
+}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports) {
 
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
@@ -17231,7 +17259,7 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
 if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17302,34 +17330,6 @@ exports.default = {
     }
   }
 
-}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _lodash = __webpack_require__(0);
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
-
-exports.default = function (vueElement, googleMapObject, events) {
-  _lodash2.default.forEach(events, function (eventName) {
-    var exposedName = eventName;
-    googleMapObject.addListener(eventName, function (ev) {
-      vueElement.$emit(exposedName, ev);
-    });
-  });
 }; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
 
 /***/ }),
@@ -17695,7 +17695,7 @@ module.exports = !__webpack_require__(28)(function(){
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global    = __webpack_require__(6)
+var global    = __webpack_require__(7)
   , core      = __webpack_require__(3)
   , ctx       = __webpack_require__(14)
   , PROTOTYPE = 'prototype';
@@ -18994,7 +18994,7 @@ module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED
 /* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global = __webpack_require__(6)
+var global = __webpack_require__(7)
   , SHARED = '__core-js_shared__'
   , store  = global[SHARED] || (global[SHARED] = {});
 module.exports = function(key){
@@ -19104,7 +19104,7 @@ var _autocomplete = __webpack_require__(115);
 
 var _autocomplete2 = _interopRequireDefault(_autocomplete);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -28533,7 +28533,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -28541,7 +28541,7 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -28638,11 +28638,15 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
+var _eventsBinder = __webpack_require__(6);
+
+var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
+
 var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -28657,6 +28661,15 @@ var _markerClustererPlus2 = _interopRequireDefault(_markerClustererPlus);
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
+
+/* vim: set softtabstop=2 shiftwidth=2 expandtab : */
+
+/**
+  * @class Cluster
+  * @prop $clusterObject -- Exposes the marker clusterer to
+        descendent Marker classes. Override this if you area
+        extending the class
+**/
 
 var props = {
   maxZoom: {
@@ -28675,14 +28688,9 @@ var props = {
     type: Array,
     twoWay: false
   }
-}; /* vim: set softtabstop=2 shiftwidth=2 expandtab : */
+};
 
-/**
-  * @class Cluster
-  * @prop $clusterObject -- Exposes the marker clusterer to
-        descendent Marker classes. Override this if you area
-        extending the class
-**/
+var events = ['click', 'rightclick', 'dblclick', 'drag', 'dragstart', 'dragend', 'mouseup', 'mousedown', 'mouseover', 'mouseout'];
 
 exports.default = {
   mixins: [_mapElementMixin2.default, _getPropsValuesMixin2.default],
@@ -28713,6 +28721,7 @@ exports.default = {
         _this.$clusterObject.addMarkers(oldMarkers);
       }
     });
+    (0, _eventsBinder2.default)(this, this.$clusterObject, events);
   },
   detached: function detached() {
     this.$clusterObject.clearMarkers();
@@ -28738,11 +28747,11 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -28865,7 +28874,7 @@ var _manager = __webpack_require__(12);
 
 var _deferredReady = __webpack_require__(15);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -29046,7 +29055,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -29058,7 +29067,7 @@ var _getPropsValuesMixin = __webpack_require__(5);
 
 var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -29313,7 +29322,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -29321,7 +29330,7 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -29493,7 +29502,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -29501,7 +29510,7 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -29617,7 +29626,7 @@ var _lodash = __webpack_require__(0);
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -29625,7 +29634,7 @@ var _propsBinder = __webpack_require__(2);
 
 var _propsBinder2 = _interopRequireDefault(_propsBinder);
 
-var _mapElementMixin = __webpack_require__(7);
+var _mapElementMixin = __webpack_require__(8);
 
 var _mapElementMixin2 = _interopRequireDefault(_mapElementMixin);
 
@@ -29709,7 +29718,7 @@ var _manager = __webpack_require__(12);
 
 var _deferredReady = __webpack_require__(15);
 
-var _eventsBinder = __webpack_require__(8);
+var _eventsBinder = __webpack_require__(6);
 
 var _eventsBinder2 = _interopRequireDefault(_eventsBinder);
 
@@ -30404,7 +30413,7 @@ module.exports = function(){ /* empty */ };
 /***/ (function(module, exports, __webpack_require__) {
 
 var isObject = __webpack_require__(19)
-  , document = __webpack_require__(6).document
+  , document = __webpack_require__(7).document
   // in old IE typeof document.createElement is 'object'
   , is = isObject(document) && isObject(document.createElement);
 module.exports = function(it){
@@ -30483,7 +30492,7 @@ module.exports.get = function getOwnPropertyNames(it){
 /* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(6).document && document.documentElement;
+module.exports = __webpack_require__(7).document && document.documentElement;
 
 /***/ }),
 /* 80 */
@@ -30628,7 +30637,7 @@ module.exports = function(object, el){
 /* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global    = __webpack_require__(6)
+var global    = __webpack_require__(7)
   , macrotask = __webpack_require__(98).set
   , Observer  = global.MutationObserver || global.WebKitMutationObserver
   , process   = global.process
@@ -30829,7 +30838,7 @@ var ctx                = __webpack_require__(14)
   , invoke             = __webpack_require__(80)
   , html               = __webpack_require__(79)
   , cel                = __webpack_require__(75)
-  , global             = __webpack_require__(6)
+  , global             = __webpack_require__(7)
   , process            = global.process
   , setTask            = global.setImmediate
   , clearTask          = global.clearImmediate
@@ -31009,7 +31018,7 @@ __webpack_require__(90)('keys', function($keys){
 
 var $          = __webpack_require__(4)
   , LIBRARY    = __webpack_require__(31)
-  , global     = __webpack_require__(6)
+  , global     = __webpack_require__(7)
   , ctx        = __webpack_require__(14)
   , classof    = __webpack_require__(26)
   , $export    = __webpack_require__(18)
@@ -31308,7 +31317,7 @@ $export($export.S + $export.F * !(USE_NATIVE && __webpack_require__(86)(function
 
 // ECMAScript 6 symbols shim
 var $              = __webpack_require__(4)
-  , global         = __webpack_require__(6)
+  , global         = __webpack_require__(7)
   , has            = __webpack_require__(29)
   , DESCRIPTORS    = __webpack_require__(17)
   , $export        = __webpack_require__(18)
