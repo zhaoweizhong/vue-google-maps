@@ -17225,26 +17225,37 @@ exports.default = function (vueElement, googleMapsElement, props, options) {
         deep: type === Object
       });
     } else if (type === Object && trackProperties) {
-      // The indicator variable that is updated whenever any of the properties have changed
+      // I can watch multiple properties, but the danger is that each of
+      // them triggers the event handler multiple times
       // This ensures that the event handler will only be fired once
-      var attributeTrackerName = '_' + attribute + '_changeTracker';
-      var attributeTrackerRoot = '$data._changeIndicators';
-      var attributeValue = vueElement[attribute];
+      var tick = 0,
+          expectedTick = 0;
 
-      vueElement.$set(vueElement.$data._changeIndicators, attributeTrackerName, 0);
+      var raiseExpectation = function raiseExpectation() {
+        expectedTick += 1;
+      };
 
-      vueElement.$watch(attributeTrackerRoot + '.' + attributeTrackerName, function () {
-        googleMapsElement[setMethodName](vueElement[attribute]);
-        if (afterModelChanged) {
-          afterModelChanged(attribute, attributeValue);
+      var updateTick = function updateTick() {
+        tick = Math.max(expectedTick, tick + 1);
+      };
+
+      var respondToChange = function respondToChange() {
+        if (tick < expectedTick) {
+          googleMapsElement[setMethodName](vueElement[attribute]);
+
+          if (afterModelChanged) {
+            afterModelChanged(attribute, attributeValue);
+          }
+
+          updateTick();
         }
-      }, {
-        immediate: typeof initialValue !== 'undefined'
-      });
+      };
 
       trackProperties.forEach(function (propName) {
+        // When any props change -- assume they change on the same tick
         vueElement.$watch(attribute + '.' + propName, function () {
-          vueElement.$set(attributeTrackerRoot, attributeTrackerName, vueElement.$get(attributeTrackerRoot, attributeTrackerName) + 1);
+          raiseExpectation();
+          vueElement.$nextTick(respondToChange);
         }, {
           immediate: typeof initialValue !== 'undefined'
         });
@@ -17387,11 +17398,6 @@ exports.default = {
 
   mixins: [_deferredReady.DeferredReadyMixin],
 
-  data: function data() {
-    return {
-      _changeIndicators: {} // For propsBinder trackProperties
-    };
-  },
   created: function created() {
     var _this = this;
 
@@ -18436,8 +18442,6 @@ exports.default = {
 
   data: function data() {
     return {
-      // For propsBinder trackProperties
-      _changeIndicators: {},
       _actualResizeBus: null
     };
   },
