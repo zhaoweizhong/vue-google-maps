@@ -29544,6 +29544,8 @@ exports.default = {
     });
 
     var updateCenter = function updateCenter() {
+      if (!_this.$mapObject) return;
+
       _this.$mapObject.setCenter({
         lat: _this.finalLat,
         lng: _this.finalLng
