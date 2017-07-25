@@ -30376,6 +30376,8 @@ exports.default = {
     });
 
     var updateCenter = function updateCenter() {
+      if (!_this.panoObject) return;
+
       _this.$panoObject.setPosition({
         lat: _this.finalLat,
         lng: _this.finalLng
