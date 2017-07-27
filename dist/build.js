@@ -29290,7 +29290,16 @@ exports.default = {
     });
     (0, _eventsBinder2.default)(this, this.$clusterObject, events);
   },
-  detached: function detached() {
+  beforeDestroy: function beforeDestroy() {
+    var _this2 = this;
+
+    /* Performance optimization when destroying a large number of markers */
+    this.$children.forEach(function (marker) {
+      if (marker.$clusterObject === _this2.$clusterObject) {
+        marker.$clusterObject = null;
+      }
+    });
+
     this.$clusterObject.clearMarkers();
   }
 };
