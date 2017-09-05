@@ -93,13 +93,13 @@
     <gmap-cluster :grid-size="gridSize" v-if="clustering">
       <gmap-marker v-if="m.enabled" :position="m.position" :opacity="m.opacity" :draggable="m.draggable" @click="m.clicked++" @rightclick="m.rightClicked++" @dragend="m.dragended++" @position_changed="updateChild(m, 'position', $event)" v-for="m in activeMarkers"
           :key="m.id">
-        <gmap-info-window :opened="m.ifw" :content="m.ifw2text"></gmap-info-window>
+        <gmap-info-window :opened="m.ifw">{{m.ifw2text}}</gmap-info-window>
       </gmap-marker>
     </gmap-cluster>
     <div v-if="!clustering">
       <gmap-marker v-if="m.enabled" :position="m.position" :opacity="m.opacity" :draggable="m.draggable" @click="m.clicked++" @rightclick="m.rightClicked++" @dragend="m.dragended++" @position_changed="updateChild(m, 'position', $event)" v-for="m in activeMarkers"
           :key="m.id">
-        <gmap-info-window :opened="m.ifw" :content="m.ifw2text"></gmap-info-window>
+        <gmap-info-window :opened="m.ifw">{{m.ifw2text}}</gmap-info-window>
       </gmap-marker>
     </div>
 
@@ -109,7 +109,7 @@
       <b>{{mapClickedCount}}</b>
     </gmap-info-window>
 
-    <gmap-info-window :position="reportedCenter" :opened="ifw2" :content="ifw2text"></gmap-info-window>
+    <gmap-info-window :position="reportedCenter" :opened="ifw2">{{ifw2text}}</gmap-info-window>
 
     <gmap-polyline v-if="plvisible" :path="plPath" :editable="pleditable" :draggable="true" :options="{geodesic:true, strokeColor:'#FF0000'}" @path_changed="updatePolylinePath($event)">
     </gmap-polyline>
