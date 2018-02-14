@@ -2,8 +2,8 @@
 const examples = []
 
 
-import E01Autocomplete_Source from "!!raw-loader!C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\components/01Autocomplete.vue"
-import E01Autocomplete_Module from "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\components/01Autocomplete.vue"
+import E01Autocomplete_Source from "!!raw-loader!/mnt/c/Users/Daniel/Desktop/vue-google-maps/examples/components/01Autocomplete.vue"
+import E01Autocomplete_Module from "/mnt/c/Users/Daniel/Desktop/vue-google-maps/examples/components/01Autocomplete.vue"
 
 examples.push({
   name: "01Autocomplete",
@@ -13,8 +13,8 @@ examples.push({
 })
     
 
-import E02LatLngBounds_Source from "!!raw-loader!C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\components/02LatLngBounds.vue"
-import E02LatLngBounds_Module from "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\components/02LatLngBounds.vue"
+import E02LatLngBounds_Source from "!!raw-loader!/mnt/c/Users/Daniel/Desktop/vue-google-maps/examples/components/02LatLngBounds.vue"
+import E02LatLngBounds_Module from "/mnt/c/Users/Daniel/Desktop/vue-google-maps/examples/components/02LatLngBounds.vue"
 
 examples.push({
   name: "02LatLngBounds",
@@ -24,8 +24,8 @@ examples.push({
 })
     
 
-import E03CurvedLine_Source from "!!raw-loader!C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\components/03CurvedLine.vue"
-import E03CurvedLine_Module from "C:\\Users\\Daniel\\Desktop\\vue-google-maps\\examples\\components/03CurvedLine.vue"
+import E03CurvedLine_Source from "!!raw-loader!/mnt/c/Users/Daniel/Desktop/vue-google-maps/examples/components/03CurvedLine.vue"
+import E03CurvedLine_Module from "/mnt/c/Users/Daniel/Desktop/vue-google-maps/examples/components/03CurvedLine.vue"
 
 examples.push({
   name: "03CurvedLine",

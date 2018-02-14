@@ -1,4 +1,5 @@
 <head>
+  <meta charset="utf-8" />
   <style>
   .map-container {
     width: 400px;
@@ -20,16 +21,20 @@
     </ol>
 
     <div>
-      Lat: <input type="number" v-model.number.lazy="mapCenter.lat" />
+      Lat: <input type="number" v-model.number.lazy="mapCenter.lat" step="0.00001"/>
     </div>
     <div>
-      Lng: <input type="number" v-model.number.lazy="mapCenter.lng" />
+      Lng: <input type="number" v-model.number.lazy="mapCenter.lng" step="0.00001"/>
     </div>
 
-    <gmap-map :center="mapCenter" :zoom="12"
-      @center_changed="updateCenter"
-      class="map-container">
-    </gmap-map>
+    <button @click="maybeShow = !maybeShow">Show/hide</button>
+
+    <div v-show="maybeShow">
+      <gmap-map :center="mapCenter" :zoom="12"
+        @center_changed="updateCenter"
+        class="map-container">
+      </gmap-map>
+    </div>
 
     <gmap-street-view-panorama :position="mapCenter" :zoom="12"
       @position_changed="updateCenter" :pov="pov"
@@ -59,7 +64,8 @@
           pov: {
             pitch: 0,
             heading: 0,
-          }
+          },
+          maybeShow: false,
         },
         methods: {
           updateCenter(newCenter) {
