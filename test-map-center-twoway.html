@@ -4,6 +4,7 @@
   .map-container {
     width: 400px;
     height: 400px;
+    display: inline-block;
   }
   </style>
 </head>
@@ -21,23 +22,31 @@
     </ol>
 
     <div>
-      Lat: <input type="number" v-model.number.lazy="mapCenter.lat" step="0.00001"/>
+      Lat: <input type="number"
+        v-model.number.lazy="reportedMapCenter.lat"
+        @change="sync"
+        step="0.00001" />
     </div>
     <div>
-      Lng: <input type="number" v-model.number.lazy="mapCenter.lng" step="0.00001"/>
+      Lng: <input type="number"
+        v-model.number.lazy="reportedMapCenter.lng"
+        @change="sync"
+        step="0.00001" />
     </div>
 
-    <button @click="maybeShow = !maybeShow">Show/hide</button>
+    <gmap-map :center="mapCenter" :zoom="12"
+      ref="map"
+      @center_changed="updateCenter($refs.map.$mapObject.getCenter())"
+      @dragend="sync"
+      @zoom_changed="sync"
+      class="map-container">
+    </gmap-map>
 
-    <div v-show="maybeShow">
-      <gmap-map :center="mapCenter" :zoom="12"
-        @center_changed="updateCenter"
-        class="map-container">
-      </gmap-map>
-    </div>
-
-    <gmap-street-view-panorama :position="mapCenter" :zoom="12"
-      @position_changed="updateCenter" :pov="pov"
+    <gmap-street-view-panorama
+      :position="mapCenter"
+      ref="pano"
+      @position_changed="updateCenter($refs.pano.$panoObject.getPosition())"
+      :pov="pov"
       class="map-container">
     </gmap-street-view-panorama>
   </div>
@@ -57,22 +66,28 @@
       new Vue({
         el: '#test1',
         data: {
-          mapCenter: {
-            lat: 1.38,
-            lng: 103.8,
+          reportedMapCenter: {
+            lat: 1.32,
+            lng: 103.8
           },
+          mapCenter: null,
           pov: {
             pitch: 0,
             heading: 0,
           },
-          maybeShow: false,
+        },
+        created () {
+          this.sync()
         },
         methods: {
-          updateCenter(newCenter) {
-            this.mapCenter = {
-              lat: newCenter.lat(),
-              lng: newCenter.lng(),
+          updateCenter(latLng) {
+            this.reportedMapCenter = {
+              lat: latLng.lat(),
+              lng: latLng.lng(),
             }
+          },
+          sync () {
+            this.mapCenter = this.reportedMapCenter
           }
         }
       });
