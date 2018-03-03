@@ -86,5 +86,13 @@ module.exports = [
       ...base.output,
       filename: 'build-examples.js'
     }
+  },
+  {
+    ...base,
+    entry: './doc/extractComponentSchemas.js',
+    output: {
+      ...base.output,
+      filename: 'doc.bundle.js'
+    }
   }
 ]

@@ -1,7 +1,7 @@
 window.MarkerClusterer = function () {}
 
 import Vue from 'vue'
-import * as VueGoogleMaps from '../src/main.js'
+import * as VueGoogleMaps from '../../src/main.js'
 import API from './API.vue'
 import Documentation from './Documentation'
 import {doc} from './Documentation'
