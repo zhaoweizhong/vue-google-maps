@@ -4,7 +4,6 @@
   "description": "This is a google map component for Vue.js, updated for Vue 2 compatibility",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "webpack-dev-server --inline --hot --quiet --port 9999",
     "build-babel": "shx rm -r dist && babel src -D --out-dir dist",
     "build-webpack": "cross-env NODE_ENV=production webpack --progress --hide-modules",
     "build": "npm run build-babel && npm run build-webpack",
@@ -54,7 +53,7 @@
     "file-loader": "^0.8.4",
     "gh-pages": "^0.11.0",
     "jsdom": "^9.8.3",
-    "lab": "^15.2.0",
+    "lab": "^15.3.0",
     "less": "^2.5.3",
     "less-loader": "^2.2.2",
     "lodash": "^4.15.0",
@@ -73,7 +72,6 @@
     "vue-router": "^2.7.0",
     "vue-template-compiler": "^2.1.6",
     "webpack": "^4.0.1",
-    "webpack-dev-server": "^2.4.1"
   },
   "author": "Daniel Sim, Guillaume Leclerc",
   "license": "MIT"
