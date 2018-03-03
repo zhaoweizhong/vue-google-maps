@@ -1,5 +1,23 @@
 <template>
   <div id="app">
+    <p>
+      This is the semi-automatically generated API documentation for
+      <code>vue2-google-maps</code>.
+    </p>
+
+    <p>
+      If any prop/event/method are not documented here, please refer to
+      <a href="https://developers.google.com/maps/documentation/javascript/reference/3.exp/">
+        Google Maps API reference
+      </a>.
+    </p>
+
+    <p>
+      If any prop/event/method are documented in the reference but not here,
+      it has probably not been implemented in the library, so
+      please file an issue (PRs are better!) on Github to implement the prop/event/method.
+    </p>
+
     <h1>Table of Contents</h1>
     <ul>
       <li v-for="[name, defn] in visibleComponents">
