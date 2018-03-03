@@ -138,4 +138,6 @@ export default {
       this.$polygonObject.setMap(map)
     })
   },
+
+  events, // FOR DOCUMENTATION PURPOSES
 }

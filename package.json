@@ -44,6 +44,7 @@
     "babel-preset-stage-2": "^6.24.1",
     "babel-runtime": "^5.8.0",
     "code": "^5.2.0",
+    "commonmark": "^0.28.1",
     "cross-env": "^1.0.8",
     "css-loader": "^0.23.0",
     "eslint": "^3.17.1",

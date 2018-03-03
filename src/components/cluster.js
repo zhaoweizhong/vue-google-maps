@@ -117,4 +117,5 @@ export default {
       this.$clusterObject.clearMarkers()
     }
   },
+  events, // FOR DOCUMENTATION PURPOSES
 }

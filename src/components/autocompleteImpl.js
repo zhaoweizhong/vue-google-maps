@@ -72,5 +72,6 @@ export default {
       })
     })
   },
-  props: props
+  props: props,
+  events: ['place_changed'], // FOR DOCUMENTATION PURPOSES
 }

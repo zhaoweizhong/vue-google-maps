@@ -55,12 +55,12 @@ export default {
       const options = clone(getPropsValues(this))
       options.map = map
       delete options.bounds
-      this.createCircle(options)
+      this._createCircle(options)
     })
   },
 
   methods: {
-    createCircle (options) {
+    _createCircle (options) {
       this.$circleObject = new google.maps.Circle(options)
       // we cant bind bounds because there is no `setBounds` method
       // on the Circle object
@@ -83,4 +83,5 @@ export default {
       this.$circleObject.setMap(null)
     }
   },
+  events, // FOR DOCUMENTATION PURPOSES
 }

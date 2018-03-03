@@ -105,4 +105,5 @@ export default {
       })
     }
   },
+  events, // FOR DOCUMENTATION PURPOSES
 }

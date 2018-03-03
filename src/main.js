@@ -19,7 +19,7 @@ import MountableMixin from './utils/mountableMixin'
 // export everything
 export {load, loaded, Marker, Cluster, Polyline, Polygon, Circle, Rectangle,
   InfoWindow, Map, PlaceInput, MapElementMixin, Autocomplete,
-  MountableMixin}
+  MountableMixin, StreetViewPanorama}
 
 export function install (Vue, options) {
   options = {

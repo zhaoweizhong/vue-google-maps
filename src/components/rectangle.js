@@ -49,12 +49,12 @@ export default {
     this.$mapPromise.then((map) => {
       const options = clone(getPropsValues(this))
       options.map = map
-      this.createRectangle(options)
+      this._createRectangle(options)
     })
   },
 
   methods: {
-    createRectangle (options) {
+    _createRectangle (options) {
       this.$rectangleObject = new google.maps.Rectangle(options)
       bindProps(this, this.$rectangleObject, props)
       bindEvents(this, this.$rectangleObject, events)
@@ -67,4 +67,5 @@ export default {
       this.$rectangleObject.setMap(null)
     }
   },
+  events, // FOR DOCUMENTATION PURPOSES
 }

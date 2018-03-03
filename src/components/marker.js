@@ -133,7 +133,7 @@ export default {
         : Promise.resolve(null)
 
       return clusterPromise.then(() => {
-        const marker = this.createMarker(options)
+        const marker = this._createMarker(options)
         this.$markerObject = marker
         return marker
       })
@@ -145,7 +145,7 @@ export default {
   },
 
   methods: {
-    createMarker (options) {
+    _createMarker (options) {
       const markerObject = new google.maps.Marker(options)
       bindProps(this, markerObject, props)
       bindEvents(this, markerObject, events)
@@ -156,4 +156,6 @@ export default {
       return markerObject
     }
   },
+
+  events, // FOR DOCUMENTATION PURPOSES
 }

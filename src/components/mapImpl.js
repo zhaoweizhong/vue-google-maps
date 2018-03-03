@@ -184,5 +184,6 @@ export default {
       throw error
     })
   },
-  methods: methods
+  methods: methods,
+  events, // FOR DOCUMENTATION PURPOSES
 }
