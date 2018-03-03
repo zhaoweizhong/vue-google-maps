@@ -29,7 +29,7 @@ Used to create components.
 
 The \`$mapPromise\` can be used to wait for the parent's Google Map to
 load. Once it's loaded, the child component can use it to add a component
-to the map ([Example](../examples/overlay.html))
+to the map ([Example](../overlay.html))
     `
   },
   GmapAutocomplete: {
