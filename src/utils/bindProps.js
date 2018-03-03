@@ -17,7 +17,7 @@ export function getPropsValues (vueInst) {
   * watch. For deep watch, we also prevent the _changed event from being
   * emitted if the data source was external.
   */
-export function bindProps(vueInst, googleMapsInst, props, options) {
+export function bindProps (vueInst, googleMapsInst, props, options) {
   const {afterModelChanged} = options || {}
   forIn(props, ({twoWay, type, trackProperties}, attribute) => {
     const setMethodName = 'set' + capitalizeFirstLetter(attribute)
@@ -32,13 +32,11 @@ export function bindProps(vueInst, googleMapsInst, props, options) {
     // We need to avoid an endless
     // propChanged -> event emitted -> propChanged -> event emitted loop
     // although this may really be the user's responsibility
-    var timesSet = 0
     if (type !== Object || !trackProperties) {
       // Track the object deeply
       vueInst.$watch(attribute, () => {
         const attributeValue = vueInst[attribute]
 
-        timesSet++
         googleMapsInst[setMethodName](attributeValue)
         if (afterModelChanged) {
           afterModelChanged(attribute, attributeValue)
@@ -59,8 +57,8 @@ export function bindProps(vueInst, googleMapsInst, props, options) {
     }
 
     if (twoWay &&
-        vueInst.$gmapOptions.autobindAllEvents ||
-        vueInst.$listeners[eventName]) {
+        (vueInst.$gmapOptions.autobindAllEvents ||
+        vueInst.$listeners[eventName])) {
       googleMapsInst.addListener(eventName, (ev) => { // eslint-disable-line no-unused-vars
         vueInst.$emit(eventName, googleMapsInst[getMethodName]())
       })

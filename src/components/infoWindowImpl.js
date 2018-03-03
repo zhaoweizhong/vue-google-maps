@@ -1,6 +1,6 @@
 import omit from 'lodash/omit'
 import clone from 'lodash/clone'
-import {bindProps, getPropsValues} from '../utils/bindProps.js'
+import {bindProps} from '../utils/bindProps.js'
 import bindEvents from '../utils/bindEvents.js'
 import MapElementMixin from './mapElementMixin'
 
@@ -50,15 +50,21 @@ export default {
 
   created () {
     const markerPromise = this.$markerPromise
-      ? this.$markerPromise.then(mo => this.$markerObject = mo)
+      ? this.$markerPromise.then(mo => {
+        this.$markerObject = mo
+        return mo
+      })
       : Promise.resolve(null)
 
     const mapPromise = this.$mapPromise
 
     return mapPromise
-      .then(map => this.$map = map)
+      .then(map => {
+        this.$map = map
+        return map
+      })
       .then(() => markerPromise)
-      .then(() => this.createInfoWindow())
+      .then(() => this._createInfoWindow())
   },
 
   destroyed () {
@@ -71,7 +77,7 @@ export default {
   },
 
   methods: {
-    openInfoWindow () {
+    _openInfoWindow () {
       if (this.opened) {
         if (this.$markerObject !== null) {
           this.$infoWindow.open(this.$map, this.$markerObject)
@@ -83,7 +89,7 @@ export default {
       }
     },
 
-    createInfoWindow () {
+    _createInfoWindow () {
       // setting options
       const options = clone(this.options)
       options.content = this.$refs.flyaway
@@ -99,9 +105,9 @@ export default {
       bindProps(this, this.$infoWindow, omit(props, ['opened']))
       bindEvents(this, this.$infoWindow, events)
 
-      this.openInfoWindow()
+      this._openInfoWindow()
       this.$watch('opened', () => {
-        this.openInfoWindow()
+        this._openInfoWindow()
       })
     }
   },

@@ -1,6 +1,6 @@
 import mapValues from 'lodash/mapValues'
 import bindEvents from '../utils/bindEvents.js'
-import {bindProps, getPropsValues} from '../utils/bindProps.js'
+import {bindProps} from '../utils/bindProps.js'
 import MapElementMixin from './mapElementMixin'
 
 const props = {
@@ -129,7 +129,10 @@ export default {
 
       // search ancestors for cluster object
       const clusterPromise = this.$clusterPromise
-        ? this.$clusterPromise.then(co => this.$clusterObject = co)
+        ? this.$clusterPromise.then(co => {
+          this.$clusterObject = co
+          return co
+        })
         : Promise.resolve(null)
 
       return clusterPromise.then(() => {

@@ -102,10 +102,11 @@ export default {
   replace: false, // necessary for css styles
 
   provide () {
+    this.$mapPromise = new Promise((resolve, reject) => {
+      this.$mapPromiseDeferred = { resolve, reject }
+    })
     return {
-      '$mapPromise': new Promise((resolve, reject) => {
-        this.$mapPromiseDeferred = { resolve, reject }
-      })
+      '$mapPromise': this.$mapPromise
     }
   },
 
