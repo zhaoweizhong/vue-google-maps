@@ -48,6 +48,21 @@ While you cannot use \`v-model\` on it, you can listen for
         type: 'google.maps.Map',
         description: 'The underlying Map object'
       }
+    },
+    methods: {
+      panToBounds: {
+        type: `google.maps.LatLngBounds =>`,
+        description: `Proxies to their corresponding \`$mapObject.*\` functions`,
+      },
+      resize: {
+        description: `Proxy to \`google.maps.event.trigger($mapObject, 'resize')\``,
+      },
+      resizePreserveCenter: {
+        type: '() =>',
+        description: `
+Proxy to \`google.maps.event.trigger($mapObject, 'resize')\`, but
+preserves the center of the map (not needed in newer versions of the Google Maps API)`,
+      }
     }
   },
   GmapStreetViewPanorama: {

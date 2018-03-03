@@ -81,7 +81,13 @@
           <li v-for="prop of defn.events">
             <code>
               {{ prop }}
+              <template v-if="documentation.get([name, 'events', prop])">
+                : {{documentation.get([name, 'events', prop]).type}}
+              </template>
             </code>
+            <template v-if="documentation.get([name, 'events', prop])">
+              {{documentation.get([name, 'events', prop]).description}}
+            </template>
           </li>
         </ul>
       </template>
@@ -91,7 +97,14 @@
           <li v-for="prop of defn.methods">
             <code>
               {{ prop }}
+              <template v-if="documentation.get([name, 'methods', prop], 'type')">
+                : {{documentation.get([name, 'methods', prop]).type}}
+              </template>
             </code>
+            <div v-if="documentation.get([name, 'methods', prop], 'description')"
+              v-html="markdown(documentation.get([name, 'methods', prop]).description)"
+              >
+            </div>
           </li>
         </ul>
       </template>
