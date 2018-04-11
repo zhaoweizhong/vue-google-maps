@@ -1,8 +1,4 @@
-import clone from 'lodash/clone'
-
-import bindEvents from '../utils/bindEvents.js'
-import {bindProps, getPropsValues} from '../utils/bindProps.js'
-import MapElementMixin from './mapElementMixin'
+import mapElementFactory from './mapElementFactory.js';
 
 const props = {
   bounds: {
@@ -37,35 +33,9 @@ const events = [
   'rightclick'
 ]
 
-export default {
-  mixins: [MapElementMixin],
-  props: props,
-
-  render () {
-    return ''
-  },
-
-  created () {
-    this.$mapPromise.then((map) => {
-      const options = clone(getPropsValues(this))
-      options.map = map
-      this._createRectangle(options)
-    })
-  },
-
-  methods: {
-    _createRectangle (options) {
-      this.$rectangleObject = new google.maps.Rectangle(options)
-      bindProps(this, this.$rectangleObject, props)
-      bindEvents(this, this.$rectangleObject, events)
-    },
-
-  },
-
-  destroyed () {
-    if (this.$rectangleObject) {
-      this.$rectangleObject.setMap(null)
-    }
-  },
-  events, // FOR DOCUMENTATION PURPOSES
-}
+export default mapElementFactory({
+  mappedProps: props,
+  name: 'rectangle',
+  ctr: () => google.maps.Rectangle,
+  events,
+})

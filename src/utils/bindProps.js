@@ -19,7 +19,9 @@ export function getPropsValues (vueInst) {
   */
 export function bindProps (vueInst, googleMapsInst, props, options) {
   const {afterModelChanged} = options || {}
-  forIn(props, ({twoWay, type, trackProperties}, attribute) => {
+  forIn(props, ({twoWay, type, trackProperties, noBind}, attribute) => {
+    if (noBind) return
+    
     const setMethodName = 'set' + capitalizeFirstLetter(attribute)
     const getMethodName = 'get' + capitalizeFirstLetter(attribute)
     const eventName = attribute.toLowerCase() + '_changed'

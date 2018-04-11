@@ -20,10 +20,6 @@ const props = {
     type: Array,
     twoWay: true
   },
-  deepWatch: {
-    type: Boolean,
-    default: false,
-  }
 }
 
 const events = [
@@ -40,57 +36,46 @@ const events = [
   'rightclick'
 ]
 
-export default {
-  mixins: [MapElementMixin],
-  props: props,
-
-  render () { return '' },
-
-  destroyed () {
-    if (this.$polylineObject) {
-      this.$polylineObject.setMap(null)
+export default mapElementFactory({
+  mappedProps: props,
+  props: {
+    deepWatch: {
+      type: Boolean,
+      default: false,
     }
   },
+  events,
 
-  created () {
-    this.$mapPromise.then((map) => {
-      const options = clone(getPropsValues(this))
-      delete options.options
-      Object.assign(options, this.options)
-      this.$polylineObject = new google.maps.Polyline(options)
-      this.$polylineObject.setMap(map)
+  name: 'polyline',
+  ctr: () => google.maps.Polyline,
 
-      bindProps(this, this.$polylineObject, omit(props, ['deepWatch', 'path']))
-      bindEvents(this, this.$polylineObject, events)
+  afterCreate (inst) {
+    var clearEvents = () => {}
 
-      var clearEvents = () => {}
+    this.$watch('path', (path) => {
+      if (path) {
+        clearEvents()
 
-      this.$watch('path', (path) => {
-        if (path) {
-          clearEvents()
+        this.$polylineObject.setPath(path)
 
-          this.$polylineObject.setPath(path)
+        const mvcPath = this.$polylineObject.getPath()
+        const eventListeners = []
 
-          const mvcPath = this.$polylineObject.getPath()
-          const eventListeners = []
-
-          const updatePaths = () => {
-            this.$emit('path_changed', this.$polylineObject.getPath())
-          }
-
-          eventListeners.push([mvcPath, mvcPath.addListener('insert_at', updatePaths)])
-          eventListeners.push([mvcPath, mvcPath.addListener('remove_at', updatePaths)])
-          eventListeners.push([mvcPath, mvcPath.addListener('set_at', updatePaths)])
-
-          clearEvents = () => {
-            eventListeners.map(([obj, listenerHandle]) => // eslint-disable-line no-unused-vars
-              google.maps.event.removeListener(listenerHandle))
-          }
+        const updatePaths = () => {
+          this.$emit('path_changed', this.$polylineObject.getPath())
         }
-      }, {
-        deep: this.deepWatch
-      })
+
+        eventListeners.push([mvcPath, mvcPath.addListener('insert_at', updatePaths)])
+        eventListeners.push([mvcPath, mvcPath.addListener('remove_at', updatePaths)])
+        eventListeners.push([mvcPath, mvcPath.addListener('set_at', updatePaths)])
+
+        clearEvents = () => {
+          eventListeners.map(([obj, listenerHandle]) => // eslint-disable-line no-unused-vars
+            google.maps.event.removeListener(listenerHandle))
+        }
+      }
+    }, {
+      deep: this.deepWatch
     })
-  },
-  events, // FOR DOCUMENTATION PURPOSES
-}
+  }
+})
