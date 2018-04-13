@@ -56,8 +56,8 @@ export default function (options) {
       mappedPropsToVueProps(mappedProps),
     },
     render () { return '' },
-    created () {
-      this[promiseName] = this.$mapPromise.then((map) => {
+    provide () {
+      const promise = this.$mapPromise.then(async (map) => {
         // Initialize the maps with the given options
         const options = {
           ...this.options,
@@ -67,7 +67,11 @@ export default function (options) {
         }
         
         if (beforeCreate) {
-          beforeCreate.bind(this)(options)
+          const result = beforeCreate.bind(this)(options)
+
+          if (result instanceof Promise) {
+            await result
+          }
         }
 
         this[instanceName] = (new (ctr()))(options)
@@ -79,9 +83,12 @@ export default function (options) {
           onCreate.bind(this)(this[instanceName])
         }
       })
+      this[promiseName] = promise
+      return {[promiseName]: promise}
     },
     destroyed () {
-      if (this[instanceName]) {
+      // Note: not all Google Maps components support maps
+      if (this[instanceName] && this[instanceName].setMap) {
         this[instanceName].setMap(null)
       }
     },
@@ -103,9 +110,9 @@ export function mappedPropsToVueProps (mappedProps) {
     .map(([key, prop]) => {
       const value = {}
 
-      if (prop.type !== undefined) {
-        value.type = prop.type
-      }
+      if ('type' in prop) value.type = prop.type
+      if ('default' in prop) value.default = prop.default
+      if ('required' in prop) value.required = prop.required
 
       return [key, {type}]
     })

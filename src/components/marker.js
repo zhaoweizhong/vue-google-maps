@@ -2,6 +2,7 @@ import mapValues from 'lodash/mapValues'
 import bindEvents from '../utils/bindEvents.js'
 import {bindProps} from '../utils/bindProps.js'
 import MapElementMixin from './mapElementMixin'
+import mapElementFactory from './mapElementFactory.js';
 
 const props = {
   animation: {
@@ -87,9 +88,11 @@ const events = [
  * reasons. Otherwise we should use a cluster-marker mixin or
  * subclass.
  */
-export default {
-  mixins: [MapElementMixin],
-  props: props,
+export default mapElementFactory({
+  mappedProps: props,
+  events,
+  name: 'marker',
+  ctr: () => google.maps.Marker,
 
   inject: {
     '$clusterPromise': {
@@ -113,52 +116,28 @@ export default {
   destroyed () {
     if (!this.$markerObject) { return }
 
-    if (this.$clusterObject) {
+    if (this.$clusterPromise) {
+      // Repaint will be performed in `updated()` of cluster
       this.$clusterObject.removeMarker(this.$markerObject, true)
     } else {
       this.$markerObject.setMap(null)
     }
   },
 
-  provide () {
-    const markerPromise = this.$mapPromise.then((map) => {
-      const options = mapValues(props, (value, prop) => this[prop])
-      options.map = map
-      delete options.options
-      Object.assign(options, this.options)
+  async beforeCreate (options) {
+    if (this.$clusterPromise) {
+      options.map = null
+    }
+    
+    await this.$clusterPromise
+  },
 
-      // search ancestors for cluster object
-      const clusterPromise = this.$clusterPromise
-        ? this.$clusterPromise.then(co => {
-          this.$clusterObject = co
-          return co
-        })
-        : Promise.resolve(null)
-
-      return clusterPromise.then(() => {
-        const marker = this._createMarker(options)
-        this.$markerObject = marker
-        return marker
+  afterCreate (inst) {
+    if (this.$clusterPromise) {
+      this.$clusterPromise.then((co) => {
+        co.addMarker(inst)
+        this.$clusterObject = co
       })
-    })
-
-    return {
-      '$markerPromise': markerPromise
     }
   },
-
-  methods: {
-    _createMarker (options) {
-      const markerObject = new google.maps.Marker(options)
-      bindProps(this, markerObject, props)
-      bindEvents(this, markerObject, events)
-
-      if (this.$clusterObject) {
-        this.$clusterObject.addMarker(markerObject)
-      }
-      return markerObject
-    }
-  },
-
-  events, // FOR DOCUMENTATION PURPOSES
-}
+})

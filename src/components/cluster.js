@@ -12,6 +12,7 @@ import bindEvents from '../utils/bindEvents.js'
 import {bindProps, getPropsValues} from '../utils/bindProps.js'
 import MapElementMixin from './mapElementMixin'
 import MarkerClusterer from 'marker-clusterer-plus'
+import mapElementFactory from './mapElementFactory.js';
 
 const props = {
   maxZoom: {
@@ -53,9 +54,18 @@ const events = [
   'mouseout'
 ]
 
-export default {
-  mixins: [MapElementMixin],
-  props: props,
+export default mapElementFactory({
+  mappedProps: props,
+  events,
+  name: 'cluster',
+  ctr: () => {
+    if (typeof MarkerClusterer === 'undefined') {
+      /* eslint-disable no-console */
+      console.error('MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js')
+      throw new Error('MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js')
+    }
+    return MarkerClusterer
+  },
 
   render (h) {
     // <div><slot></slot></div>
@@ -65,40 +75,36 @@ export default {
     )
   },
 
+  // Override the default `provide()`, because
+  // MarkerClusterer has a special way of calling the constructor
   provide () {
     const clusterPromise = this.$mapPromise.then((map) => {
-      const options = clone(getPropsValues(this))
-
-      if (typeof MarkerClusterer === 'undefined') {
-        /* eslint-disable no-console */
-        console.error('MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js')
-        throw new Error('MarkerClusterer is not installed! require() it or include it from https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js')
-      }
-
       this.$clusterObject = new MarkerClusterer(map, [], options)
 
-      bindProps(this, this.$clusterObject, props, {
-        afterModelChanged: (a, v) => { // eslint-disable-line no-unused-vars
-          const oldMarkers = this.$clusterObject.getMarkers()
-
-          this.$clusterObject.clearMarkers()
-          this.$clusterObject.addMarkers(oldMarkers)
-        }
-      })
+      bindProps(this, this.$clusterObject, props)
       bindEvents(this, this.$clusterObject, events)
+
+      const reinsertMarkers = () => {
+        const oldMarkers = this.$clusterObject.getMarkers()
+        this.$clusterObject.clearMarkers()
+        this.$clusterObject.addMarkers(oldMarkers)
+      }
+
+      // After model changed, update everything
+      for (let prop in props) {
+        if (props[prop].twoWay) {
+          this.$on(prop.toLowerCase() + '_changed', reinsertMarkers)
+        }
+      }
 
       return this.$clusterObject
     })
 
+    this.$clusterPromise = clusterPromise
+    
     return {
       $clusterPromise: clusterPromise
     }
-  },
-
-  created () {
-    this.$mapPromise.then(() => {
-
-    })
   },
 
   updated () {
@@ -117,5 +123,4 @@ export default {
       this.$clusterObject.clearMarkers()
     }
   },
-  events, // FOR DOCUMENTATION PURPOSES
-}
+})

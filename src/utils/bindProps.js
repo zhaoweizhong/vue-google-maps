@@ -18,7 +18,6 @@ export function getPropsValues (vueInst) {
   * emitted if the data source was external.
   */
 export function bindProps (vueInst, googleMapsInst, props, options) {
-  const {afterModelChanged} = options || {}
   forIn(props, ({twoWay, type, trackProperties, noBind}, attribute) => {
     if (noBind) return
     
@@ -40,9 +39,6 @@ export function bindProps (vueInst, googleMapsInst, props, options) {
         const attributeValue = vueInst[attribute]
 
         googleMapsInst[setMethodName](attributeValue)
-        if (afterModelChanged) {
-          afterModelChanged(attribute, attributeValue)
-        }
       }, {
         immediate: typeof initialValue !== 'undefined',
         deep: type === Object
