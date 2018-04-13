@@ -5,6 +5,7 @@ import mountableMixin from '../utils/mountableMixin.js'
 
 import TwoWayBindingWrapper from '../utils/TwoWayBindingWrapper.js'
 import WatchPrimitiveProperties from '../utils/WatchPrimitiveProperties.js'
+import { mappedPropsToVueProps } from './mapElementFactory.js'
 
 const props = {
   zoom: {
@@ -48,7 +49,7 @@ const events = [
 
 export default {
   mixins: [mountableMixin],
-  props: props,
+  props: mappedPropsToVueProps(props),
   replace: false, // necessary for css styles
   methods: {
     resize () {
@@ -59,10 +60,12 @@ export default {
   },
 
   provide () {
+    const promise = new Promise((resolve, reject) => {
+      this.$panoPromiseDeferred = {resolve, reject}
+    })
     return {
-      '$panoPromise': new Promise((resolve, reject) => {
-        this.$panoPromiseDeferred = {resolve, reject}
-      })
+      '$panoPromise': promise,
+      '$mapPromise': promise, // so that we can use it with markers
     }
   },
 

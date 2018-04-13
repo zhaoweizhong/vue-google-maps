@@ -70,7 +70,10 @@ const base = {
 module.exports = [
   {
     ...base,
-    entry: './src/main.js',
+    entry: [
+      'babel-polyfill',
+      './src/main.js'
+    ],
     output: {
       ...base.output,
       filename: 'build.js'

@@ -1,4 +1,4 @@
-import mapElementFactory from './mapElementFactory.js';
+import mapElementFactory from './mapElementFactory.js'
 
 const props = {
   bounds: {

@@ -1,7 +1,4 @@
-import {bindProps} from '../utils/bindProps.js'
-import bindEvents from '../utils/bindEvents.js'
-import MapElementMixin from './mapElementMixin'
-import mapElementFactory from './mapElementFactory.js';
+import mapElementFactory from './mapElementFactory.js'
 
 const props = {
   options: {
@@ -50,7 +47,7 @@ export default mapElementFactory({
     el.parentNode.removeChild(el)
   },
 
-  async beforeCreate (options) {
+  beforeCreate (options) {
     options.content = this.$refs.flyaway
 
     if (this.$markerPromise) {
@@ -66,9 +63,9 @@ export default mapElementFactory({
     _openInfoWindow () {
       if (this.opened) {
         if (this.$markerObject !== null) {
-          this.$infoWindowObject.open(this.$mapPromise, this.$markerObject)
+          this.$infoWindowObject.open(this.$map, this.$markerObject)
         } else {
-          this.$infoWindowObject.open(this.$mapPromise)
+          this.$infoWindowObject.open(this.$map)
         }
       } else {
         this.$infoWindowObject.close()
@@ -76,7 +73,7 @@ export default mapElementFactory({
     },
   },
 
-  onCreate () {
+  afterCreate () {
     this._openInfoWindow()
     this.$watch('opened', () => {
       this._openInfoWindow()

@@ -1,4 +1,4 @@
-import mapElementFactory from "./mapElementFactory";
+import mapElementFactory from './mapElementFactory'
 
 const props = {
   center: {

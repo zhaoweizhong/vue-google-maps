@@ -1,5 +1,3 @@
-import omit from 'lodash/omit'
-
 import { loaded } from '../manager.js'
 import bindEvents from '../utils/bindEvents.js'
 import {bindProps, getPropsValues} from '../utils/bindProps.js'
@@ -7,6 +5,7 @@ import mountableMixin from '../utils/mountableMixin.js'
 
 import TwoWayBindingWrapper from '../utils/TwoWayBindingWrapper.js'
 import WatchPrimitiveProperties from '../utils/WatchPrimitiveProperties.js'
+import { mappedPropsToVueProps } from './mapElementFactory.js'
 
 const props = {
   center: {
@@ -93,7 +92,7 @@ const customMethods = {
 
 export default {
   mixins: [mountableMixin],
-  props: props,
+  props: mappedPropsToVueProps(props),
 
   provide () {
     this.$mapPromise = new Promise((resolve, reject) => {

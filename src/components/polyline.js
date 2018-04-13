@@ -1,9 +1,4 @@
-import omit from 'lodash/omit'
-import clone from 'lodash/clone'
-
-import bindEvents from '../utils/bindEvents.js'
-import {bindProps, getPropsValues} from '../utils/bindProps.js'
-import MapElementMixin from './mapElementMixin'
+import mapElementFactory from './mapElementFactory.js'
 
 const props = {
   draggable: {

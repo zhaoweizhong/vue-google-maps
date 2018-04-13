@@ -30,10 +30,7 @@
             lng: 8.547511
           },
           infoContent: '',
-          infoWindowPos: {
-            lat: 0,
-            lng: 0
-          },
+          infoWindowPos: null,
           infoWinOpen: false,
           currentMidx: null,
           //optional: offset infowindow so it visually sits nicely on top of our marker
@@ -65,7 +62,6 @@
         },
         methods: {
           toggleInfoWindow: function(marker, idx) {
-
             this.infoWindowPos = marker.position;
             this.infoContent = marker.infoText;
 

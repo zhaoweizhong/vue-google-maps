@@ -1,5 +1,3 @@
-/* vim: set softtabstop=2 shiftwidth=2 expandtab : */
-
 /**
   * @class Cluster
   * @prop $clusterObject -- Exposes the marker clusterer to
@@ -7,12 +5,10 @@
         extending the class
 **/
 
-import clone from 'lodash/clone'
 import bindEvents from '../utils/bindEvents.js'
 import {bindProps, getPropsValues} from '../utils/bindProps.js'
-import MapElementMixin from './mapElementMixin'
 import MarkerClusterer from 'marker-clusterer-plus'
-import mapElementFactory from './mapElementFactory.js';
+import mapElementFactory from './mapElementFactory.js'
 
 const props = {
   maxZoom: {
@@ -79,6 +75,8 @@ export default mapElementFactory({
   // MarkerClusterer has a special way of calling the constructor
   provide () {
     const clusterPromise = this.$mapPromise.then((map) => {
+      const options = getPropsValues(this)
+
       this.$clusterObject = new MarkerClusterer(map, [], options)
 
       bindProps(this, this.$clusterObject, props)
@@ -101,7 +99,7 @@ export default mapElementFactory({
     })
 
     this.$clusterPromise = clusterPromise
-    
+
     return {
       $clusterPromise: clusterPromise
     }

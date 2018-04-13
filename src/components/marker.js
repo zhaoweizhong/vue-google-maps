@@ -1,8 +1,4 @@
-import mapValues from 'lodash/mapValues'
-import bindEvents from '../utils/bindEvents.js'
-import {bindProps} from '../utils/bindProps.js'
-import MapElementMixin from './mapElementMixin'
-import mapElementFactory from './mapElementFactory.js';
+import mapElementFactory from './mapElementFactory.js'
 
 const props = {
   animation: {
@@ -124,12 +120,12 @@ export default mapElementFactory({
     }
   },
 
-  async beforeCreate (options) {
+  beforeCreate (options) {
     if (this.$clusterPromise) {
       options.map = null
     }
-    
-    await this.$clusterPromise
+
+    return this.$clusterPromise
   },
 
   afterCreate (inst) {
