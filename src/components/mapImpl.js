@@ -1,5 +1,4 @@
 import omit from 'lodash/omit'
-import clone from 'lodash/clone'
 
 import { loaded } from '../manager.js'
 import bindEvents from '../utils/bindEvents.js'
@@ -13,12 +12,14 @@ const props = {
   center: {
     required: true,
     twoWay: true,
-    type: Object
+    type: Object,
+    noBind: true,
   },
   zoom: {
     required: false,
     twoWay: true,
-    type: Number
+    type: Number,
+    noBind: true,
   },
   heading: {
     type: Number,
@@ -27,10 +28,6 @@ const props = {
   mapTypeId: {
     twoWay: true,
     type: String
-  },
-  bounds: {
-    twoWay: true,
-    type: Object,
   },
   tilt: {
     twoWay: true,
@@ -43,6 +40,7 @@ const props = {
 }
 
 const events = [
+  'bounds_changed',
   'click',
   'dblclick',
   'drag',
@@ -93,13 +91,9 @@ const customMethods = {
   }
 }
 
-// Methods is a combination of customMethods and linkedMethods
-const methods = Object.assign({}, customMethods, linkedMethods)
-
 export default {
   mixins: [mountableMixin],
   props: props,
-  replace: false, // necessary for css styles
 
   provide () {
     this.$mapPromise = new Promise((resolve, reject) => {
@@ -138,14 +132,17 @@ export default {
       const element = this.$refs['vue-map']
 
       // creating the map
-      const copiedData = clone(getPropsValues(this))
-      delete copiedData.options
-      const options = clone(this.options)
-      Object.assign(options, copiedData)
+      const options = {
+        ...this.options,
+        ...getPropsValues(this),
+      }
+      delete options.options
       this.$mapObject = new google.maps.Map(element, options)
 
       // binding properties (two and one way)
-      bindProps(this, this.$mapObject, omit(props, ['center', 'zoom', 'bounds']))
+      bindProps(this, this.$mapObject, props)
+      // binding events
+      bindEvents(this, this.$mapObject, events)
 
       // manually trigger center and zoom
       TwoWayBindingWrapper((increment, decrement, shouldUpdate) => {
@@ -174,9 +171,6 @@ export default {
         this.$emit('bounds_changed', this.$mapObject.getBounds())
       })
 
-      // binding events
-      bindEvents(this, this.$mapObject, events)
-
       this.$mapPromiseDeferred.resolve(this.$mapObject)
 
       return this.$mapObject
@@ -185,6 +179,9 @@ export default {
       throw error
     })
   },
-  methods: methods,
+  methods: {
+    ...customMethods,
+    ...linkedMethods,
+  },
   events, // FOR DOCUMENTATION PURPOSES
 }

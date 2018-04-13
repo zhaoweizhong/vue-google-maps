@@ -1,5 +1,3 @@
-import omit from 'lodash/omit'
-
 import {loaded} from '../manager.js'
 import bindEvents from '../utils/bindEvents.js'
 import {bindProps, getPropsValues} from '../utils/bindProps.js'
@@ -21,6 +19,7 @@ const props = {
   position: {
     twoWay: true,
     type: Object,
+    noBind: true,
   },
   pano: {
     twoWay: true,
@@ -47,23 +46,17 @@ const events = [
   'status_changed',
 ]
 
-// Other convenience methods exposed by Vue Google Maps
-const customMethods = {
-  resize () {
-    if (this.$panoObject) {
-      google.maps.event.trigger(this.$panoObject, 'resize')
-    }
-  },
-}
-
-// Methods is a combination of customMethods and linkedMethods
-const methods = Object.assign({}, customMethods)
-
 export default {
   mixins: [mountableMixin],
   props: props,
   replace: false, // necessary for css styles
-  methods,
+  methods: {
+    resize () {
+      if (this.$panoObject) {
+        google.maps.event.trigger(this.$panoObject, 'resize')
+      }
+    },
+  },
 
   provide () {
     return {
@@ -104,16 +97,18 @@ export default {
       const element = this.$refs['vue-street-view-pano']
 
       // creating the map
-      const options = Object.assign({},
-        this.options,
-        omit(getPropsValues(this), ['options'])
-      )
+      const options = {
+        ...this.options,
+        ...getPropsValues(this),
+      }
+      delete options.options
 
       this.$panoObject = new google.maps.StreetViewPanorama(element, options)
 
       // binding properties (two and one way)
-      bindProps(this, this.$panoObject,
-        omit(props, ['position']))
+      bindProps(this, this.$panoObject, props)
+      // binding events
+      bindEvents(this, this.$panoObject, events)
 
       // manually trigger position
       TwoWayBindingWrapper((increment, decrement, shouldUpdate) => {
@@ -138,9 +133,6 @@ export default {
           updateCenter
         )
       })
-
-      // binding events
-      bindEvents(this, this.$panoObject, events)
 
       this.$panoPromiseDeferred.resolve(this.$panoObject)
 
