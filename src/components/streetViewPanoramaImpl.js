@@ -102,7 +102,7 @@ export default {
       // creating the map
       const options = {
         ...this.options,
-        ...getPropsValues(this),
+        ...getPropsValues(this, props),
       }
       delete options.options
 

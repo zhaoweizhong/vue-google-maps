@@ -1,4 +1,3 @@
-import clone from 'lodash/clone'
 import pickBy from 'lodash/pickBy'
 import omit from 'lodash/omit'
 import {bindProps, getPropsValues} from '../utils/bindProps.js'
@@ -41,7 +40,7 @@ const props = {
 export default {
   mounted () {
     loaded.then(() => {
-      const options = clone(getPropsValues(this))
+      const options = getPropsValues(this, props)
       if (this.selectFirstOnEnter) {
         downArrowSimulator(this.$refs.input)
       }

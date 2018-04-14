@@ -1,13 +1,18 @@
-import mapValues from 'lodash/mapValues'
-import forIn from 'lodash/forIn'
 import WatchPrimitiveProperties from '../utils/WatchPrimitiveProperties'
 
 function capitalizeFirstLetter (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-export function getPropsValues (vueInst) {
-  return mapValues(vueInst.$options.props, (v, k) => vueInst[k])
+export function getPropsValues (vueInst, props) {
+  return Object.keys(props)
+    .reduce(
+      (acc, prop) => {
+        acc[prop] = vueInst[prop]
+        return acc
+      },
+      {}
+    )
 }
 
 /**
@@ -18,7 +23,9 @@ export function getPropsValues (vueInst) {
   * emitted if the data source was external.
   */
 export function bindProps (vueInst, googleMapsInst, props, options) {
-  forIn(props, ({twoWay, type, trackProperties, noBind}, attribute) => {
+  for (let attribute in props) {
+    let {twoWay, type, trackProperties, noBind} = props[attribute]
+
     if (noBind) return
 
     const setMethodName = 'set' + capitalizeFirstLetter(attribute)
@@ -61,5 +68,5 @@ export function bindProps (vueInst, googleMapsInst, props, options) {
         vueInst.$emit(eventName, googleMapsInst[getMethodName]())
       })
     }
-  })
+  }
 }

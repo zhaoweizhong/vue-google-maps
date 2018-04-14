@@ -14,11 +14,12 @@ import PlaceInput from './components/placeInput.vue'
 import Autocomplete from './components/autocomplete.vue'
 
 import MapElementMixin from './components/mapElementMixin'
+import MapElementFactory from './components/mapElementFactory'
 import MountableMixin from './utils/mountableMixin'
 
 // export everything
 export {load, loaded, Marker, Cluster, Polyline, Polygon, Circle, Rectangle,
-  InfoWindow, Map, PlaceInput, MapElementMixin, Autocomplete,
+  InfoWindow, Map, PlaceInput, MapElementMixin, MapElementFactory, Autocomplete,
   MountableMixin, StreetViewPanorama}
 
 export function install (Vue, options) {

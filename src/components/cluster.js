@@ -4,9 +4,6 @@
         descendent Marker classes. Override this if you area
         extending the class
 **/
-
-import bindEvents from '../utils/bindEvents.js'
-import {bindProps, getPropsValues} from '../utils/bindProps.js'
 import MarkerClusterer from 'marker-clusterer-plus'
 import mapElementFactory from './mapElementFactory.js'
 
@@ -62,6 +59,7 @@ export default mapElementFactory({
     }
     return MarkerClusterer
   },
+  ctrArgs: ({map, ...otherOptions}) => [map, [], otherOptions],
 
   render (h) {
     // <div><slot></slot></div>
@@ -71,42 +69,24 @@ export default mapElementFactory({
     )
   },
 
-  // Override the default `provide()`, because
-  // MarkerClusterer has a special way of calling the constructor
-  provide () {
-    const clusterPromise = this.$mapPromise.then((map) => {
-      const options = getPropsValues(this)
+  afterCreate (inst) {
+    const reinsertMarkers = () => {
+      const oldMarkers = inst.getMarkers()
+      inst.clearMarkers()
+      inst.addMarkers(oldMarkers)
+    }
 
-      this.$clusterObject = new MarkerClusterer(map, [], options)
-
-      bindProps(this, this.$clusterObject, props)
-      bindEvents(this, this.$clusterObject, events)
-
-      const reinsertMarkers = () => {
-        const oldMarkers = this.$clusterObject.getMarkers()
-        this.$clusterObject.clearMarkers()
-        this.$clusterObject.addMarkers(oldMarkers)
+    for (let prop in props) {
+      if (props[prop].twoWay) {
+        this.$on(prop.toLowerCase() + '_changed', reinsertMarkers)
       }
-
-      // After model changed, update everything
-      for (let prop in props) {
-        if (props[prop].twoWay) {
-          this.$on(prop.toLowerCase() + '_changed', reinsertMarkers)
-        }
-      }
-
-      return this.$clusterObject
-    })
-
-    this.$clusterPromise = clusterPromise
-
-    return {
-      $clusterPromise: clusterPromise
     }
   },
 
   updated () {
-    this.$clusterObject.repaint()
+    if (this.$clusterObject) {
+      this.$clusterObject.repaint()
+    }
   },
 
   beforeDestroy () {

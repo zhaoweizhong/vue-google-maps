@@ -24,8 +24,19 @@ import MapElementMixin from './mapElementMixin'
  *  `google.maps.Polyline`. However, since this is not
  *  generally available during library load, this becomes
  *  a function instead, e.g. () => google.maps.Polyline
- *  whcih will be called only after the API has been loaded
+ *  which will be called only after the API has been loaded
+ * @param {(MappedProps, OtherVueProps) => Array} options.ctrArgs -
+ *   If the constructor in `ctr` needs to be called with
+ *   arguments other than a single `options` object, e.g. for
+ *   GroundOverlay, we call `new GroundOverlay(url, bounds, options)`
+ *   then pass in a function that returns the argument list as an array
  *
+ * Otherwise, the constructor will be called with an `options` object,
+ *   with property and values merged from:
+ *
+ *   1. the `options` property, if any
+ *   2. a `map` property with the Google Maps
+ *   3. all the properties passed to the component in `mappedProps`
  * @param {Object => Any} options.beforeCreate -
  *  Hook to modify the options passed to the initializer
  * @param {(options.ctr, Object) => Any} options.afterCreate -
@@ -37,6 +48,7 @@ export default function (options) {
     mappedProps,
     name,
     ctr,
+    ctrArgs,
     events,
     beforeCreate,
     afterCreate,
@@ -65,7 +77,7 @@ export default function (options) {
         const options = {
           ...this.options,
           map,
-          ...getPropsValues(this)
+          ...getPropsValues(this, mappedProps)
         }
         delete options.options // delete the extra options
 
@@ -79,7 +91,14 @@ export default function (options) {
         return {options}
       }).then(({options}) => {
         const ConstructorObject = ctr()
-        this[instanceName] = new ConstructorObject(options)
+        // https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+        this[instanceName] = ctrArgs
+          ? new (Function.prototype.bind.call(
+            ConstructorObject,
+            null,
+            ...ctrArgs(options, getPropsValues(this, props))
+          ))()
+          : new ConstructorObject(options)
 
         bindProps(this, this[instanceName], mappedProps)
         bindEvents(this, this[instanceName], events)
@@ -87,6 +106,7 @@ export default function (options) {
         if (afterCreate) {
           afterCreate.bind(this)(this[instanceName])
         }
+        return this[instanceName]
       })
       this[promiseName] = promise
       return {[promiseName]: promise}
