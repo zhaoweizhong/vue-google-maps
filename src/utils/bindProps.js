@@ -8,7 +8,9 @@ export function getPropsValues (vueInst, props) {
   return Object.keys(props)
     .reduce(
       (acc, prop) => {
-        acc[prop] = vueInst[prop]
+        if (vueInst[prop] !== undefined) {
+          acc[prop] = vueInst[prop]
+        }
         return acc
       },
       {}
