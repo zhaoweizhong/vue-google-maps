@@ -42,6 +42,9 @@
 Autocomplete:
   name: autocomplete
   isIrregular: true
+  description:
+    If you need to capture the native <code>input</code> / <code>change</code> / <code>keyup</code> /
+     <code>keydown</code> etc. events, just add a <code>.native</code> modifier to the event.
   mappedProps:
     bounds: {}
     componentRestrictions: {}
@@ -55,7 +58,7 @@ Autocomplete:
         <code>Enter</code>.
     value: {}
     options: {}
-  events: ['place_changed']
+  events: ['place_changed', 'input.native', 'change.native', 'focus.native', '*.native']
 
 StreetViewPanorama:
   description:
@@ -155,3 +158,9 @@ Polygon:
 
         <p>If you know that your <code>path</code> is unlikely to change, then
         leave this as <code>false</code></p>
+
+InfoWindow:
+  description: >
+    <p>Displays an info window. To add your content, write something like
+      <code>&lt;GmapInfoWindow>(Your content here)&lt;/GmapInfoWindow></code> tag</p>
+
