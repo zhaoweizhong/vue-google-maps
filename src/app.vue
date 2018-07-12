@@ -150,9 +150,11 @@ gmap-map {
 </style>
 
 <script>
-const _ = require('lodash');
+import _ from 'lodash'
+import GmapCluster from '../../src/components/cluster.js';
 
 export default {
+  components: {GmapCluster},
   data: function data() {
     return {
       lastId: 1,
