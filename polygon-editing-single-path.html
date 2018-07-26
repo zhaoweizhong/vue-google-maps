@@ -9,7 +9,7 @@
     </label>
 
     <gmap-map :center="center" :zoom="12" style="width: 100%; height: 500px" ref="map">
-      <gmap-polygon v-if="paths.length > 0" :paths="paths" :editable="true" @paths_changed="updateEdited($event)"
+      <gmap-polygon v-if="paths.length > 0" :paths="paths" :editable="true" @path_changed="updateEdited($event)"
           @rightclick="handleClickForDelete"
           ref="polygon">
       </gmap-polygon>

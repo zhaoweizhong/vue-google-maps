@@ -10,7 +10,7 @@ Vue.config.optionMergeStrategies.description = (a, b) => a || b
 
 Vue.use(VueGoogleMaps, {
   load: {
-    key: 'AIzaSyBzlLYISGjL_ovJwAehh6ydhB56fCCpPQw',
+    key: 'AIzaSyDf43lPdwlF98RCBsJOFNKOkoEjkwxb5Sc',
     libraries: 'places'
   },
 });
