@@ -2,6 +2,27 @@
 const webpack = require('webpack');
 const path = require('path')
 
+const babelConfig = {
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "browsers": [
+            "last 2 versions",
+            "safari >= 7"
+          ]
+        }
+      }
+    ]
+  ],
+  "plugins": [
+    "transform-object-rest-spread",
+    "transform-inline-environment-variables",
+    "minify-dead-code-elimination"
+  ]
+}
+
 const baseConfig = {
   entry: [
     path.resolve('./src/main.js')
@@ -12,6 +33,15 @@ const baseConfig = {
         test: /\.vue$/,
         loader: 'vue-loader',
         options: { target: 'node' }
+      },
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        options: babelConfig,
+        include: [
+          /node_modules\/lazy-value/,
+          /node_modules\/sinon/,
+        ]
       },
       {
         test: /\.js$/,
