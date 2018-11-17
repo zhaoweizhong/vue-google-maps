@@ -4,6 +4,7 @@
     <label>
       AutoComplete
       <gmap-autocomplete
+        placeholder="This is a placeholder text"
         @place_changed="setPlace">
       </gmap-autocomplete>
       <button @click="usePlace">Add</button>
@@ -26,8 +27,7 @@
     </Gmap-Map>
   </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.0/vue.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.js"></script>
 <script src="vue-google-maps.js"></script>
 
 <script>

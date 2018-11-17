@@ -7,6 +7,7 @@
     <label>
       Place:
       <gmap-autocomplete :value="description"
+        placeholder="This is a placeholder text"
         @place_changed="setPlace"
         :select-first-on-enter="true">
       </gmap-autocomplete>
@@ -32,7 +33,7 @@
     </div>
   </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.8/vue.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js"></script>
 <script src="vue-google-maps.js"></script>
 
@@ -57,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
         this.description = description;
       },
       setPlace(place) {
-        if (place) return
+        if (!place) return
 
         this.latLng = {
           lat: place.geometry.location.lat(),
