@@ -60,7 +60,7 @@
         <th>infoWIndow text</th>
         <th>Delete me</th>
       </tr>
-      <tr v-for="m in markers">
+      <tr v-for="(m, index) in markers" :key="index">
         <td>
           <input type="number" v-model.number="m.position.lat">
         </td>

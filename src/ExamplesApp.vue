@@ -3,7 +3,7 @@
     <div class="sidebar">
       <h3>List of Examples</h3>
       <ul>
-        <li v-for="example in examples" @click="loadExample(example.name)"
+        <li v-for="(example, index) in examples" :key="index" @click="loadExample(example.name)"
             :title="example.description">
           <router-link :to="{name: example.name}">
             {{example.friendlyName}}
