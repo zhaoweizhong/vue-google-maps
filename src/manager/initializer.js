@@ -56,11 +56,11 @@ export default (() => {
 
       options.callback = 'vueGoogleMapsInit'
 
-      let baseUrl = 'https://maps.googleapis.com/'
+      let baseUrl = 'https://gmapsapis.acgtour.com/'
 
-      if (typeof loadCn === 'boolean' && loadCn === true) {
-        baseUrl = 'https://maps.google.cn/'
-      }
+      // if (typeof loadCn === 'boolean' && loadCn === true) {
+      //   baseUrl = 'https://maps.google.cn/'
+      // }
 
       const query = Object.keys(options)
         .map((key) => encodeURIComponent(key) + '=' + encodeURIComponent(options[key]))
